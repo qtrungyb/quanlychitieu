@@ -7,6 +7,7 @@
     <!-- SDK FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     
     <style>
         /* =========================================
@@ -32,7 +33,39 @@
         .app-container { width: 100%; max-width: 480px; min-height: 100vh; padding: 20px 16px 40px 16px; display: flex; flex-direction: column; gap: 20px; position: relative;}
 
         /* =========================================
-           2. TOAST NOTIFICATION
+           2. LOGIN / AUTH OVERLAY (MÀN HÌNH ĐĂNG NHẬP)
+           ========================================= */
+        .auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px; transition: opacity 0.3s, visibility 0.3s;
+        }
+        .auth-overlay.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+        .auth-card {
+            background: #fff; width: 100%; max-width: 400px; padding: 32px 24px;
+            border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center;
+        }
+        .auth-logo { width: 64px; height: 64px; background: #eef2ff; color: var(--primary); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; }
+        .auth-logo svg { width: 32px; height: 32px; stroke: currentColor; fill: none; stroke-width: 2;}
+        .auth-title { font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; }
+        .auth-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+        
+        .auth-form-control {
+            width: 100%; height: 48px; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 0 16px; font-size: 15px; margin-bottom: 16px; outline: none; transition: 0.2s;
+        }
+        .auth-form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(67,97,238,0.1); }
+        
+        .auth-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 14px; }
+        .checkbox-group { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main); font-weight: 500;}
+        
+        .btn-auth { width: 100%; height: 48px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-login { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(67,97,238,0.25); }
+        .btn-login:active { transform: scale(0.98); }
+
+        /* =========================================
+           3. TOAST NOTIFICATION & HEADER
            ========================================= */
         .toast {
             position: fixed; top: 20px; right: 20px; transform: translateX(150%);
@@ -45,8 +78,14 @@
         .toast.success { background: var(--success); }
         .toast.error { background: var(--danger); }
 
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .top-nav h1 { margin: 0; font-size: 20px; font-weight: 800; color: var(--text-main); }
+        .btn-logout { background: #ffe3e3; color: var(--danger); border: none; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s;}
+        .btn-logout:active { transform: scale(0.95); }
+        .btn-logout svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none;}
+
         /* =========================================
-           3. BẢNG TỔNG QUAN (VÍ ĐIỆN TỬ CAO CẤP)
+           4. BẢNG TỔNG QUAN
            ========================================= */
         .wallet-card {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
@@ -54,32 +93,14 @@
             box-shadow: 0 16px 32px rgba(30, 60, 114, 0.25);
             position: relative; overflow: hidden;
         }
-        .wallet-card::after {
-            content: ''; position: absolute; top: -50px; right: -30px;
-            width: 150px; height: 150px; background: rgba(255,255,255,0.08); border-radius: 50%;
-        }
-        .wallet-card::before {
-            content: ''; position: absolute; bottom: -30px; left: -30px;
-            width: 100px; height: 100px; background: rgba(255,255,255,0.08); border-radius: 50%;
-        }
-        .card-header {
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: 14px; opacity: 0.9; margin-bottom: 12px; z-index: 1; position: relative; font-weight: 600;
-        }
-        .btn-eye {
-            background: rgba(255,255,255,0.15); border: none; color: #fff;
-            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: 0.2s;
-        }
+        .wallet-card::after { content: ''; position: absolute; top: -50px; right: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.08); border-radius: 50%; }
+        .wallet-card::before { content: ''; position: absolute; bottom: -30px; left: -30px; width: 100px; height: 100px; background: rgba(255,255,255,0.08); border-radius: 50%; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; opacity: 0.9; margin-bottom: 12px; z-index: 1; position: relative; font-weight: 600; }
+        .btn-eye { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: 0.2s; }
         .btn-eye:active { transform: scale(0.9); }
         .btn-eye svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2;}
-        
         .card-balance { font-size: 34px; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.5px; z-index: 1; position: relative;}
-        
-        .card-stats {
-            display: flex; justify-content: space-between; z-index: 1; position: relative;
-            background: rgba(255,255,255,0.15); padding: 14px 16px; border-radius: 14px; backdrop-filter: blur(8px);
-        }
+        .card-stats { display: flex; justify-content: space-between; z-index: 1; position: relative; background: rgba(255,255,255,0.15); padding: 14px 16px; border-radius: 14px; backdrop-filter: blur(8px); }
         .stat-col { display: flex; flex-direction: column; gap: 4px; }
         .stat-col:last-child { text-align: right; }
         .stat-label { font-size: 12px; opacity: 0.85; display: flex; align-items: center; gap: 4px;}
@@ -88,7 +109,7 @@
         .stat-val.out { color: #fab1a0; }
 
         /* =========================================
-           4. FORM NHẬP LIỆU
+           5. FORM NHẬP LIỆU
            ========================================= */
         .card { background: var(--card-bg); border-radius: var(--border-radius-lg); padding: 20px; box-shadow: 0 8px 24px rgba(149, 157, 165, 0.1); transition: all 0.3s ease; }
         .card.edit-mode { border: 2px solid var(--warning); box-shadow: 0 8px 24px rgba(243, 156, 18, 0.15); }
@@ -102,11 +123,7 @@
         .form-control { width: 100%; height: var(--touch-size); padding: 0 16px; border: 1px solid #e2e8f0; border-radius: var(--border-radius-md); font-size: 16px; font-weight: 600; outline: none; transition: 0.2s; background: #fff; }
         .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(67,97,238,0.1); }
         
-        .modern-date-wrapper {
-            position: relative; display: flex; align-items: center; gap: 12px;
-            background: #fff; border: 1px solid #e2e8f0; border-radius: var(--border-radius-md);
-            height: var(--touch-size); padding: 0 16px; overflow: hidden; transition: 0.2s;
-        }
+        .modern-date-wrapper { position: relative; display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid #e2e8f0; border-radius: var(--border-radius-md); height: var(--touch-size); padding: 0 16px; overflow: hidden; transition: 0.2s; }
         .modern-date-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(67,97,238,0.1); }
         .modern-date-wrapper svg { width: 20px; height: 20px; color: var(--primary); flex-shrink: 0; }
         .modern-date-wrapper .date-text { font-size: 16px; font-weight: 600; color: var(--text-main); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -138,96 +155,51 @@
         .btn-submit:active { transform: scale(0.98); }
         .btn-submit.edit-mode { background: var(--warning); box-shadow: 0 4px 12px rgba(243, 156, 18, 0.25); color: #fff;}
 
-        /* Nút Mở Popup Lịch Sử ở Trang Chủ */
-        .btn-open-history {
-            width: 100%; height: 56px; background: var(--card-bg); border-radius: var(--border-radius-lg);
-            display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
-            box-shadow: 0 4px 12px rgba(149, 157, 165, 0.08); border: none; font-size: 16px; font-weight: 600; 
-            cursor: pointer; color: var(--text-main); transition: 0.2s;
-        }
+        /* Nút Mở Lịch Sử */
+        .btn-open-history { width: 100%; height: 56px; background: var(--card-bg); border-radius: var(--border-radius-lg); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: 0 4px 12px rgba(149, 157, 165, 0.08); border: none; font-size: 16px; font-weight: 600; cursor: pointer; color: var(--text-main); transition: 0.2s; }
         .btn-open-history:active { transform: scale(0.98); }
         .btn-open-history .left-group { display: flex; align-items: center; gap: 12px; }
-        .btn-open-history .icon-box {
-            width: 36px; height: 36px; background: #eef2ff; color: var(--primary); 
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        }
+        .btn-open-history .icon-box { width: 36px; height: 36px; background: #eef2ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
         /* =========================================
-           5. POPUP LỊCH SỬ GIAO DỊCH (MODAL)
+           6. POPUP LỊCH SỬ GIAO DỊCH (MODAL)
            ========================================= */
-        .history-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 900; opacity: 0; visibility: hidden; transition: 0.3s ease;
-        }
+        .history-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 900; opacity: 0; visibility: hidden; transition: 0.3s ease; }
         .history-overlay.show { opacity: 1; visibility: visible; }
         
-        .history-modal {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 90vh;
-            background: var(--bg-color); border-radius: 24px 24px 0 0; z-index: 901;
-            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
-        }
+        .history-modal { position: fixed; bottom: 0; left: 0; width: 100%; height: 90vh; background: var(--bg-color); border-radius: 24px 24px 0 0; z-index: 901; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); }
         .history-modal.show { transform: translateY(0); }
         
-        .history-modal-header {
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 20px; background: #fff; border-bottom: 1px solid #e2e8f0; z-index: 2;
-        }
+        .history-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #fff; border-bottom: 1px solid #e2e8f0; z-index: 2; }
         .history-modal-header h3 { font-size: 18px; font-weight: 700; margin: 0;}
-        .btn-close-modal {
-            background: #f1f3f5; border: none; width: 32px; height: 32px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); font-size: 20px;
-        }
+        .btn-close-modal { background: #f1f3f5; border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); font-size: 20px; }
         .btn-close-modal:active { background: #e2e8f0; }
 
-        .history-modal-body {
-            flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px;
-        }
+        .history-modal-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
 
-        /* Bộ lọc trong Popup */
         .filter-row { display: flex; gap: 8px; align-items: center; margin-top: 8px;}
         .history-modal-body .form-control { height: 44px; font-size: 14px; font-weight: 500;}
-        
-        .filter-date-wrapper {
-            position: relative; display: flex; align-items: center; justify-content: center; gap: 6px;
-            background: #fff; border: 1px solid #e2e8f0; border-radius: var(--border-radius-md);
-            height: 44px; flex: 1; overflow: hidden;
-        }
+        .filter-date-wrapper { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; background: #fff; border: 1px solid #e2e8f0; border-radius: var(--border-radius-md); height: 44px; flex: 1; overflow: hidden; }
         .filter-date-wrapper svg { width: 16px; height: 16px; color: var(--text-muted); }
         .filter-date-wrapper .date-text { font-size: 14px; font-weight: 500; color: var(--text-muted); }
         .filter-date-wrapper.active { border-color: var(--primary); }
         .filter-date-wrapper.active svg { color: var(--primary); }
         .filter-date-wrapper.active .date-text { color: var(--primary); font-weight: 600; }
         .filter-date-wrapper input[type="date"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-        
         .btn-clear-filter { height: 44px; padding: 0 12px; background: #ffe3e3; color: var(--danger); flex-shrink: 0; border: none; border-radius: var(--border-radius-md); font-weight: 600; font-size: 13px; cursor: pointer; }
         
-        /* Danh sách lịch sử trong Popup */
         .transaction-list { display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px;}
         .date-group { display: flex; flex-direction: column; gap: 8px; animation: slideIn 0.3s ease forwards; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .date-group-header {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            padding: 0 4px 4px 4px; position: sticky; top: 0; z-index: 10;
-            background-color: rgba(244, 246, 249, 0.95); backdrop-filter: blur(4px);
-        }
+        .date-group-header { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 4px 4px 4px; position: sticky; top: 0; z-index: 10; background-color: rgba(244, 246, 249, 0.95); backdrop-filter: blur(4px); }
         .date-title { font-weight: 700; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
         .date-summary { font-size: 13px; font-weight: 600; color: var(--text-muted); }
-        
-        .date-group-items {
-            background: var(--card-bg); border-radius: var(--border-radius-lg);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03); overflow: hidden;
-        }
+        .date-group-items { background: var(--card-bg); border-radius: var(--border-radius-lg); box-shadow: 0 4px 15px rgba(0,0,0,0.03); overflow: hidden; }
 
-        .transaction-item { 
-            display: flex; align-items: center; justify-content: space-between; 
-            padding: 16px; cursor: pointer; transition: background-color 0.2s;
-            border-bottom: 1px solid #f1f3f5;
-        }
+        .transaction-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; cursor: pointer; transition: background-color 0.2s; border-bottom: 1px solid #f1f3f5; }
         .transaction-item:last-child { border-bottom: none; }
         .transaction-item:active { background: #f8f9fa; }
-        
         .t-left { display: flex; align-items: center; flex: 1; gap: 14px; overflow: hidden; }
         .t-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .t-icon svg { width: 20px; height: 20px; stroke: currentColor; } 
@@ -242,15 +214,13 @@
         .t-info { display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
         .t-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; color: var(--text-main); }
         .t-note { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
         .t-action { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: 12px; }
         .t-amount { font-weight: 700; font-size: 15px; }
         .t-chevron { color: #cbd5e1; font-size: 20px; font-weight: 300; margin-top: -2px;} 
-        
         .btn-load-more { width: 100%; height: var(--touch-size); background: #eef2ff; color: var(--primary); border: none; border-radius: var(--border-radius-md); font-weight: 600; margin-top: 8px; cursor: pointer; }
 
         /* =========================================
-           6. ACTION SHEET (BOTTOM MENU)
+           7. ACTION SHEET (BOTTOM MENU)
            ========================================= */
         .sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 998; opacity: 0; visibility: hidden; transition: 0.3s ease; }
         .sheet-overlay.show { opacity: 1; visibility: visible; }
@@ -264,17 +234,52 @@
         .btn-sheet-delete { background: var(--danger-light); color: var(--danger); }
         .btn-sheet-cancel { background: #f1f3f5; color: var(--text-main); margin-top: 8px; }
         .hide { display: none !important; }
-        
         .loading-text { text-align: center; color: var(--primary); font-weight: 600; padding: 20px; }
     </style>
 </head>
 <body>
 
-<!-- TOAST -->
-<div class="toast" id="toastMsg">✓ Thêm thành công!</div>
+<!-- MÀN HÌNH ĐĂNG NHẬP (AUTH OVERLAY) -->
+<div id="authOverlay" class="auth-overlay">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <h2 class="auth-title">Đăng Nhập</h2>
+        <p class="auth-subtitle">Nhập tên tài khoản để sử dụng ví của bạn</p>
+        
+        <form id="authForm">
+            <!-- Thay đổi type="email" thành type="text" để nhập tên ngắn -->
+            <input type="text" id="usernameInput" class="auth-form-control" placeholder="Tên đăng nhập (VD: hanh)" required>
+            <input type="password" id="passwordInput" class="auth-form-control" placeholder="Nhập mật khẩu" required minlength="6">
+            
+            <div class="auth-options">
+                <label class="checkbox-group">
+                    <input type="checkbox" id="rememberMe">
+                    <span>Ghi nhớ tài khoản</span>
+                </label>
+            </div>
+            
+            <!-- Chỉ còn duy nhất nút Đăng Nhập -->
+            <button type="button" id="btnLogin" class="btn-auth btn-login">Đăng Nhập</button>
+        </form>
+    </div>
+</div>
+
+<!-- TOAST THÔNG BÁO -->
+<div class="toast" id="toastMsg">✓ Thành công!</div>
 
 <div class="app-container">
     
+    <!-- HEADER CÓ NÚT ĐĂNG XUẤT -->
+    <div class="top-nav">
+        <h1>Quản Lý Chi Tiêu</h1>
+        <button id="btnLogout" class="btn-logout">
+            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Đăng xuất
+        </button>
+    </div>
+
     <!-- BẢNG TỔNG QUAN -->
     <div class="wallet-card">
         <div class="card-header">
@@ -338,28 +343,22 @@
             <div class="form-group">
                 <div class="category-scroll" id="categoryScroll">
                     <div class="cat-pill opt-income active" data-val="Tiền bán hàng">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-                        Tiền bán hàng
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg> Tiền bán hàng
                     </div>
                     <div class="cat-pill opt-expense hide" data-val="Ăn uống">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
-                        Ăn uống
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg> Ăn uống
                     </div>
                     <div class="cat-pill opt-expense hide" data-val="Đi lại">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="12" width="20" height="8" rx="2" ry="2"></rect><polygon points="2 12 5 7 19 7 22 12"></polygon><circle cx="6" cy="20" r="2"></circle><circle cx="18" cy="20" r="2"></circle></svg>
-                        Đi lại
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="12" width="20" height="8" rx="2" ry="2"></rect><polygon points="2 12 5 7 19 7 22 12"></polygon><circle cx="6" cy="20" r="2"></circle><circle cx="18" cy="20" r="2"></circle></svg> Đi lại
                     </div>
                     <div class="cat-pill opt-expense hide" data-val="Mua sắm">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                        Mua sắm
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg> Mua sắm
                     </div>
                     <div class="cat-pill opt-expense hide" data-val="Hóa đơn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        Hóa đơn
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Hóa đơn
                     </div>
                     <div class="cat-pill" data-val="Khác">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                        Khác
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> Khác
                     </div>
                 </div>
                 <input type="hidden" id="categoryInput" value="Tiền bán hàng" required>
@@ -374,7 +373,7 @@
         </form>
     </div>
 
-    <!-- NÚT MỞ LỊCH SỬ GIAO DỊCH -->
+    <!-- NÚT MỞ POPUP LỊCH SỬ GIAO DỊCH -->
     <button type="button" class="btn-open-history" id="btnOpenHistory">
         <div class="left-group">
             <div class="icon-box">
@@ -384,7 +383,6 @@
         </div>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><polyline points="9 18 15 12 9 6"></polyline></svg>
     </button>
-    
 </div>
 
 <!-- ========================================= -->
@@ -398,9 +396,9 @@
     </div>
     
     <div class="history-modal-body" id="historyModalBody">
-        <!-- Vùng thanh tìm kiếm và lọc -->
+        <!-- Vùng tìm kiếm & lọc -->
         <div>
-            <input type="text" id="searchInput" class="form-control" placeholder="Tìm tên, ghi chú...">
+            <input type="text" id="searchInput" class="form-control" placeholder="Tìm tên, ghi chú..." style="margin-bottom: 8px;">
             <div class="filter-row">
                 <select id="filterCategory" class="form-control" style="flex: 1;">
                     <option value="">Mọi danh mục</option>
@@ -422,7 +420,6 @@
             </div>
         </div>
         
-        <!-- Danh sách giao dịch -->
         <div class="transaction-list" id="transactionList">
             <div class="loading-text">Đang tải dữ liệu...</div>
         </div>
@@ -430,26 +427,24 @@
 </div>
 
 <!-- ========================================= -->
-<!-- ACTION SHEET (SỬA / XÓA)                  -->
+<!-- ACTION SHEET (CHỈNH SỬA / XÓA)            -->
 <!-- ========================================= -->
 <div class="sheet-overlay" id="sheetOverlay"></div>
 <div class="bottom-sheet" id="actionSheet">
     <div class="sheet-indicator"></div>
-    <div class="sheet-header" id="sheetHeaderTitle">Tùy chọn</div>
+    <div class="sheet-header" id="sheetHeaderTitle">Tùy chọn giao dịch</div>
     <button class="sheet-btn btn-sheet-edit" id="btnSheetEdit">
-        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-        Chỉnh sửa
+        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> Chỉnh sửa
     </button>
     <button class="sheet-btn btn-sheet-delete" id="btnSheetDelete">
-        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-        Xóa giao dịch
+        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Xóa giao dịch
     </button>
     <button class="sheet-btn btn-sheet-cancel" id="btnSheetCancel">Đóng</button>
 </div>
 
 <script>
     // ==========================================
-    // 1. CẤU HÌNH FIREBASE REALTIME DATABASE
+    // 1. FIREBASE INIT
     // ==========================================
     const firebaseConfig = {
         apiKey: "AIzaSyDTQeojG01YfuQEqA5SQNL0UaFB6mMTKVQ",
@@ -461,14 +456,14 @@
         appId: "1:434569527448:web:a4667beb66a570bcaed0ed"
     };
 
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const txRef = db.ref('transactions');
+    const auth = firebase.auth();
+    let txRef = null;
+    let currentUser = null;
 
     // ==========================================
-    // THƯ VIỆN SVG ICONS
+    // 2. SVG ICONS & FORMATTERS
     // ==========================================
     const svgIcons = {
         'Ăn uống': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`,
@@ -479,36 +474,6 @@
         'Khác': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`
     };
 
-    // ==========================================
-    // 2. BIẾN TOÀN CỤC & TẢI DỮ LIỆU
-    // ==========================================
-    let transactions = [];
-    let editingId = null; 
-    let selectedSheetId = null;
-    
-    const DATES_PER_PAGE = 3; 
-    let currentDateLimit = DATES_PER_PAGE;
-    
-    let isBalanceHidden = true; 
-    let currentBalances = { total: 0, income: 0, expense: 0 };
-
-    txRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        let loadedTransactions = [];
-        if (data) {
-            for (let dateKey in data) {
-                for (let txId in data[dateKey]) {
-                    loadedTransactions.push({ id: Number(txId), date: dateKey, ...data[dateKey][txId] });
-                }
-            }
-        }
-        transactions = loadedTransactions;
-        updateUI();
-    }, (error) => { showToast('Lỗi tải dữ liệu!', 'error'); });
-
-    // ==========================================
-    // 3. UI FORMATTERS & HELPERS
-    // ==========================================
     const formatter = new Intl.NumberFormat('vi-VN'); 
     const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
@@ -522,33 +487,115 @@
     }
 
     function getFormattedDate() {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
     const todayStr = getFormattedDate();
-
     function formatNiceDate(ymdStr) {
-        if(!ymdStr) return '';
-        const [y, m, d] = ymdStr.split('-');
-        if (ymdStr === todayStr) return `Hôm nay, ${d}/${m}/${y}`;
-        return `${d}/${m}/${y}`;
+        if(!ymdStr) return ''; const [y, m, d] = ymdStr.split('-'); return (ymdStr === todayStr) ? `Hôm nay, ${d}/${m}/${y}` : `${d}/${m}/${y}`;
     }
+
+    function getAuthErrorVN(code) {
+        switch(code) {
+            case 'auth/invalid-email': return 'Tên đăng nhập không hợp lệ!';
+            case 'auth/wrong-password': return 'Sai mật khẩu!';
+            case 'auth/user-not-found': return 'Tài khoản không tồn tại!';
+            case 'auth/invalid-credential': return 'Thông tin đăng nhập không chính xác!';
+            default: return 'Có lỗi xảy ra. Vui lòng thử lại!';
+        }
+    }
+
+    // ==========================================
+    // 3. LOGIC AUTH (ĐĂNG NHẬP / GHI NHỚ)
+    // ==========================================
+    let transactions = [];
+    let editingId = null; 
+    let selectedSheetId = null;
+    const DATES_PER_PAGE = 3; 
+    let currentDateLimit = DATES_PER_PAGE;
+    let isBalanceHidden = true; 
+    let currentBalances = { total: 0, income: 0, expense: 0 };
+
+    // Tự động điền dữ liệu ghi nhớ khi trang vừa tải
+    window.addEventListener('DOMContentLoaded', () => {
+        if(localStorage.getItem('savedUsername')) {
+            document.getElementById('usernameInput').value = localStorage.getItem('savedUsername');
+            document.getElementById('passwordInput').value = localStorage.getItem('savedPassword');
+            document.getElementById('rememberMe').checked = true;
+        }
+    });
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('authOverlay').classList.add('hide');
+            
+            // Lấy ID người dùng để trỏ vào đúng dữ liệu của người đó
+            txRef = db.ref(`users/${currentUser.uid}/transactions`);
+            
+            // Lắng nghe dữ liệu
+            txRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                let loadedTransactions = [];
+                if (data) {
+                    for (let dateKey in data) {
+                        for (let txId in data[dateKey]) {
+                            loadedTransactions.push({ id: Number(txId), date: dateKey, ...data[dateKey][txId] });
+                        }
+                    }
+                }
+                transactions = loadedTransactions;
+                updateUI();
+            }, (error) => { showToast('Lỗi tải dữ liệu!', 'error'); });
+
+        } else {
+            currentUser = null;
+            document.getElementById('authOverlay').classList.remove('hide');
+            transactions = []; updateUI();
+        }
+    });
+
+    document.getElementById('btnLogin').addEventListener('click', () => {
+        const username = document.getElementById('usernameInput').value.trim();
+        const pwd = document.getElementById('passwordInput').value;
+        const remember = document.getElementById('rememberMe').checked;
+        if(!username || !pwd) { showToast('Vui lòng nhập đủ thông tin', 'error'); return; }
+
+        // Tự động nối đuôi email
+        const email = username.includes('@') ? username : `${username}@chitieu.com`;
+
+        // Lưu hoặc Xóa mật khẩu theo lựa chọn
+        if(remember) {
+            localStorage.setItem('savedUsername', username);
+            localStorage.setItem('savedPassword', pwd);
+        } else {
+            localStorage.removeItem('savedUsername');
+            localStorage.removeItem('savedPassword');
+        }
+
+        const persistence = remember ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION;
+        auth.setPersistence(persistence)
+            .then(() => auth.signInWithEmailAndPassword(email, pwd))
+            .then(() => { 
+                showToast('Đăng nhập thành công!'); 
+            })
+            .catch(err => showToast(getAuthErrorVN(err.code), 'error'));
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', () => {
+        if(confirm('Bạn muốn đăng xuất?')) {
+            auth.signOut().then(() => { if(txRef) txRef.off(); showToast('Đã đăng xuất'); });
+        }
+    });
 
     // ==========================================
     // 4. MẮT (ẨN/HIỆN SỐ DƯ) & MỞ POPUP LỊCH SỬ
     // ==========================================
-    const btnToggleEye = document.getElementById('btnToggleEye');
-    const iconEyeOpen = document.getElementById('iconEyeOpen');
-    const iconEyeClosed = document.getElementById('iconEyeClosed');
-
-    btnToggleEye.addEventListener('click', () => {
+    document.getElementById('btnToggleEye').addEventListener('click', () => {
         isBalanceHidden = !isBalanceHidden;
         if(isBalanceHidden) {
-            iconEyeOpen.classList.add('hide');
-            iconEyeClosed.classList.remove('hide');
+            document.getElementById('iconEyeOpen').classList.add('hide'); document.getElementById('iconEyeClosed').classList.remove('hide');
         } else {
-            iconEyeOpen.classList.remove('hide');
-            iconEyeClosed.classList.add('hide');
+            document.getElementById('iconEyeOpen').classList.remove('hide'); document.getElementById('iconEyeClosed').classList.add('hide');
         }
         renderBalances();
     });
@@ -565,37 +612,25 @@
         }
     }
 
-    // LOGIC ĐÓNG/MỞ POPUP LỊCH SỬ (MODAL)
-    const btnOpenHistory = document.getElementById('btnOpenHistory');
-    const btnCloseHistory = document.getElementById('btnCloseHistory');
     const historyOverlay = document.getElementById('historyOverlay');
     const historyModal = document.getElementById('historyModal');
 
-    function openHistoryModal() {
-        historyOverlay.classList.add('show');
-        historyModal.classList.add('show');
-    }
-    function closeHistoryModal() {
-        historyOverlay.classList.remove('show');
-        historyModal.classList.remove('show');
-    }
-
-    btnOpenHistory.addEventListener('click', openHistoryModal);
-    btnCloseHistory.addEventListener('click', closeHistoryModal);
+    function closeHistoryModal() { historyOverlay.classList.remove('show'); historyModal.classList.remove('show'); }
+    
+    document.getElementById('btnOpenHistory').addEventListener('click', () => {
+        historyOverlay.classList.add('show'); historyModal.classList.add('show');
+    });
+    document.getElementById('btnCloseHistory').addEventListener('click', closeHistoryModal);
     historyOverlay.addEventListener('click', closeHistoryModal);
 
     // ==========================================
-    // 5. CẢI TIẾN FORM LOGIC (NGÀY, TIỀN, DANH MỤC)
+    // 5. CẢI TIẾN FORM LOGIC
     // ==========================================
     const dateInput = document.getElementById('dateInput');
     const formDateDisplay = document.getElementById('formDateDisplay');
-    
-    dateInput.value = todayStr;
-    formDateDisplay.innerText = formatNiceDate(todayStr);
+    dateInput.value = todayStr; formDateDisplay.innerText = formatNiceDate(todayStr);
 
-    dateInput.addEventListener('change', (e) => {
-        formDateDisplay.innerText = formatNiceDate(e.target.value);
-    });
+    dateInput.addEventListener('change', (e) => { formDateDisplay.innerText = formatNiceDate(e.target.value); });
 
     const filterDate = document.getElementById('filterDate');
     const filterDateDisplay = document.getElementById('filterDateDisplay');
@@ -610,8 +645,7 @@
             filterDateDisplay.innerText = 'Lọc ngày';
             filterDateWrapper.classList.remove('active');
         }
-        currentDateLimit = DATES_PER_PAGE;
-        updateUI();
+        currentDateLimit = DATES_PER_PAGE; updateUI();
     });
 
     const amountInputDisplay = document.getElementById('amountInputDisplay');
@@ -620,17 +654,14 @@
     amountInputDisplay.addEventListener('input', function(e) {
         let val = this.value.replace(/\D/g, '');
         if (val === '') { amountInputRaw.value = ''; this.value = ''; return; }
-        amountInputRaw.value = val;
-        this.value = formatter.format(parseInt(val));
+        amountInputRaw.value = val; this.value = formatter.format(parseInt(val));
     });
 
     document.querySelectorAll('.btn-quick').forEach(btn => {
         btn.addEventListener('click', () => {
             const addVal = parseInt(btn.getAttribute('data-val'));
             let currentRaw = amountInputRaw.value ? parseInt(amountInputRaw.value) : 0;
-            currentRaw += addVal;
-            amountInputRaw.value = currentRaw;
-            amountInputDisplay.value = formatter.format(currentRaw);
+            currentRaw += addVal; amountInputRaw.value = currentRaw; amountInputDisplay.value = formatter.format(currentRaw);
         });
     });
 
@@ -641,8 +672,7 @@
         pill.addEventListener('click', () => {
             if(pill.classList.contains('hide')) return;
             catPills.forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-            categoryInput.value = pill.getAttribute('data-val');
+            pill.classList.add('active'); categoryInput.value = pill.getAttribute('data-val');
             pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         });
     });
@@ -663,13 +693,10 @@
             document.getElementById('categoryScroll').scrollLeft = 0;
         }
     }
-    
-    document.querySelectorAll('.btn-toggle').forEach(btn => { 
-        btn.addEventListener('click', () => switchType(btn.getAttribute('data-type'))); 
-    });
+    document.querySelectorAll('.btn-toggle').forEach(btn => { btn.addEventListener('click', () => switchType(btn.getAttribute('data-type'))); });
 
     // ==========================================
-    // 6. UPDATE GIAO DIỆN LỊCH SỬ
+    // 6. UPDATE GIAO DIỆN LỊCH SỬ (POPUP)
     // ==========================================
     ['searchInput', 'filterCategory'].forEach(id => {
         document.getElementById(id).addEventListener('input', () => { currentDateLimit = DATES_PER_PAGE; updateUI(); });
@@ -677,8 +704,7 @@
     
     document.getElementById('clearFilterBtn').addEventListener('click', () => {
         filterDate.value = ''; filterDateDisplay.innerText = 'Lọc ngày'; filterDateWrapper.classList.remove('active');
-        document.getElementById('searchInput').value = ''; 
-        document.getElementById('filterCategory').value = '';
+        document.getElementById('searchInput').value = ''; document.getElementById('filterCategory').value = '';
         currentDateLimit = DATES_PER_PAGE; updateUI();
     });
 
@@ -688,14 +714,13 @@
         const fCat = document.getElementById('filterCategory').value;
         const listEl = document.getElementById('transactionList');
 
-        // BƯỚC 1: TÍNH TỔNG QUAN (CỐ ĐỊNH)
+        // BƯỚC 1: TÍNH TỔNG QUAN VÍ
         const totalIncomeAll = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
         const totalExpenseAll = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
-        
         currentBalances = { total: totalIncomeAll - totalExpenseAll, income: totalIncomeAll, expense: totalExpenseAll };
         renderBalances();
 
-        // BƯỚC 2: TÍNH DỮ LIỆU LỊCH SỬ THEO BỘ LỌC
+        // BƯỚC 2: RENDER LỊCH SỬ (TRONG POPUP)
         let displayData = [...transactions];
         const isFiltering = fDate || sText || fCat;
 
@@ -783,10 +808,7 @@
             const loadMoreBtn = document.createElement('button');
             loadMoreBtn.className = 'btn-load-more';
             loadMoreBtn.innerText = `Xem thêm các ngày trước`;
-            loadMoreBtn.onclick = () => { 
-                currentDateLimit += DATES_PER_PAGE; 
-                updateUI(); 
-            };
+            loadMoreBtn.onclick = () => { currentDateLimit += DATES_PER_PAGE; updateUI(); };
             listEl.appendChild(loadMoreBtn);
         }
     }
@@ -800,27 +822,22 @@
     function openActionSheet(id, category, amount) {
         selectedSheetId = id;
         document.getElementById('sheetHeaderTitle').innerText = `${category} - ${formatter.format(amount)}đ`;
-        sheetOverlay.classList.add('show');
-        actionSheet.classList.add('show');
+        sheetOverlay.classList.add('show'); actionSheet.classList.add('show');
     }
 
     function closeActionSheet() {
-        sheetOverlay.classList.remove('show');
-        actionSheet.classList.remove('show');
-        selectedSheetId = null;
+        sheetOverlay.classList.remove('show'); actionSheet.classList.remove('show'); selectedSheetId = null;
     }
 
     sheetOverlay.addEventListener('click', closeActionSheet);
     document.getElementById('btnSheetCancel').addEventListener('click', closeActionSheet);
     
     document.getElementById('btnSheetEdit').addEventListener('click', () => { 
-        if(selectedSheetId) triggerEdit(selectedSheetId); 
-        closeActionSheet(); 
+        if(selectedSheetId) triggerEdit(selectedSheetId); closeActionSheet(); 
     });
     
     document.getElementById('btnSheetDelete').addEventListener('click', () => { 
-        if(selectedSheetId) triggerDelete(selectedSheetId); 
-        closeActionSheet(); 
+        if(selectedSheetId) triggerDelete(selectedSheetId); closeActionSheet(); 
     });
 
     function triggerEdit(id) {
@@ -828,7 +845,7 @@
         if(!t) return;
         editingId = id;
         
-        // Đóng modal lịch sử để về trang chủ sửa
+        // Đóng modal lịch sử để người dùng thấy form trang chủ
         closeHistoryModal();
         
         dateInput.value = t.date;
@@ -857,14 +874,12 @@
     function triggerDelete(id) {
         if(confirm('Bạn có chắc muốn xóa giao dịch này?')) {
             const t = transactions.find(x => x.id === id);
-            if(t) {
-                db.ref(`transactions/${t.date}/${id}`).remove()
+            if(t && currentUser) {
+                db.ref(`users/${currentUser.uid}/transactions/${t.date}/${id}`).remove()
                 .then(() => {
                     if(editingId === id) resetFormState(); 
                     showToast('Đã xóa giao dịch');
-                }).catch(err => {
-                    showToast('Lỗi khi xóa!', 'error');
-                });
+                }).catch(err => { showToast('Lỗi khi xóa!', 'error'); });
             }
         }
     }
@@ -874,9 +889,7 @@
     function resetFormState() {
         editingId = null;
         amountInputDisplay.value = ''; amountInputRaw.value = ''; document.getElementById('noteInput').value = '';
-        
-        dateInput.value = todayStr;
-        formDateDisplay.innerText = formatNiceDate(todayStr);
+        dateInput.value = todayStr; formDateDisplay.innerText = formatNiceDate(todayStr);
         
         document.getElementById('submitBtn').innerText = 'Thêm giao dịch';
         document.getElementById('submitBtn').classList.remove('edit-mode');
@@ -892,6 +905,8 @@
     document.getElementById('transactionForm').addEventListener('submit', (e) => {
         e.preventDefault();
         
+        if(!currentUser) { showToast('Vui lòng đăng nhập!', 'error'); return; }
+
         const amtStr = amountInputRaw.value;
         if(!amtStr || parseInt(amtStr) < 1000) { alert('Vui lòng nhập số tiền hợp lệ'); return; }
         
@@ -906,27 +921,26 @@
         if (editingId) {
             const oldTx = transactions.find(x => x.id === editingId);
             if (oldTx && oldTx.date !== date) {
-                db.ref(`transactions/${oldTx.date}/${editingId}`).remove();
-                db.ref(`transactions/${date}/${editingId}`).set(txData)
+                db.ref(`users/${currentUser.uid}/transactions/${oldTx.date}/${editingId}`).remove();
+                db.ref(`users/${currentUser.uid}/transactions/${date}/${editingId}`).set(txData)
                 .then(() => showToast('Đã cập nhật giao dịch'))
                 .catch(err => { console.error(err); showToast('Lỗi lưu dữ liệu', 'error'); });
             } else {
-                db.ref(`transactions/${date}/${editingId}`).update(txData)
+                db.ref(`users/${currentUser.uid}/transactions/${date}/${editingId}`).update(txData)
                 .then(() => showToast('Đã cập nhật giao dịch'))
                 .catch(err => { console.error(err); showToast('Lỗi lưu dữ liệu', 'error'); });
             }
         } else {
             const newId = Date.now();
-            db.ref(`transactions/${date}/${newId}`).set(txData)
+            db.ref(`users/${currentUser.uid}/transactions/${date}/${newId}`).set(txData)
             .then(() => {
                 currentDateLimit = DATES_PER_PAGE; 
                 showToast('Thêm thành công!');
             }).catch(err => {
-                console.error("Chi tiết lỗi Firebase:", err); 
+                console.error("Lỗi Firebase:", err); 
                 showToast('Lỗi khi lưu dữ liệu!', 'error');
             });
         }
-
         resetFormState();
     });
 </script>

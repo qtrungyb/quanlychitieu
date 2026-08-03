@@ -33,8 +33,16 @@
         .app-container { width: 100%; max-width: 480px; min-height: 100vh; padding: 20px 16px 40px 16px; display: flex; flex-direction: column; gap: 20px; position: relative;}
 
         /* =========================================
-           2. LOGIN / AUTH OVERLAY (MÀN HÌNH ĐĂNG NHẬP)
+           2. SPLASH SCREEN & AUTH OVERLAY
            ========================================= */
+        .splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 99999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        .splash-screen.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+
         .auth-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-color); z-index: 10000;
@@ -42,27 +50,42 @@
             padding: 20px; transition: opacity 0.3s, visibility 0.3s;
         }
         .auth-overlay.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+        
         .auth-card {
-            background: #fff; width: 100%; max-width: 400px; padding: 32px 24px;
+            background: #fff; width: 100%; max-width: 360px; padding: 40px 24px;
             border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center;
         }
-        .auth-logo { width: 64px; height: 64px; background: #eef2ff; color: var(--primary); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; }
-        .auth-logo svg { width: 32px; height: 32px; stroke: currentColor; fill: none; stroke-width: 2;}
-        .auth-title { font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; }
-        .auth-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
-        
-        .auth-form-control {
-            width: 100%; height: 48px; border: 1px solid #e2e8f0; border-radius: 12px;
-            padding: 0 16px; font-size: 15px; margin-bottom: 16px; outline: none; transition: 0.2s;
+        .auth-logo { 
+            width: 72px; height: 72px; background: linear-gradient(135deg, var(--primary) 0%, #2a5298 100%); 
+            color: #fff; border-radius: 24px; display: flex; align-items: center; justify-content: center; 
+            margin: 0 auto 24px auto; box-shadow: 0 8px 16px rgba(67, 97, 238, 0.25); 
         }
-        .auth-form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(67,97,238,0.1); }
+        .auth-logo svg { width: 36px; height: 36px; stroke: currentColor; fill: none; stroke-width: 2;}
+        .auth-title { font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 28px; }
         
-        .auth-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 14px; }
-        .checkbox-group { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main); font-weight: 500;}
+        .auth-input-group { position: relative; margin-bottom: 16px; }
+        .auth-input-group svg {
+            position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+            width: 20px; height: 20px; color: var(--text-muted); transition: 0.2s;
+        }
+        .auth-form-control {
+            width: 100%; height: 52px; border: 1px solid #e2e8f0; border-radius: 16px;
+            padding: 0 16px 0 48px; font-size: 15px; font-weight: 500; outline: none; 
+            transition: 0.2s; background: var(--bg-color); color: var(--text-main);
+        }
+        .auth-form-control:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(67,97,238,0.1); }
+        .auth-input-group:focus-within svg { color: var(--primary); }
         
-        .btn-auth { width: 100%; height: 48px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .btn-login { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(67,97,238,0.25); }
+        .auth-options { display: flex; justify-content: flex-start; align-items: center; margin-bottom: 24px; font-size: 14px; }
+        .checkbox-group { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-muted); font-weight: 500;}
+        
+        .btn-login { 
+            width: 100%; height: 52px; background: var(--primary); color: #fff; border: none; 
+            border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; 
+            box-shadow: 0 4px 12px rgba(67,97,238,0.25); display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
         .btn-login:active { transform: scale(0.98); }
+        .btn-login svg { width: 20px; height: 20px; }
 
         /* =========================================
            3. TOAST NOTIFICATION & HEADER
@@ -71,7 +94,10 @@
             position: fixed; top: 20px; right: 20px; transform: translateX(150%);
             background: rgba(43, 45, 66, 0.95); color: #fff; padding: 12px 24px;
             border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            z-index: 9999; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            
+            /* SỬA LỖI: z-index phải lớn hơn auth-overlay (10000) để nổi lên trên màn hình đăng nhập */
+            z-index: 100001; 
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             display: flex; align-items: center; gap: 8px;
         }
         .toast.show { transform: translateX(0); }
@@ -150,6 +176,16 @@
         .cat-pill.active[data-val="Hóa đơn"] { border-color: var(--c-bill); background: var(--c-bill-bg); color: var(--c-bill); }
         .cat-pill.active[data-val="Tiền bán hàng"] { border-color: var(--c-sales); background: var(--c-sales-bg); color: var(--c-sales); }
         .cat-pill.active[data-val="Khác"] { border-color: var(--c-other); background: var(--c-other-bg); color: var(--text-main); }
+
+        /* CẢI TIẾN: Format riêng cho ô Ghi chú (Mỏng hơn, chữ nhỏ hơn) */
+        #noteInput {
+            font-size: 15px; 
+            font-weight: 500;
+        }
+        #noteInput::placeholder {
+            font-weight: 400;
+            color: #a0aec0;
+        }
         
         .btn-submit { width: 100%; height: var(--touch-size); background: var(--primary); color: white; border: none; border-radius: var(--border-radius-md); font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: 0.2s; box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);}
         .btn-submit:active { transform: scale(0.98); }
@@ -239,19 +275,32 @@
 </head>
 <body>
 
-<!-- MÀN HÌNH ĐĂNG NHẬP (AUTH OVERLAY) -->
-<div id="authOverlay" class="auth-overlay">
+<!-- MÀN HÌNH SPLASH CHỜ LOAD DỮ LIỆU ĐỂ TRÁNH NHÁY MÀN HÌNH -->
+<div id="splashScreen" class="splash-screen">
+    <div class="auth-logo">
+        <svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
+    </div>
+    <h2 class="auth-title">Quản Lý Chi Tiêu</h2>
+</div>
+
+<!-- MÀN HÌNH ĐĂNG NHẬP -->
+<div id="authOverlay" class="auth-overlay hide">
     <div class="auth-card">
         <div class="auth-logo">
-            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
         </div>
-        <h2 class="auth-title">Đăng Nhập</h2>
-        <p class="auth-subtitle">Nhập tên tài khoản để sử dụng ví của bạn</p>
+        <h2 class="auth-title">Quản Lý Chi Tiêu</h2>
         
         <form id="authForm">
-            <!-- Thay đổi type="email" thành type="text" để nhập tên ngắn -->
-            <input type="text" id="usernameInput" class="auth-form-control" placeholder="Tên đăng nhập (VD: hanh)" required>
-            <input type="password" id="passwordInput" class="auth-form-control" placeholder="Nhập mật khẩu" required minlength="6">
+            <div class="auth-input-group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <input type="text" id="usernameInput" class="auth-form-control" placeholder="Tài khoản" required>
+            </div>
+            
+            <div class="auth-input-group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <input type="password" id="passwordInput" class="auth-form-control" placeholder="Mật khẩu" required minlength="6">
+            </div>
             
             <div class="auth-options">
                 <label class="checkbox-group">
@@ -260,13 +309,15 @@
                 </label>
             </div>
             
-            <!-- Chỉ còn duy nhất nút Đăng Nhập -->
-            <button type="button" id="btnLogin" class="btn-auth btn-login">Đăng Nhập</button>
+            <button type="button" id="btnLogin" class="btn-auth btn-login">
+                Đăng nhập
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
         </form>
     </div>
 </div>
 
-<!-- TOAST THÔNG BÁO -->
+<!-- TOAST THÔNG BÁO CAO NHẤT -->
 <div class="toast" id="toastMsg">✓ Thành công!</div>
 
 <div class="app-container">
@@ -276,7 +327,7 @@
         <h1>Quản Lý Chi Tiêu</h1>
         <button id="btnLogout" class="btn-logout">
             <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            Đăng xuất
+            Thoát
         </button>
     </div>
 
@@ -364,6 +415,7 @@
                 <input type="hidden" id="categoryInput" value="Tiền bán hàng" required>
             </div>
 
+            <!-- GHI CHÚ (CẢI TIẾN FONT CHỮ) -->
             <div class="form-group" style="margin-bottom: 0;">
                 <input type="text" id="noteInput" class="form-control" placeholder="Ghi chú (Không bắt buộc)">
             </div>
@@ -505,7 +557,7 @@
     }
 
     // ==========================================
-    // 3. LOGIC AUTH (ĐĂNG NHẬP / GHI NHỚ)
+    // 3. LOGIC AUTH (CHỐNG NHÁY MÀN HÌNH)
     // ==========================================
     let transactions = [];
     let editingId = null; 
@@ -514,8 +566,9 @@
     let currentDateLimit = DATES_PER_PAGE;
     let isBalanceHidden = true; 
     let currentBalances = { total: 0, income: 0, expense: 0 };
+    
+    let isFirstLoad = true;
 
-    // Tự động điền dữ liệu ghi nhớ khi trang vừa tải
     window.addEventListener('DOMContentLoaded', () => {
         if(localStorage.getItem('savedUsername')) {
             document.getElementById('usernameInput').value = localStorage.getItem('savedUsername');
@@ -524,15 +577,13 @@
         }
     });
 
+    // Lắng nghe trạng thái đăng nhập
     auth.onAuthStateChanged(user => {
         if (user) {
             currentUser = user;
-            document.getElementById('authOverlay').classList.add('hide');
+            document.getElementById('authOverlay').classList.add('hide'); 
             
-            // Lấy ID người dùng để trỏ vào đúng dữ liệu của người đó
             txRef = db.ref(`users/${currentUser.uid}/transactions`);
-            
-            // Lắng nghe dữ liệu
             txRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 let loadedTransactions = [];
@@ -545,12 +596,17 @@
                 }
                 transactions = loadedTransactions;
                 updateUI();
-            }, (error) => { showToast('Lỗi tải dữ liệu!', 'error'); });
-
+            });
         } else {
             currentUser = null;
-            document.getElementById('authOverlay').classList.remove('hide');
+            document.getElementById('authOverlay').classList.remove('hide'); 
             transactions = []; updateUI();
+        }
+        
+        // Chỉ tắt màn hình Splash sau khi Firebase đã phản hồi AuthState lần đầu
+        if (isFirstLoad) {
+            document.getElementById('splashScreen').classList.add('hide');
+            isFirstLoad = false;
         }
     });
 
@@ -560,10 +616,8 @@
         const remember = document.getElementById('rememberMe').checked;
         if(!username || !pwd) { showToast('Vui lòng nhập đủ thông tin', 'error'); return; }
 
-        // Tự động nối đuôi email
         const email = username.includes('@') ? username : `${username}@chitieu.com`;
 
-        // Lưu hoặc Xóa mật khẩu theo lựa chọn
         if(remember) {
             localStorage.setItem('savedUsername', username);
             localStorage.setItem('savedPassword', pwd);
@@ -575,9 +629,7 @@
         const persistence = remember ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION;
         auth.setPersistence(persistence)
             .then(() => auth.signInWithEmailAndPassword(email, pwd))
-            .then(() => { 
-                showToast('Đăng nhập thành công!'); 
-            })
+            .then(() => { showToast('Đăng nhập thành công!'); })
             .catch(err => showToast(getAuthErrorVN(err.code), 'error'));
     });
 
@@ -845,7 +897,6 @@
         if(!t) return;
         editingId = id;
         
-        // Đóng modal lịch sử để người dùng thấy form trang chủ
         closeHistoryModal();
         
         dateInput.value = t.date;

@@ -3,12 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Quản Lý Chi Tiêu</title>
+    <title>Quản lý chi tiêu</title>
     <!-- SDK FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
-    
+    <!-- THƯ VIỆN KÉO THẢ (SORTABLE.JS) -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <!-- THƯ VIỆN VẼ BIỂU ĐỒ (CHART.JS) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="manifest" href="./manifest.json">
+	<!-- Theme color cho thanh trạng thái của trình duyệt mobile -->
+	<meta name="theme-color" content="#4361ee">
+	<link rel="apple-touch-icon" href="./icon-192.png">
     <style>
         /* =========================================
            1. BIẾN MÀU SẮC & THIẾT LẬP CƠ BẢN
@@ -20,131 +27,88 @@
             --text-main: #2b2d42; --text-muted: #8d99ae;
             --border-radius-lg: 16px; --border-radius-md: 12px; --touch-size: 48px;
             
-            --c-food: #ff9f43; --c-food-bg: #fff5ec;
-            --c-transport: #0abde3; --c-transport-bg: #e6f8fc;
-            --c-shopping: #f368e0; --c-shopping-bg: #fef0fc;
-            --c-bill: #5f27cd; --c-bill-bg: #efebf9;
-            --c-sales: #10ac84; --c-sales-bg: #e7f7f3;
-            --c-other: #8395a7; --c-other-bg: #f2f4f6;
+            --c-orange: #ff9f43; --bg-orange: #fff5ec;
+            --c-blue: #0abde3;   --bg-blue: #e6f8fc;
+            --c-pink: #f368e0;   --bg-pink: #fef0fc;
+            --c-purple: #5f27cd; --bg-purple: #efebf9;
+            --c-green: #10ac84;  --bg-green: #e7f7f3;
+            --c-gray: #8395a7;   --bg-gray: #f2f4f6;
+            --c-red: #e74c3c;    --bg-red: #fceceb;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 480px; min-height: 100vh; padding: 20px 16px 40px 16px; display: flex; flex-direction: column; gap: 20px; position: relative;}
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; overflow-x: hidden;}
+        .app-container { width: 100%; max-width: 480px; min-height: 100vh; padding: 20px 16px 100px 16px; display: flex; flex-direction: column; gap: 20px; position: relative;}
+
+        .text-success { color: var(--success) !important; }
+        .text-danger { color: var(--danger) !important; }
 
         /* =========================================
            2. SPLASH SCREEN & AUTH OVERLAY
            ========================================= */
-        .splash-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color); z-index: 99999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.4s ease, visibility 0.4s ease;
-        }
+        .splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease, visibility 0.4s ease; }
         .splash-screen.hide { opacity: 0; visibility: hidden; pointer-events: none; }
 
-        .auth-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color); z-index: 10000;
-            display: flex; align-items: center; justify-content: center;
-            padding: 20px; transition: opacity 0.3s, visibility 0.3s;
-        }
+        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; transition: opacity 0.3s, visibility 0.3s; }
         .auth-overlay.hide { opacity: 0; visibility: hidden; pointer-events: none; }
         
-        .auth-card {
-            background: #fff; width: 100%; max-width: 360px; padding: 40px 24px;
-            border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center;
-        }
-        .auth-logo { 
-            width: 72px; height: 72px; background: linear-gradient(135deg, var(--primary) 0%, #2a5298 100%); 
-            color: #fff; border-radius: 24px; display: flex; align-items: center; justify-content: center; 
-            margin: 0 auto 24px auto; box-shadow: 0 8px 16px rgba(67, 97, 238, 0.25); 
-        }
+        .auth-card { background: #fff; width: 100%; max-width: 360px; padding: 40px 24px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; max-height: 90vh; overflow-y: auto; }
+        .auth-logo { width: 72px; height: 72px; background: linear-gradient(135deg, var(--primary) 0%, #2a5298 100%); color: #fff; border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px auto; box-shadow: 0 8px 16px rgba(67, 97, 238, 0.25); }
         .auth-logo svg { width: 36px; height: 36px; stroke: currentColor; fill: none; stroke-width: 2;}
-        .auth-title { font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 28px; }
+        .auth-title { font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 28px; letter-spacing: -0.5px;}
         
         .auth-input-group { position: relative; margin-bottom: 16px; }
-        .auth-input-group svg {
-            position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-            width: 20px; height: 20px; color: var(--text-muted); transition: 0.2s;
-        }
-        .auth-form-control {
-            width: 100%; height: 52px; border: 1px solid #e2e8f0; border-radius: 16px;
-            padding: 0 16px 0 48px; font-size: 15px; font-weight: 500; outline: none; 
-            transition: 0.2s; background: var(--bg-color); color: var(--text-main);
-        }
+        .auth-input-group svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: var(--text-muted); transition: 0.2s; }
+        .auth-form-control { width: 100%; height: 52px; border: 1px solid #e2e8f0; border-radius: 16px; padding: 0 16px 0 48px; font-size: 15px; font-weight: 500; outline: none; transition: 0.2s; background: var(--bg-color); color: var(--text-main); }
         .auth-form-control:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(67,97,238,0.1); }
         .auth-input-group:focus-within svg { color: var(--primary); }
         
         .auth-options { display: flex; justify-content: flex-start; align-items: center; margin-bottom: 24px; font-size: 14px; }
         .checkbox-group { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-muted); font-weight: 500;}
         
-        .btn-login { 
-            width: 100%; height: 52px; background: var(--primary); color: #fff; border: none; 
-            border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; 
-            box-shadow: 0 4px 12px rgba(67,97,238,0.25); display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
+        .btn-auth { width: 100%; height: 48px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-login { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(67,97,238,0.25); display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;}
         .btn-login:active { transform: scale(0.98); }
         .btn-login svg { width: 20px; height: 20px; }
-        
         .btn-cancel { background: #f1f3f5; color: var(--text-main); margin-bottom: 0; box-shadow: none;}
         .btn-cancel:active { background: #e2e8f0; }
 
         /* =========================================
            3. TOAST NOTIFICATION & HEADER AVATAR
            ========================================= */
-        .toast {
-            position: fixed; top: 20px; right: 20px; transform: translateX(150%);
-            background: rgba(43, 45, 66, 0.95); color: #fff; padding: 12px 24px;
-            border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            z-index: 100001; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            display: flex; align-items: center; gap: 8px;
-        }
+        .toast { position: fixed; top: 20px; right: 20px; transform: translateX(150%); background: rgba(43, 45, 66, 0.95); color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 100001; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); display: flex; align-items: center; gap: 8px; }
         .toast.show { transform: translateX(0); }
         .toast.success { background: var(--success); }
         .toast.error { background: var(--danger); }
 
         .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; position: relative; z-index: 50;}
-        .top-nav h1 { margin: 0; font-size: 20px; font-weight: 800; color: var(--text-main); }
+        .top-nav h1 { margin: 0; font-size: 20px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px;}
         
-        /* User Avatar & Dropdown */
         .user-menu { position: relative; }
-        .avatar-btn {
-            width: 40px; height: 40px; border-radius: 50%; border: 2px solid #e2e8f0; 
-            overflow: hidden; cursor: pointer; padding: 0; background: #fff;
-            transition: 0.2s; display: flex; align-items: center; justify-content: center;
-        }
-        .avatar-btn:active { transform: scale(0.95); }
+        .avatar-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--primary); box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2); overflow: hidden; cursor: pointer; padding: 0; background: #fff; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; justify-content: center; }
+        .avatar-btn:active { transform: scale(0.92); box-shadow: 0 2px 6px rgba(67, 97, 238, 0.2); }
         .avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
         
-        .dropdown-menu {
-            position: absolute; top: 50px; right: 0; width: 180px; background: #fff;
-            border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #f1f3f5;
-            opacity: 0; visibility: hidden; transform: translateY(-10px); transition: 0.2s; overflow: hidden;
-        }
+        .dropdown-menu { position: absolute; top: 54px; right: 0; width: 220px; background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #f1f3f5; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: 0.2s; overflow: hidden; }
         .dropdown-menu.show { opacity: 1; visibility: visible; transform: translateY(0); }
-        
         .dropdown-header { padding: 12px 16px; border-bottom: 1px solid #f1f3f5; background: #f8f9fa; }
-        .dropdown-name { font-size: 13px; font-weight: 700; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-        
-        .dropdown-item {
-            width: 100%; text-align: left; padding: 12px 16px; border: none; background: #fff;
-            font-size: 14px; font-weight: 600; color: var(--text-main); cursor: pointer;
-            display: flex; align-items: center; gap: 10px; transition: 0.2s;
-        }
+        .dropdown-name { font-size: 13px; font-weight: 800; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase;}
+        .dropdown-item { width: 100%; text-align: left; padding: 12px 16px; border: none; background: #fff; font-size: 14px; font-weight: 600; color: var(--text-main); cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
         .dropdown-item:active { background: #f8f9fa; }
         .dropdown-item svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2;}
         .dropdown-item.text-danger { color: var(--danger); }
 
         /* =========================================
-           4. BẢNG TỔNG QUAN
+           4. VIEW TOGGLE (TRANG CHỦ / LỊCH SỬ / THỐNG KÊ)
            ========================================= */
-        .wallet-card {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            border-radius: 20px; padding: 24px; color: #fff;
-            box-shadow: 0 16px 32px rgba(30, 60, 114, 0.25);
-            position: relative; overflow: hidden; z-index: 10;
-        }
+        .view-section { display: none; animation: fadeIn 0.3s ease; flex-direction: column; gap: 20px;}
+        .view-section.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* =========================================
+           5. BẢNG TỔNG QUAN
+           ========================================= */
+        .wallet-card { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-radius: 20px; padding: 24px; color: #fff; box-shadow: 0 16px 32px rgba(30, 60, 114, 0.25); position: relative; overflow: hidden; z-index: 10; }
         .wallet-card::after { content: ''; position: absolute; top: -50px; right: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.08); border-radius: 50%; }
         .wallet-card::before { content: ''; position: absolute; bottom: -30px; left: -30px; width: 100px; height: 100px; background: rgba(255,255,255,0.08); border-radius: 50%; }
         .card-header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; opacity: 0.9; margin-bottom: 12px; z-index: 1; position: relative; font-weight: 600; }
@@ -161,7 +125,7 @@
         .stat-val.out { color: #fab1a0; }
 
         /* =========================================
-           5. FORM NHẬP LIỆU
+           6. FORM NHẬP LIỆU
            ========================================= */
         .card { background: var(--card-bg); border-radius: var(--border-radius-lg); padding: 20px; box-shadow: 0 8px 24px rgba(149, 157, 165, 0.1); transition: all 0.3s ease; }
         .card.edit-mode { border: 2px solid var(--warning); box-shadow: 0 8px 24px rgba(243, 156, 18, 0.15); }
@@ -190,18 +154,13 @@
         .btn-quick { flex-shrink: 0; background: #f1f3f5; border: none; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--text-main); cursor: pointer; transition: 0.2s; }
         .btn-quick:active { background: #e2e8f0; transform: scale(0.95); }
 
-        .category-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 4px 0 8px 0; }
+        .category-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 4px 0 8px 0; align-items: center;}
         .category-scroll::-webkit-scrollbar { display: none; }
         .cat-pill { flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 10px 16px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 24px; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
-        .cat-pill svg { width: 18px; height: 18px; stroke: currentColor; } 
+        .cat-pill .pill-icon { display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; }
+        .cat-pill .pill-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; }
         .cat-pill.hide { display: none; }
-        
-        .cat-pill.active[data-val="Ăn uống"] { border-color: var(--c-food); background: var(--c-food-bg); color: var(--c-food); }
-        .cat-pill.active[data-val="Đi lại"] { border-color: var(--c-transport); background: var(--c-transport-bg); color: var(--c-transport); }
-        .cat-pill.active[data-val="Mua sắm"] { border-color: var(--c-shopping); background: var(--c-shopping-bg); color: var(--c-shopping); }
-        .cat-pill.active[data-val="Hóa đơn"] { border-color: var(--c-bill); background: var(--c-bill-bg); color: var(--c-bill); }
-        .cat-pill.active[data-val="Tiền bán hàng"] { border-color: var(--c-sales); background: var(--c-sales-bg); color: var(--c-sales); }
-        .cat-pill.active[data-val="Khác"] { border-color: var(--c-other); background: var(--c-other-bg); color: var(--text-main); }
+        .cat-pill.active { border-color: var(--cat-color, var(--primary)); background: var(--cat-bg, #eef2ff); color: var(--cat-color, var(--primary)); }
 
         #noteInput { font-size: 15px; font-weight: 500; }
         #noteInput::placeholder { font-weight: 400; color: #a0aec0; }
@@ -210,72 +169,127 @@
         .btn-submit:active { transform: scale(0.98); }
         .btn-submit.edit-mode { background: var(--warning); box-shadow: 0 4px 12px rgba(243, 156, 18, 0.25); color: #fff;}
 
-        /* Nút Mở Lịch Sử */
-        .btn-open-history { width: 100%; height: 56px; background: var(--card-bg); border-radius: var(--border-radius-lg); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: 0 4px 12px rgba(149, 157, 165, 0.08); border: none; font-size: 16px; font-weight: 600; cursor: pointer; color: var(--text-main); transition: 0.2s; }
-        .btn-open-history:active { transform: scale(0.98); }
-        .btn-open-history .left-group { display: flex; align-items: center; gap: 12px; }
-        .btn-open-history .icon-box { width: 36px; height: 36px; background: #eef2ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        /* =========================================
+           7. TAB LỊCH SỬ GIAO DỊCH
+           ========================================= */
+        .history-filters-card { background: #fff; border-radius: var(--border-radius-lg); padding: 20px; box-shadow: 0 8px 24px rgba(149, 157, 165, 0.1); margin-bottom: 8px;}
+        
+        .search-box { position: relative; margin-bottom: 16px;}
+        .search-box svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); }
+        .search-box input { width: 100%; height: 44px; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0 16px 0 44px; font-size: 14px; font-weight: 500; outline: none; background: #f8f9fa; transition: 0.2s; }
+        .search-box input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(67,97,238,0.1); }
+
+        .filter-row { display: flex; gap: 8px; align-items: center;}
+        
+        /* Cải tiến bộ lọc ngày Range & Nút Clear Icon */
+        .filter-date-wrapper { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 10px; height: 44px; flex: 1; overflow: hidden; }
+        .filter-date-wrapper svg { width: 14px; height: 14px; color: var(--text-muted); }
+        .filter-date-wrapper .date-text { font-size: 13px; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
+        .filter-date-wrapper.active { border-color: var(--primary); background: #eef2ff; }
+        .filter-date-wrapper.active svg { color: var(--primary); }
+        .filter-date-wrapper.active .date-text { color: var(--primary); font-weight: 600; }
+        .filter-date-wrapper input[type="date"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        
+        .btn-clear-filter { width: 44px; height: 44px; padding: 0; background: #ffe3e3; color: var(--danger); flex-shrink: 0; border: none; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;}
+        .btn-clear-filter:active { transform: scale(0.9); }
+
+        .transaction-list { display: flex; flex-direction: column; gap: 24px;}
+        .date-group { display: flex; flex-direction: column; gap: 10px; animation: slideIn 0.3s ease forwards; }
+        .date-group-header { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 4px 4px 4px; position: sticky; top: -20px; z-index: 10; background-color: rgba(244, 246, 249, 0.95); backdrop-filter: blur(8px); margin-bottom: 4px; padding-top: 10px; }
+        .date-title { font-weight: 800; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .date-summary { font-size: 13px; font-weight: 700; color: var(--text-muted); }
+        .date-group-items { background: var(--card-bg); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); overflow: hidden; border: 1px solid #f1f3f5;}
+
+        .transaction-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; cursor: pointer; transition: background-color 0.2s; border-bottom: 1px solid #f8f9fa; }
+        .transaction-item:last-child { border-bottom: none; }
+        .transaction-item:active { background: #f8f9fa; }
+        .t-left { display: flex; align-items: center; flex: 1; gap: 16px; overflow: hidden; }
+        .t-icon { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .t-icon svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2;} 
+        
+        .t-info { display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+        .t-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: var(--text-main); }
+        .t-note { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500;}
+        .t-action { display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: 12px; }
+        .t-amount { font-weight: 800; font-size: 16px; letter-spacing: -0.3px;}
+        .t-chevron { color: #cbd5e1; font-size: 22px; font-weight: 300; margin-top: -2px;} 
+        .btn-load-more { width: 100%; height: var(--touch-size); background: #eef2ff; color: var(--primary); border: none; border-radius: var(--border-radius-md); font-weight: 600; margin-top: 8px; cursor: pointer; }
 
         /* =========================================
-           6. POPUP LỊCH SỬ GIAO DỊCH (MODAL)
+           8. TAB THỐNG KÊ (ANALYTICS)
+           ========================================= */
+        .chart-card { background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08); }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .chart-title { font-size: 16px; font-weight: 800; color: var(--text-main); margin: 0; }
+        .chart-subtitle { font-size: 13px; color: var(--text-muted); font-weight: 500; background: var(--bg-color); padding: 4px 10px; border-radius: 12px;}
+        .chart-container { position: relative; width: 100%; height: 250px; }
+        
+        .empty-chart { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: var(--text-muted); text-align: center;}
+        .empty-chart svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
+
+        /* =========================================
+           9. BOTTOM NAVIGATION BAR
+           ========================================= */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #fff;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.05); display: flex; justify-content: space-around;
+            align-items: center; z-index: 900; padding-bottom: env(safe-area-inset-bottom); border-radius: 24px 24px 0 0;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #a0aec0; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 80px;
+        }
+        .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; stroke: currentColor; fill: none; stroke-width: 2.5; transition: 0.2s;}
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active svg { transform: translateY(-2px); }
+
+        /* =========================================
+           10. CÁC POPUP MODALS (MANAGER, ADD CAT)
            ========================================= */
         .history-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 900; opacity: 0; visibility: hidden; transition: 0.3s ease; }
         .history-overlay.show { opacity: 1; visibility: visible; }
         
-        .history-modal { position: fixed; bottom: 0; left: 0; width: 100%; height: 90vh; background: var(--bg-color); border-radius: 24px 24px 0 0; z-index: 901; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); }
+        .history-modal { position: fixed; bottom: 0; left: 0; width: 100%; height: 92vh; background: var(--bg-color); border-radius: 24px 24px 0 0; z-index: 901; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); }
         .history-modal.show { transform: translateY(0); }
         
-        .history-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #fff; border-bottom: 1px solid #e2e8f0; z-index: 2; }
-        .history-modal-header h3 { font-size: 18px; font-weight: 700; margin: 0;}
+        .history-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 16px 20px; background: #fff; z-index: 2; flex-shrink: 0;}
+        .history-modal-header h3 { font-size: 18px; font-weight: 800; margin: 0; letter-spacing: -0.5px;}
         .btn-close-modal { background: #f1f3f5; border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); font-size: 20px; }
         .btn-close-modal:active { background: #e2e8f0; }
 
-        .history-modal-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
-
-        .filter-row { display: flex; gap: 8px; align-items: center; margin-top: 8px;}
-        .history-modal-body .form-control { height: 44px; font-size: 14px; font-weight: 500;}
-        .filter-date-wrapper { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; background: #fff; border: 1px solid #e2e8f0; border-radius: var(--border-radius-md); height: 44px; flex: 1; overflow: hidden; }
-        .filter-date-wrapper svg { width: 16px; height: 16px; color: var(--text-muted); }
-        .filter-date-wrapper .date-text { font-size: 14px; font-weight: 500; color: var(--text-muted); }
-        .filter-date-wrapper.active { border-color: var(--primary); }
-        .filter-date-wrapper.active svg { color: var(--primary); }
-        .filter-date-wrapper.active .date-text { color: var(--primary); font-weight: 600; }
-        .filter-date-wrapper input[type="date"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-        .btn-clear-filter { height: 44px; padding: 0 12px; background: #ffe3e3; color: var(--danger); flex-shrink: 0; border: none; border-radius: var(--border-radius-md); font-weight: 600; font-size: 13px; cursor: pointer; }
+        .cat-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 24px;}
+        .cat-list-header h4 { font-size: 13px; color: var(--text-muted); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;}
+        .cat-list-header:first-of-type { margin-top: 8px; }
         
-        .transaction-list { display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px;}
-        .date-group { display: flex; flex-direction: column; gap: 8px; animation: slideIn 0.3s ease forwards; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-add-cat-inline { width: 32px; height: 32px; border-radius: 50%; background: #eef2ff; color: var(--primary); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;}
+        .btn-add-cat-inline:active { transform: scale(0.9); background: #e2e8f0;}
+        .btn-add-cat-inline svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.5; }
 
-        .date-group-header { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 4px 4px 4px; position: sticky; top: 0; z-index: 10; background-color: rgba(244, 246, 249, 0.95); backdrop-filter: blur(4px); }
-        .date-title { font-weight: 700; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .date-summary { font-size: 13px; font-weight: 600; color: var(--text-muted); }
-        .date-group-items { background: var(--card-bg); border-radius: var(--border-radius-lg); box-shadow: 0 4px 15px rgba(0,0,0,0.03); overflow: hidden; }
+        .cat-list { display: flex; flex-direction: column; gap: 10px; }
+        .cat-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px 12px 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: transform 0.2s, box-shadow 0.2s;}
+        
+        .drag-handle { width: 32px; height: 40px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; cursor: grab; flex-shrink: 0;}
+        .drag-handle:active { cursor: grabbing; }
+        .drag-handle svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2.5;}
+        .sortable-ghost { opacity: 0.4; box-shadow: 0 8px 16px rgba(0,0,0,0.1); transform: scale(0.98); border-color: var(--primary);}
 
-        .transaction-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; cursor: pointer; transition: background-color 0.2s; border-bottom: 1px solid #f1f3f5; }
-        .transaction-item:last-child { border-bottom: none; }
-        .transaction-item:active { background: #f8f9fa; }
-        .t-left { display: flex; align-items: center; flex: 1; gap: 14px; overflow: hidden; }
-        .t-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .t-icon svg { width: 20px; height: 20px; stroke: currentColor; } 
+        .cat-item-left { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 15px; color: var(--text-main);}
+        .cat-item-actions { display: flex; gap: 16px; }
+        .cat-item-actions svg { width: 20px; height: 20px; color: var(--text-muted); cursor: pointer; transition: 0.2s;}
+        .cat-item-actions svg:active { transform: scale(0.9); }
         
-        .t-icon[data-cat="Ăn uống"] { background-color: var(--c-food-bg); color: var(--c-food); }
-        .t-icon[data-cat="Đi lại"] { background-color: var(--c-transport-bg); color: var(--c-transport); }
-        .t-icon[data-cat="Mua sắm"] { background-color: var(--c-shopping-bg); color: var(--c-shopping); }
-        .t-icon[data-cat="Hóa đơn"] { background-color: var(--c-bill-bg); color: var(--c-bill); }
-        .t-icon[data-cat="Tiền bán hàng"] { background-color: var(--c-sales-bg); color: var(--c-sales); }
-        .t-icon[data-cat="Khác"] { background-color: var(--c-other-bg); color: var(--text-main); }
-        
-        .t-info { display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
-        .t-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; color: var(--text-main); }
-        .t-note { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .t-action { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: 12px; }
-        .t-amount { font-weight: 700; font-size: 15px; }
-        .t-chevron { color: #cbd5e1; font-size: 20px; font-weight: 300; margin-top: -2px;} 
-        .btn-load-more { width: 100%; height: var(--touch-size); background: #eef2ff; color: var(--primary); border: none; border-radius: var(--border-radius-md); font-weight: 600; margin-top: 8px; cursor: pointer; }
+        .icon-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 8px; margin-bottom: 20px;}
+        .icon-box { height: 48px; border-radius: 14px; background: #fff; border: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;}
+        .icon-box svg { width: 24px; height: 24px; stroke: var(--text-muted); fill: none; stroke-width: 2;}
+        .icon-box.active { border-color: var(--primary); background: #eef2ff; }
+        .icon-box.active svg { stroke: var(--primary); }
+
+        .color-grid { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; margin-bottom: 30px; justify-content: center;}
+        .color-circle { width: 44px; height: 44px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: 0.2s; box-shadow: 0 0 0 2px #fff inset;}
+        .color-circle.active { transform: scale(1.15); border-color: var(--primary); }
 
         /* =========================================
-           7. ACTION SHEET (BOTTOM MENU)
+           11. ACTION SHEET (BOTTOM MENU)
            ========================================= */
         .sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 998; opacity: 0; visibility: hidden; transition: 0.3s ease; }
         .sheet-overlay.show { opacity: 1; visibility: visible; }
@@ -284,7 +298,7 @@
         .sheet-header { text-align: center; font-weight: 700; font-size: 16px; margin-bottom: 8px; color: var(--text-muted);}
         .sheet-indicator { width: 40px; height: 4px; background: #e2e8f0; border-radius: 4px; margin: 0 auto 16px auto; }
         .sheet-btn { width: 100%; height: 56px; border-radius: 16px; border: none; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
-        .sheet-btn svg { width: 20px; height: 20px; }
+        .sheet-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2;}
         .btn-sheet-edit { background: #eef2ff; color: var(--primary); }
         .btn-sheet-delete { background: var(--danger-light); color: var(--danger); }
         .btn-sheet-cancel { background: #f1f3f5; color: var(--text-main); margin-top: 8px; }
@@ -294,40 +308,29 @@
 </head>
 <body>
 
-<!-- MÀN HÌNH SPLASH CHỜ LOAD DỮ LIỆU ĐỂ TRÁNH NHÁY MÀN HÌNH -->
+<!-- MÀN HÌNH SPLASH -->
 <div id="splashScreen" class="splash-screen">
-    <div class="auth-logo">
-        <svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
-    </div>
-    <h2 class="auth-title">Quản Lý Chi Tiêu</h2>
+    <div class="auth-logo"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg></div>
+    <h2 class="auth-title">QUẢN LÝ CHI TIÊU</h2>
 </div>
 
 <!-- MÀN HÌNH ĐĂNG NHẬP -->
 <div id="authOverlay" class="auth-overlay hide">
     <div class="auth-card">
-        <div class="auth-logo">
-            <svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
-        </div>
-        <h2 class="auth-title">Quản Lý Chi Tiêu</h2>
-        
+        <div class="auth-logo"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg></div>
+        <h2 class="auth-title">QUẢN LÝ CHI TIÊU</h2>
         <form id="authForm">
             <div class="auth-input-group">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 <input type="text" id="usernameInput" class="auth-form-control" placeholder="Tài khoản" required>
             </div>
-            
             <div class="auth-input-group">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <input type="password" id="passwordInput" class="auth-form-control" placeholder="Mật khẩu" required minlength="6">
             </div>
-            
             <div class="auth-options">
-                <label class="checkbox-group">
-                    <input type="checkbox" id="rememberMe">
-                    <span>Ghi nhớ tài khoản</span>
-                </label>
+                <label class="checkbox-group"><input type="checkbox" id="rememberMe"><span>Ghi nhớ tài khoản</span></label>
             </div>
-            
             <button type="button" id="btnLogin" class="btn-auth btn-login">
                 Đăng nhập
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
@@ -339,187 +342,179 @@
 <!-- POPUP ĐỔI MẬT KHẨU -->
 <div id="changePwdOverlay" class="auth-overlay hide">
     <div class="auth-card">
-        <h2 class="auth-title" style="margin-bottom: 16px;">Đổi Mật Khẩu</h2>
+        <h2 class="auth-title" style="margin-bottom: 24px; font-size: 18px;">ĐỔI MẬT KHẨU</h2>
         <form id="changePwdForm">
+            <div class="auth-input-group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <input type="password" id="oldPasswordInput" class="auth-form-control" placeholder="Mật khẩu hiện tại" required>
+            </div>
             <div class="auth-input-group">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <input type="password" id="newPasswordInput" class="auth-form-control" placeholder="Mật khẩu mới (từ 6 ký tự)" required minlength="6">
             </div>
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
                 <button type="button" id="btnCancelChangePwd" class="btn-auth btn-cancel" style="flex: 1;">Hủy</button>
-                <button type="button" id="btnSubmitChangePwd" class="btn-auth btn-login" style="flex: 1; margin: 0;">Lưu</button>
+                <button type="button" id="btnSubmitChangePwd" class="btn-auth btn-login" style="flex: 1.5; margin: 0;">Lưu Mật Khẩu</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- TOAST THÔNG BÁO CAO NHẤT -->
+<!-- TOAST THÔNG BÁO -->
 <div class="toast" id="toastMsg">✓ Thành công!</div>
 
+<!-- MAIN APP CONTAINER -->
 <div class="app-container">
     
     <!-- HEADER CÓ AVATAR -->
     <div class="top-nav">
-        <h1>Quản Lý Chi Tiêu</h1>
-        
+        <h1>QUẢN LÝ CHI TIÊU</h1>
         <div class="user-menu" id="userMenu">
-            <button class="avatar-btn" id="btnAvatar">
-                <img src="" alt="Avatar" id="avatarImg">
-            </button>
-            
+            <button class="avatar-btn" id="btnAvatar"><img src="" alt="Avatar" id="avatarImg"></button>
             <div class="dropdown-menu" id="dropdownMenu">
-                <div class="dropdown-header">
-                    <span class="dropdown-name" id="dropdownName">Tài khoản</span>
-                </div>
+                <div class="dropdown-header"><span class="dropdown-name" id="dropdownName">TÀI KHOẢN</span></div>
+                
+                <button class="dropdown-item" id="btnOpenCatManager">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<circle cx="12" cy="12" r="3"></circle>
+						<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+					</svg>
+					Quản lý danh mục
+				</button>
                 <button class="dropdown-item" id="btnOpenChangePwd">
-                    <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
-                    Đổi mật khẩu
+                    <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg> Đổi mật khẩu
                 </button>
                 <button class="dropdown-item text-danger" id="btnLogout">
-                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                    Đăng xuất
+                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Đăng xuất
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- BẢNG TỔNG QUAN -->
-    <div class="wallet-card">
-        <div class="card-header">
-            <span>Tổng số dư</span>
-            <button class="btn-eye" id="btnToggleEye">
-                <svg id="iconEyeOpen" class="hide" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                <svg id="iconEyeClosed" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-            </button>
+    <!-- ========================================= -->
+    <!-- TAB 1: NHẬP LIỆU (HOME)                   -->
+    <!-- ========================================= -->
+    <div id="homeView" class="view-section active">
+        
+        <div class="wallet-card">
+            <div class="card-header">
+                <span>Tổng số dư</span>
+                <button class="btn-eye" id="btnToggleEye">
+                    <svg id="iconEyeOpen" class="hide" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <svg id="iconEyeClosed" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                </button>
+            </div>
+            <div class="card-balance" id="totalBalance">******</div>
+            <div class="card-stats">
+                <div class="stat-col">
+                    <span class="stat-label">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg> Tổng Thu
+                    </span>
+                    <span class="stat-val in" id="totalIncome">******</span>
+                </div>
+                <div class="stat-col">
+                    <span class="stat-label">
+                        Tổng Chi
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                    </span>
+                    <span class="stat-val out" id="totalExpense">******</span>
+                </div>
+            </div>
         </div>
-        <div class="card-balance" id="totalBalance">******</div>
-        <div class="card-stats">
-            <div class="stat-col">
-                <span class="stat-label">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-                    Tổng Thu
-                </span>
-                <span class="stat-val in" id="totalIncome">******</span>
-            </div>
-            <div class="stat-col">
-                <span class="stat-label">
-                    Tổng Chi
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-                </span>
-                <span class="stat-val out" id="totalExpense">******</span>
-            </div>
-        </div>
-    </div>
 
-    <!-- FORM THÊM / SỬA -->
-    <div class="card" id="formCard">
-        <form id="transactionForm">
-            <div class="type-toggle">
-                <button type="button" class="btn-toggle active income" data-type="income">Tiền Thu</button>
-                <button type="button" class="btn-toggle expense" data-type="expense">Tiền Chi</button>
-            </div>
-            <input type="hidden" id="typeInput" value="income">
-            
-            <div class="form-group">
-                <div class="modern-date-wrapper">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    <span class="date-text" id="formDateDisplay">Hôm nay</span>
-                    <input type="date" id="dateInput" required>
+        <div class="card" id="formCard">
+            <form id="transactionForm">
+                <div class="type-toggle">
+                    <button type="button" class="btn-toggle active income" data-type="income">Tiền Thu</button>
+                    <button type="button" class="btn-toggle expense" data-type="expense">Tiền Chi</button>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <div class="amount-wrapper">
-                    <input type="text" id="amountInputDisplay" class="form-control input-amount" placeholder="0" inputmode="numeric" required>
-                    <span class="amount-currency">đ</span>
-                </div>
-                <input type="hidden" id="amountInputRaw" required>
-                <div class="quick-amounts">
-                    <button type="button" class="btn-quick" data-val="10000">+10K</button>
-                    <button type="button" class="btn-quick" data-val="20000">+20K</button>
-                    <button type="button" class="btn-quick" data-val="50000">+50K</button>
-                    <button type="button" class="btn-quick" data-val="100000">+100K</button>
-                    <button type="button" class="btn-quick" data-val="500000">+500K</button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <div class="category-scroll" id="categoryScroll">
-                    <div class="cat-pill opt-income active" data-val="Tiền bán hàng">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg> Tiền bán hàng
-                    </div>
-                    <div class="cat-pill opt-expense hide" data-val="Ăn uống">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg> Ăn uống
-                    </div>
-                    <div class="cat-pill opt-expense hide" data-val="Đi lại">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="12" width="20" height="8" rx="2" ry="2"></rect><polygon points="2 12 5 7 19 7 22 12"></polygon><circle cx="6" cy="20" r="2"></circle><circle cx="18" cy="20" r="2"></circle></svg> Đi lại
-                    </div>
-                    <div class="cat-pill opt-expense hide" data-val="Mua sắm">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg> Mua sắm
-                    </div>
-                    <div class="cat-pill opt-expense hide" data-val="Hóa đơn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Hóa đơn
-                    </div>
-                    <div class="cat-pill" data-val="Khác">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> Khác
-                    </div>
-                </div>
-                <input type="hidden" id="categoryInput" value="Tiền bán hàng" required>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <input type="text" id="noteInput" class="form-control" placeholder="Ghi chú (Không bắt buộc)">
-            </div>
-            
-            <button type="submit" class="btn-submit" id="submitBtn">Thêm giao dịch</button>
-            <button type="button" id="cancelEditBtn" class="btn-clear-filter hide" style="width: 100%; margin-top: 12px; justify-content: center; height: 48px;">Hủy chỉnh sửa</button>
-        </form>
-    </div>
-
-    <!-- NÚT MỞ POPUP LỊCH SỬ GIAO DỊCH -->
-    <button type="button" class="btn-open-history" id="btnOpenHistory">
-        <div class="left-group">
-            <div class="icon-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-            </div>
-            <span>Xem lịch sử giao dịch</span>
-        </div>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><polyline points="9 18 15 12 9 6"></polyline></svg>
-    </button>
-</div>
-
-<!-- ========================================= -->
-<!-- POPUP LỊCH SỬ GIAO DỊCH (MODAL)           -->
-<!-- ========================================= -->
-<div class="history-overlay" id="historyOverlay"></div>
-<div class="history-modal" id="historyModal">
-    <div class="history-modal-header">
-        <h3>Lịch sử giao dịch</h3>
-        <button class="btn-close-modal" id="btnCloseHistory">&times;</button>
-    </div>
-    
-    <div class="history-modal-body" id="historyModalBody">
-        <!-- Vùng tìm kiếm & lọc -->
-        <div>
-            <input type="text" id="searchInput" class="form-control" placeholder="Tìm tên, ghi chú..." style="margin-bottom: 8px;">
-            <div class="filter-row">
-                <select id="filterCategory" class="form-control" style="flex: 1;">
-                    <option value="">Mọi danh mục</option>
-                    <option value="Tiền bán hàng">Tiền bán hàng</option>
-                    <option value="Ăn uống">Ăn uống</option>
-                    <option value="Đi lại">Đi lại</option>
-                    <option value="Mua sắm">Mua sắm</option>
-                    <option value="Hóa đơn">Hóa đơn</option>
-                    <option value="Khác">Khác</option>
-                </select>
+                <input type="hidden" id="typeInput" value="income">
                 
-                <div class="filter-date-wrapper" id="filterDateWrapper">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    <span class="date-text" id="filterDateDisplay">Lọc ngày</span>
-                    <input type="date" id="filterDate">
+                <div class="form-group">
+                    <div class="modern-date-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        <span class="date-text" id="formDateDisplay">Hôm nay</span>
+                        <input type="date" id="dateInput" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="amount-wrapper">
+                        <input type="text" id="amountInputDisplay" class="form-control input-amount" placeholder="0" inputmode="numeric" required>
+                        <span class="amount-currency">đ</span>
+                    </div>
+                    <input type="hidden" id="amountInputRaw" required>
+                    <div class="quick-amounts">
+                        <button type="button" class="btn-quick" data-val="10000">+10K</button>
+                        <button type="button" class="btn-quick" data-val="20000">+20K</button>
+                        <button type="button" class="btn-quick" data-val="50000">+50K</button>
+                        <button type="button" class="btn-quick" data-val="100000">+100K</button>
+                        <button type="button" class="btn-quick" data-val="500000">+500K</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="category-scroll" id="categoryScroll">
+                        <div class="loading-text" style="font-size: 13px;">Đang tải danh mục...</div>
+                    </div>
+                    <input type="hidden" id="categoryIdInput" required>
+                    <input type="hidden" id="categoryNameInput" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <input type="text" id="noteInput" class="form-control" placeholder="Ghi chú (Không bắt buộc)">
                 </div>
                 
-                <button id="clearFilterBtn" class="btn-clear-filter hide">Bỏ lọc</button>
+                <button type="submit" class="btn-submit" id="submitBtn">Thêm giao dịch</button>
+                <button type="button" id="cancelEditBtn" class="btn-clear-filter hide" style="width: 100%; margin-top: 12px; justify-content: center; height: 48px;">Hủy chỉnh sửa</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- TAB 2: LỊCH SỬ (HISTORY) CẢI TIẾN TỐI ƯU  -->
+    <!-- ========================================= -->
+    <div id="historyView" class="view-section">
+        <div class="history-filters-card">
+            
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="searchInput" placeholder="Tìm tên, ghi chú...">
+            </div>
+
+            <!-- BỘ LỌC DANH MỤC SCROLL NGANG XỊN XÒ -->
+            <div class="category-scroll" id="historyCategoryFilter" style="margin-top: 12px; padding-bottom: 0;">
+                <!-- Dữ liệu được nạp bằng JS -->
+                <div class="cat-pill active" data-filter="">Tất cả</div>
+            </div>
+
+            <!-- BỘ LỌC NGÀY TRÊN 1 HÀNG -->
+            <div class="filter-row" style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
+                <div class="filter-date-wrapper" id="filterStartDateWrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <span class="date-text" id="filterStartDateDisplay">Từ ngày</span>
+                    <input type="date" id="filterStartDate">
+                </div>
+                
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted); flex-shrink: 0;"><path d="M5 12h14"></path></svg>
+                
+                <div class="filter-date-wrapper" id="filterEndDateWrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <span class="date-text" id="filterEndDateDisplay">Đến ngày</span>
+                    <input type="date" id="filterEndDate">
+                </div>
+                
+                <!-- NÚT BỎ LỌC (ICON) -->
+                <button id="clearFilterBtn" class="btn-clear-filter hide" title="Bỏ lọc">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <!-- TỔNG KẾT RIÊNG CHO MỤC ĐANG LỌC -->
+            <div id="filteredSummary" class="hide" style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; font-size: 14px; font-weight: 700;">
+                <span class="text-success" id="filterSumInc">+0đ</span>
+                <span class="text-danger" id="filterSumExp">-0đ</span>
+                <span style="color: var(--primary)" id="filterSumBal">Dư: 0đ</span>
             </div>
         </div>
         
@@ -527,20 +522,134 @@
             <div class="loading-text">Đang tải dữ liệu...</div>
         </div>
     </div>
+
+    <!-- ========================================= -->
+    <!-- TAB 3: THỐNG KÊ (ANALYTICS)               -->
+    <!-- ========================================= -->
+    <div id="analyticsView" class="view-section">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Cơ cấu chi tiêu</h3>
+                <span class="chart-subtitle">Tháng này</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="pieChart"></canvas>
+            </div>
+            <div id="pieEmptyState" class="empty-chart hide">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <p>Chưa có dữ liệu chi tiêu tháng này</p>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Thu / Chi</h3>
+                <span class="chart-subtitle">7 ngày qua</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div> <!-- HẾT APP CONTAINER -->
+
+<!-- BOTTOM NAVIGATION BAR -->
+<div class="bottom-nav">
+    <div class="nav-item active" id="tabHome">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>Nhập liệu</span>
+    </div>
+    <div class="nav-item" id="tabHistory">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>Lịch sử</span>
+    </div>
+    <div class="nav-item" id="tabStats">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span>Thống kê</span>
+    </div>
 </div>
 
 <!-- ========================================= -->
-<!-- ACTION SHEET (CHỈNH SỬA / XÓA)            -->
+<!-- POPUP QUẢN LÝ DANH MỤC TỔNG               -->
+<!-- ========================================= -->
+<div class="history-overlay" id="catManagerOverlay"></div>
+<div class="history-modal" id="catManagerModal" style="height: 85vh;">
+    <div class="history-modal-header">
+        <h3>Quản lý Danh mục</h3>
+        <button class="btn-close-modal" onclick="closeCatManager()">&times;</button>
+    </div>
+    
+    <div class="history-modal-body" style="background: var(--bg-color)">
+        <div class="cat-list-header">
+            <h4>Tiền Chi</h4>
+            <button class="btn-add-cat-inline" onclick="openCatForm(null, 'expense')" title="Thêm mục chi">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+        </div>
+        <div class="cat-list" id="expenseCatList"></div>
+        
+        <div class="cat-list-header">
+            <h4>Tiền Thu</h4>
+            <button class="btn-add-cat-inline" onclick="openCatForm(null, 'income')" title="Thêm mục thu">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+        </div>
+        <div class="cat-list" id="incomeCatList"></div>
+    </div>
+</div>
+
+<!-- ========================================= -->
+<!-- POPUP FORM THÊM / SỬA 1 DANH MỤC          -->
+<!-- ========================================= -->
+<div class="history-overlay" id="catFormOverlay" style="z-index: 10001;"></div>
+<div class="history-modal" id="catFormModal" style="z-index: 10002; height: 95vh;">
+    <div class="history-modal-header">
+        <h3 id="catFormTitle">Thêm danh mục</h3>
+        <button class="btn-close-modal" onclick="closeCatForm()">&times;</button>
+    </div>
+    
+    <div class="history-modal-body" style="background: #fff">
+        <div class="form-group">
+            <input type="text" id="catNameInput" class="form-control" placeholder="Tên danh mục (VD: Đóng học phí)" required>
+        </div>
+        
+        <div class="type-toggle" style="margin-bottom: 24px;">
+            <button type="button" class="btn-toggle active income" id="btnCatTypeInc" onclick="setCatFormType('income')">Tiền Thu</button>
+            <button type="button" class="btn-toggle expense" id="btnCatTypeExp" onclick="setCatFormType('expense')">Tiền Chi</button>
+        </div>
+        <input type="hidden" id="catFormTypeInput" value="income">
+
+        <h4 style="font-size: 14px; color: var(--text-muted);">Chọn Icon</h4>
+        <div class="icon-grid" id="iconGrid"></div>
+        <input type="hidden" id="catIconInput">
+
+        <h4 style="font-size: 14px; color: var(--text-muted);">Chọn Màu Sắc</h4>
+        <div class="color-grid" id="colorGrid"></div>
+        <input type="hidden" id="catColorInput">
+
+        <div style="display: flex; justify-content: center; margin-top: 10px; margin-bottom: 30px;">
+            <button class="btn-login" id="btnSaveCat" style="width: auto; min-width: 200px; border-radius: 26px; margin: 0;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Lưu danh mục
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ========================================= -->
+<!-- ACTION SHEET (SỬA / XÓA GIAO DỊCH)        -->
 <!-- ========================================= -->
 <div class="sheet-overlay" id="sheetOverlay"></div>
 <div class="bottom-sheet" id="actionSheet">
     <div class="sheet-indicator"></div>
     <div class="sheet-header" id="sheetHeaderTitle">Tùy chọn giao dịch</div>
     <button class="sheet-btn btn-sheet-edit" id="btnSheetEdit">
-        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> Chỉnh sửa
+        <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> Chỉnh sửa
     </button>
     <button class="sheet-btn btn-sheet-delete" id="btnSheetDelete">
-        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Xóa giao dịch
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Xóa giao dịch
     </button>
     <button class="sheet-btn btn-sheet-cancel" id="btnSheetCancel">Đóng</button>
 </div>
@@ -563,18 +672,52 @@
     const db = firebase.database();
     const auth = firebase.auth();
     let txRef = null;
+    let catRef = null;
     let currentUser = null;
 
     // ==========================================
-    // 2. SVG ICONS & FORMATTERS
+    // 2. CẤU HÌNH GIAO DIỆN & CHART.JS
     // ==========================================
-    const svgIcons = {
-        'Ăn uống': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`,
-        'Đi lại': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="12" width="20" height="8" rx="2" ry="2"></rect><polygon points="2 12 5 7 19 7 22 12"></polygon><circle cx="6" cy="20" r="2"></circle><circle cx="18" cy="20" r="2"></circle></svg>`,
-        'Mua sắm': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`,
-        'Hóa đơn': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
-        'Tiền bán hàng': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>`,
-        'Khác': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`
+    Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    Chart.defaults.color = '#8d99ae';
+    
+    let pieChartInstance = null;
+    let barChartInstance = null;
+
+    const SVG_LIB = {
+        'food': `<svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`,
+        'transport': `<svg viewBox="0 0 24 24"><rect x="2" y="12" width="20" height="8" rx="2" ry="2"></rect><polygon points="2 12 5 7 19 7 22 12"></polygon><circle cx="6" cy="20" r="2"></circle><circle cx="18" cy="20" r="2"></circle></svg>`,
+        'shopping': `<svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`,
+        'bill': `<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+        'sales': `<svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>`,
+        'salary': `<svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`,
+        'home': `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`,
+        'gift': `<svg viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>`,
+        'health': `<svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>`,
+        'education': `<svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`,
+        'tool': `<svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>`,
+        'other': `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`
+    };
+
+    const THEMES = {
+        'theme-orange': { color: 'var(--c-orange)', bg: 'var(--bg-orange)', hex: '#ff9f43' },
+        'theme-blue': { color: 'var(--c-blue)', bg: 'var(--bg-blue)', hex: '#0abde3' },
+        'theme-pink': { color: 'var(--c-pink)', bg: 'var(--bg-pink)', hex: '#f368e0' },
+        'theme-purple': { color: 'var(--c-purple)', bg: 'var(--bg-purple)', hex: '#5f27cd' },
+        'theme-green': { color: 'var(--c-green)', bg: 'var(--bg-green)', hex: '#10ac84' },
+        'theme-red': { color: 'var(--c-red)', bg: 'var(--bg-red)', hex: '#e74c3c' },
+        'theme-gray': { color: 'var(--text-main)', bg: 'var(--bg-gray)', hex: '#8395a7' }
+    };
+
+    const DEFAULT_CATEGORIES = {
+        'exp_food': { name: 'Ăn uống', type: 'expense', icon: 'food', color: 'theme-orange', order: 1 },
+        'exp_transport': { name: 'Đi lại', type: 'expense', icon: 'transport', color: 'theme-blue', order: 2 },
+        'exp_shopping': { name: 'Mua sắm', type: 'expense', icon: 'shopping', color: 'theme-pink', order: 3 },
+        'exp_bill': { name: 'Hóa đơn', type: 'expense', icon: 'bill', color: 'theme-purple', order: 4 },
+        'inc_sales': { name: 'Tiền bán hàng', type: 'income', icon: 'sales', color: 'theme-green', order: 1 },
+        'inc_salary': { name: 'Tiền lương', type: 'income', icon: 'salary', color: 'theme-blue', order: 2 },
+        'inc_other': { name: 'Khác', type: 'income', icon: 'other', color: 'theme-gray', order: 3 },
+        'exp_other': { name: 'Khác', type: 'expense', icon: 'other', color: 'theme-gray', order: 5 }
     };
 
     const formatter = new Intl.NumberFormat('vi-VN'); 
@@ -603,45 +746,91 @@
             case 'auth/wrong-password': return 'Sai mật khẩu!';
             case 'auth/user-not-found': return 'Tài khoản không tồn tại!';
             case 'auth/invalid-credential': return 'Thông tin đăng nhập không chính xác!';
-            case 'auth/requires-recent-login': return 'Vì lý do bảo mật, vui lòng đăng xuất và đăng nhập lại trước khi đổi mật khẩu.';
             default: return 'Có lỗi xảy ra. Vui lòng thử lại!';
         }
     }
 
     // ==========================================
-    // 3. LOGIC AUTH & AVATAR MENU
+    // 3. ĐIỀU HƯỚNG TAB (BOTTOM NAVIGATION)
+    // ==========================================
+    const tabHome = document.getElementById('tabHome');
+    const tabHistory = document.getElementById('tabHistory');
+    const tabStats = document.getElementById('tabStats');
+    
+    const homeView = document.getElementById('homeView');
+    const historyView = document.getElementById('historyView');
+    const analyticsView = document.getElementById('analyticsView');
+
+    function switchTab(tabName) {
+        [tabHome, tabHistory, tabStats].forEach(t => t.classList.remove('active'));
+        [homeView, historyView, analyticsView].forEach(v => v.classList.remove('active'));
+
+        if (tabName === 'home') {
+            tabHome.classList.add('active'); homeView.classList.add('active');
+        } else if (tabName === 'history') {
+            tabHistory.classList.add('active'); historyView.classList.add('active');
+        } else if (tabName === 'stats') {
+            tabStats.classList.add('active'); analyticsView.classList.add('active');
+            renderCharts();
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    tabHome.addEventListener('click', () => switchTab('home'));
+    tabHistory.addEventListener('click', () => switchTab('history'));
+    tabStats.addEventListener('click', () => switchTab('stats'));
+
+    // ==========================================
+    // 4. LOGIC AUTH & TẢI DỮ LIỆU ĐỘNG
     // ==========================================
     let transactions = [];
+    let categories = [];
     let editingId = null; 
     let selectedSheetId = null;
+    let editingCatId = null; 
+    
     const DATES_PER_PAGE = 3; 
     let currentDateLimit = DATES_PER_PAGE;
     let isBalanceHidden = true; 
     let currentBalances = { total: 0, income: 0, expense: 0 };
-    
     let isFirstLoad = true;
+    
+    let incSortable = null;
+    let expSortable = null;
 
-    // Tự động điền mật khẩu đã lưu
     window.addEventListener('DOMContentLoaded', () => {
         if(localStorage.getItem('savedUsername')) {
             document.getElementById('usernameInput').value = localStorage.getItem('savedUsername');
             document.getElementById('passwordInput').value = localStorage.getItem('savedPassword');
             document.getElementById('rememberMe').checked = true;
         }
+        initCatFormGrids(); 
     });
 
-    // Lắng nghe trạng thái đăng nhập
     auth.onAuthStateChanged(user => {
         if (user) {
             currentUser = user;
             document.getElementById('authOverlay').classList.add('hide'); 
             
-            // Xử lý tạo Avatar
             const username = user.email.split('@')[0];
-            document.getElementById('dropdownName').innerText = 'Xin chào, ' + username;
+            document.getElementById('dropdownName').innerText = ('XIN CHÀO, ' + username).toUpperCase();
             document.getElementById('avatarImg').src = `https://ui-avatars.com/api/?name=${username}&background=4361ee&color=fff&bold=true`;
 
-            // Tải dữ liệu Firebase
+            catRef = db.ref(`users/${currentUser.uid}/categories`);
+            catRef.on('value', (snap) => {
+                if(!snap.exists()) {
+                    catRef.set(DEFAULT_CATEGORIES);
+                } else {
+                    const data = snap.val();
+                    categories = Object.keys(data).map(k => ({id: k, ...data[k]}));
+                    categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    
+                    renderCategoryUI();
+                    switchType(document.getElementById('typeInput').value);
+                    if(transactions.length > 0) { updateUI(); renderCharts(); }
+                }
+            });
+
             txRef = db.ref(`users/${currentUser.uid}/transactions`);
             txRef.on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -655,21 +844,23 @@
                 }
                 transactions = loadedTransactions;
                 updateUI();
+                renderCharts(); 
             });
         } else {
             currentUser = null;
             document.getElementById('authOverlay').classList.remove('hide'); 
-            transactions = []; updateUI();
+            transactions = []; categories = []; updateUI();
+            
+            if(pieChartInstance) pieChartInstance.destroy();
+            if(barChartInstance) barChartInstance.destroy();
         }
         
-        // Tắt Splash screen
         if (isFirstLoad) {
             document.getElementById('splashScreen').classList.add('hide');
             isFirstLoad = false;
         }
     });
 
-    // Xử lý nút Đăng nhập
     document.getElementById('btnLogin').addEventListener('click', () => {
         const username = document.getElementById('usernameInput').value.trim();
         const pwd = document.getElementById('passwordInput').value;
@@ -693,71 +884,51 @@
             .catch(err => showToast(getAuthErrorVN(err.code), 'error'));
     });
 
-    // Toggle Dropdown Menu Avatar
     const btnAvatar = document.getElementById('btnAvatar');
     const dropdownMenu = document.getElementById('dropdownMenu');
     
-    btnAvatar.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dropdownMenu.classList.toggle('show');
-    });
+    btnAvatar.addEventListener('click', (e) => { e.stopPropagation(); dropdownMenu.classList.toggle('show'); });
+    document.addEventListener('click', (e) => { if(!dropdownMenu.contains(e.target) && e.target !== btnAvatar) dropdownMenu.classList.remove('show'); });
 
-    // Đóng dropdown khi click ra ngoài
-    document.addEventListener('click', (e) => {
-        if(!dropdownMenu.contains(e.target) && e.target !== btnAvatar) {
-            dropdownMenu.classList.remove('show');
-        }
-    });
-
-    // Đăng xuất từ menu dropdown
     document.getElementById('btnLogout').addEventListener('click', () => {
         dropdownMenu.classList.remove('show');
         if(confirm('Bạn muốn đăng xuất?')) {
-            auth.signOut().then(() => { if(txRef) txRef.off(); showToast('Đã đăng xuất'); });
+            auth.signOut().then(() => { if(txRef) txRef.off(); if(catRef) catRef.off(); showToast('Đã đăng xuất'); switchTab('home');});
         }
     });
 
-    // Xử lý Popup Đổi Mật Khẩu
     const changePwdOverlay = document.getElementById('changePwdOverlay');
-    
-    document.getElementById('btnOpenChangePwd').addEventListener('click', () => {
-        dropdownMenu.classList.remove('show');
-        changePwdOverlay.classList.remove('hide');
-    });
-
-    document.getElementById('btnCancelChangePwd').addEventListener('click', () => {
-        changePwdOverlay.classList.add('hide');
-        document.getElementById('newPasswordInput').value = '';
-    });
+    document.getElementById('btnOpenChangePwd').addEventListener('click', () => { dropdownMenu.classList.remove('show'); changePwdOverlay.classList.remove('hide'); });
+    document.getElementById('btnCancelChangePwd').addEventListener('click', () => { changePwdOverlay.classList.add('hide'); document.getElementById('oldPasswordInput').value = ''; document.getElementById('newPasswordInput').value = ''; });
 
     document.getElementById('btnSubmitChangePwd').addEventListener('click', () => {
+        const oldPwd = document.getElementById('oldPasswordInput').value;
         const newPwd = document.getElementById('newPasswordInput').value;
-        if(newPwd.length < 6) { showToast('Mật khẩu phải từ 6 ký tự!', 'error'); return; }
+        if(!oldPwd) { showToast('Vui lòng nhập mật khẩu hiện tại!', 'error'); return; }
+        if(newPwd.length < 6) { showToast('Mật khẩu mới phải từ 6 ký tự!', 'error'); return; }
 
-        currentUser.updatePassword(newPwd).then(() => {
-            showToast('Đổi mật khẩu thành công!');
-            changePwdOverlay.classList.add('hide');
-            document.getElementById('newPasswordInput').value = '';
-            // Cập nhật pass đã lưu nếu đang dùng ghi nhớ
-            if(localStorage.getItem('savedUsername')) {
-                localStorage.setItem('savedPassword', newPwd);
-            }
+        const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, oldPwd);
+        currentUser.reauthenticateWithCredential(credential).then(() => {
+            currentUser.updatePassword(newPwd).then(() => {
+                showToast('Đổi mật khẩu thành công!');
+                changePwdOverlay.classList.add('hide');
+                document.getElementById('oldPasswordInput').value = ''; document.getElementById('newPasswordInput').value = '';
+                if(localStorage.getItem('savedUsername')) localStorage.setItem('savedPassword', newPwd);
+            }).catch((error) => { showToast(getAuthErrorVN(error.code), 'error'); });
         }).catch((error) => {
-            showToast(getAuthErrorVN(error.code), 'error');
+            if(error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') showToast('Mật khẩu hiện tại không đúng!', 'error');
+            else showToast(getAuthErrorVN(error.code), 'error');
         });
     });
 
+    document.getElementById('btnOpenCatManager').addEventListener('click', () => {
+        dropdownMenu.classList.remove('show'); openCatManager();
+    });
 
-    // ==========================================
-    // 4. MẮT (ẨN/HIỆN SỐ DƯ) & MỞ POPUP LỊCH SỬ
-    // ==========================================
     document.getElementById('btnToggleEye').addEventListener('click', () => {
         isBalanceHidden = !isBalanceHidden;
-        if(isBalanceHidden) {
-            document.getElementById('iconEyeOpen').classList.add('hide'); document.getElementById('iconEyeClosed').classList.remove('hide');
-        } else {
-            document.getElementById('iconEyeOpen').classList.remove('hide'); document.getElementById('iconEyeClosed').classList.add('hide');
-        }
+        if(isBalanceHidden) { document.getElementById('iconEyeOpen').classList.add('hide'); document.getElementById('iconEyeClosed').classList.remove('hide'); } 
+        else { document.getElementById('iconEyeOpen').classList.remove('hide'); document.getElementById('iconEyeClosed').classList.add('hide'); }
         renderBalances();
     });
 
@@ -773,41 +944,250 @@
         }
     }
 
-    const historyOverlay = document.getElementById('historyOverlay');
-    const historyModal = document.getElementById('historyModal');
+    // ==========================================
+    // 5. RENDER & QUẢN LÝ DANH MỤC ĐỘNG
+    // ==========================================
+    function renderCategoryUI() {
+        // 1. Render Form Nhập liệu (Scroll ngang)
+        const scroll = document.getElementById('categoryScroll');
+        scroll.innerHTML = '';
+        
+        categories.forEach(c => {
+            const div = document.createElement('div');
+            div.className = `cat-pill opt-${c.type} hide`;
+            div.setAttribute('data-id', c.id);
+            div.setAttribute('data-val', c.name);
+            div.style.setProperty('--cat-color', THEMES[c.color].color);
+            div.style.setProperty('--cat-bg', THEMES[c.color].bg);
+            div.innerHTML = `<div class="pill-icon" style="color: var(--cat-color)">${SVG_LIB[c.icon]}</div> ${c.name}`;
+            
+            div.onclick = () => {
+                document.querySelectorAll('#categoryScroll .cat-pill').forEach(p => p.classList.remove('active'));
+                div.classList.add('active');
+                document.getElementById('categoryIdInput').value = c.id;
+                document.getElementById('categoryNameInput').value = c.name;
+                div.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            };
+            scroll.appendChild(div);
+        });
 
-    function closeHistoryModal() { historyOverlay.classList.remove('show'); historyModal.classList.remove('show'); }
-    
-    document.getElementById('btnOpenHistory').addEventListener('click', () => {
-        historyOverlay.classList.add('show'); historyModal.classList.add('show');
+        // 2. Render Bộ Lọc Lịch Sử (Scroll ngang)
+        const histCatScroll = document.getElementById('historyCategoryFilter');
+        const currentFilter = histCatScroll.querySelector('.cat-pill.active')?.getAttribute('data-filter') || '';
+        histCatScroll.innerHTML = '<div class="cat-pill active" data-filter="">Tất cả</div>';
+        
+        categories.forEach(c => {
+            const theme = THEMES[c.color];
+            histCatScroll.innerHTML += `
+                <div class="cat-pill" data-filter="${c.name}">
+                    <div class="pill-icon" style="color: ${theme.color}">${SVG_LIB[c.icon]}</div> ${c.name}
+                </div>
+            `;
+        });
+        
+        let foundActive = false;
+        histCatScroll.querySelectorAll('.cat-pill').forEach(pill => {
+            if(pill.getAttribute('data-filter') === currentFilter) {
+                pill.classList.add('active');
+                foundActive = true;
+            } else {
+                pill.classList.remove('active');
+            }
+            
+            pill.addEventListener('click', () => {
+                histCatScroll.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                currentDateLimit = DATES_PER_PAGE;
+                updateUI();
+            });
+        });
+        if(!foundActive) histCatScroll.querySelector('.cat-pill[data-filter=""]').classList.add('active');
+
+        // 3. Render Quản lý danh mục List
+        const incList = document.getElementById('incomeCatList');
+        const expList = document.getElementById('expenseCatList');
+        incList.innerHTML = ''; expList.innerHTML = '';
+        
+        categories.forEach(c => {
+            const theme = THEMES[c.color];
+            const itemHTML = `
+                <div class="cat-item" data-id="${c.id}">
+                    <div class="cat-item-left">
+                        <div class="drag-handle" title="Kéo để sắp xếp"><svg viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line></svg></div>
+                        <div class="cat-item-icon" style="background-color: ${theme.bg}; color: ${theme.color}; width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center;">
+                            <svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SVG_LIB[c.icon].match(/<svg[^>]*>([\s\S]*?)<\/svg>/)[1]}</svg>
+                        </div>
+                        ${c.name}
+                    </div>
+                    <div class="cat-item-actions">
+                        <svg onclick="openCatForm('${c.id}')" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        <svg onclick="deleteCat('${c.id}')" style="color:var(--danger)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </div>
+                </div>
+            `;
+            if(c.type === 'income') incList.innerHTML += itemHTML;
+            else expList.innerHTML += itemHTML;
+        });
+
+        initSortable();
+    }
+
+    function initSortable() {
+        if(expSortable) expSortable.destroy();
+        if(incSortable) incSortable.destroy();
+
+        const opt = {
+            handle: '.drag-handle',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function (evt) { saveCategoryOrder(evt.to.id); }
+        };
+
+        expSortable = new Sortable(document.getElementById('expenseCatList'), opt);
+        incSortable = new Sortable(document.getElementById('incomeCatList'), opt);
+    }
+
+    function saveCategoryOrder(listId) {
+        const listEl = document.getElementById(listId);
+        const items = listEl.querySelectorAll('.cat-item');
+        const updates = {};
+        
+        items.forEach((item, index) => {
+            const catId = item.getAttribute('data-id');
+            updates[`${catId}/order`] = index;
+        });
+
+        if (Object.keys(updates).length > 0) {
+            db.ref(`users/${currentUser.uid}/categories`).update(updates).catch(err => showToast('Lỗi lưu thứ tự', 'error'));
+        }
+    }
+
+    function initCatFormGrids() {
+        const iGrid = document.getElementById('iconGrid');
+        iGrid.innerHTML = '';
+        for(let key in SVG_LIB) {
+            const div = document.createElement('div');
+            div.className = 'icon-box';
+            div.innerHTML = SVG_LIB[key];
+            div.onclick = () => {
+                document.querySelectorAll('.icon-box').forEach(el => el.classList.remove('active'));
+                div.classList.add('active');
+                document.getElementById('catIconInput').value = key;
+            };
+            iGrid.appendChild(div);
+        }
+
+        const cGrid = document.getElementById('colorGrid');
+        cGrid.innerHTML = '';
+        for(let key in THEMES) {
+            const div = document.createElement('div');
+            div.className = 'color-circle';
+            div.style.backgroundColor = THEMES[key].color;
+            div.onclick = () => {
+                document.querySelectorAll('.color-circle').forEach(el => el.classList.remove('active'));
+                div.classList.add('active');
+                document.getElementById('catColorInput').value = key;
+            };
+            cGrid.appendChild(div);
+        }
+    }
+
+    function openCatManager() {
+        document.getElementById('catManagerOverlay').classList.add('show');
+        document.getElementById('catManagerModal').classList.add('show');
+    }
+    function closeCatManager() {
+        document.getElementById('catManagerOverlay').classList.remove('show');
+        document.getElementById('catManagerModal').classList.remove('show');
+    }
+
+    function setCatFormType(type) {
+        document.getElementById('btnCatTypeInc').classList.toggle('active', type === 'income');
+        document.getElementById('btnCatTypeExp').classList.toggle('active', type === 'expense');
+        document.getElementById('catFormTypeInput').value = type;
+    }
+
+    function openCatForm(id = null, defaultType = 'expense') {
+        editingCatId = id;
+        document.getElementById('catManagerOverlay').classList.remove('show');
+        document.getElementById('catManagerModal').classList.remove('show');
+        
+        document.getElementById('catFormOverlay').classList.add('show');
+        document.getElementById('catFormModal').classList.add('show');
+        
+        document.querySelectorAll('.icon-box, .color-circle').forEach(el => el.classList.remove('active'));
+
+        if (id) {
+            const c = categories.find(x => x.id === id);
+            document.getElementById('catFormTitle').innerText = 'Sửa danh mục';
+            document.getElementById('catNameInput').value = c.name;
+            setCatFormType(c.type);
+            
+            document.getElementById('catIconInput').value = c.icon;
+            document.getElementById('catColorInput').value = c.color;
+            
+            const iBox = [...document.querySelectorAll('.icon-box')].find(el => el.innerHTML === SVG_LIB[c.icon]);
+            if(iBox) iBox.classList.add('active');
+            
+            const cBox = [...document.querySelectorAll('.color-circle')].find(el => el.style.backgroundColor === THEMES[c.color].color);
+            if(cBox) cBox.classList.add('active');
+            
+            document.getElementById('btnSaveCat').innerText = 'Lưu thay đổi';
+            document.getElementById('btnSaveCat').classList.add('edit-mode');
+
+        } else {
+            document.getElementById('catFormTitle').innerText = 'Thêm danh mục';
+            document.getElementById('catNameInput').value = '';
+            setCatFormType(defaultType);
+            document.getElementById('catIconInput').value = '';
+            document.getElementById('catColorInput').value = '';
+            
+            document.getElementById('btnSaveCat').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Lưu danh mục';
+            document.getElementById('btnSaveCat').classList.remove('edit-mode');
+        }
+    }
+
+    function closeCatForm() {
+        document.getElementById('catFormOverlay').classList.remove('show');
+        document.getElementById('catFormModal').classList.remove('show');
+        openCatManager(); 
+    }
+
+    document.getElementById('btnSaveCat').addEventListener('click', () => {
+        const name = document.getElementById('catNameInput').value.trim();
+        const type = document.getElementById('catFormTypeInput').value;
+        const icon = document.getElementById('catIconInput').value;
+        const color = document.getElementById('catColorInput').value;
+
+        if(!name) { showToast('Vui lòng nhập tên danh mục!', 'error'); return; }
+        if(!icon) { showToast('Vui lòng chọn 1 biểu tượng!', 'error'); return; }
+        if(!color) { showToast('Vui lòng chọn 1 màu sắc!', 'error'); return; }
+
+        if(editingCatId) {
+            db.ref(`users/${currentUser.uid}/categories/${editingCatId}`).update({ name, type, icon, color })
+              .then(() => { showToast('Đã cập nhật danh mục'); closeCatForm(); });
+        } else {
+            const newId = 'cat_' + Date.now();
+            const newOrder = categories.filter(c => c.type === type).length;
+            db.ref(`users/${currentUser.uid}/categories/${newId}`).set({ name, type, icon, color, order: newOrder })
+              .then(() => { showToast('Đã thêm danh mục mới'); closeCatForm(); });
+        }
     });
-    document.getElementById('btnCloseHistory').addEventListener('click', closeHistoryModal);
-    historyOverlay.addEventListener('click', closeHistoryModal);
+
+    function deleteCat(id) {
+        if(confirm('Bạn có chắc muốn xóa danh mục này? (Các giao dịch cũ vẫn sẽ được giữ lại)')) {
+            db.ref(`users/${currentUser.uid}/categories/${id}`).remove()
+              .then(() => showToast('Đã xóa danh mục'));
+        }
+    }
 
     // ==========================================
-    // 5. CẢI TIẾN FORM LOGIC
+    // 6. FORM LOGIC CƠ BẢN
     // ==========================================
     const dateInput = document.getElementById('dateInput');
     const formDateDisplay = document.getElementById('formDateDisplay');
     dateInput.value = todayStr; formDateDisplay.innerText = formatNiceDate(todayStr);
-
     dateInput.addEventListener('change', (e) => { formDateDisplay.innerText = formatNiceDate(e.target.value); });
-
-    const filterDate = document.getElementById('filterDate');
-    const filterDateDisplay = document.getElementById('filterDateDisplay');
-    const filterDateWrapper = document.getElementById('filterDateWrapper');
-
-    filterDate.addEventListener('change', (e) => {
-        const val = e.target.value;
-        if(val) {
-            filterDateDisplay.innerText = formatNiceDate(val).replace('Hôm nay, ', '');
-            filterDateWrapper.classList.add('active');
-        } else {
-            filterDateDisplay.innerText = 'Lọc ngày';
-            filterDateWrapper.classList.remove('active');
-        }
-        currentDateLimit = DATES_PER_PAGE; updateUI();
-    });
 
     const amountInputDisplay = document.getElementById('amountInputDisplay');
     const amountInputRaw = document.getElementById('amountInputRaw');
@@ -826,75 +1206,110 @@
         });
     });
 
-    const catPills = document.querySelectorAll('.cat-pill');
-    const categoryInput = document.getElementById('categoryInput');
-
-    catPills.forEach(pill => {
-        pill.addEventListener('click', () => {
-            if(pill.classList.contains('hide')) return;
-            catPills.forEach(p => p.classList.remove('active'));
-            pill.classList.add('active'); categoryInput.value = pill.getAttribute('data-val');
-            pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        });
-    });
-
     function switchType(type) {
         document.querySelectorAll('.btn-toggle').forEach(b => b.classList.remove('active', 'income', 'expense'));
         document.querySelector(`.btn-toggle[data-type="${type}"]`).classList.add('active', type);
         document.getElementById('typeInput').value = type;
 
-        document.querySelectorAll('.opt-expense').forEach(opt => opt.classList.toggle('hide', type === 'income'));
-        document.querySelectorAll('.opt-income').forEach(opt => opt.classList.toggle('hide', type === 'expense'));
+        document.querySelectorAll('#categoryScroll .cat-pill[data-val]').forEach(opt => {
+            if(opt.classList.contains(`opt-${type}`)) opt.classList.remove('hide');
+            else opt.classList.add('hide');
+        });
         
-        const firstVisiblePill = document.querySelector(`.cat-pill:not(.hide)`);
+        const firstVisiblePill = document.querySelector(`#categoryScroll .cat-pill:not(.hide)`);
         if (firstVisiblePill) {
-            catPills.forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('#categoryScroll .cat-pill').forEach(p => p.classList.remove('active'));
             firstVisiblePill.classList.add('active');
-            categoryInput.value = firstVisiblePill.getAttribute('data-val');
+            document.getElementById('categoryIdInput').value = firstVisiblePill.getAttribute('data-id');
+            document.getElementById('categoryNameInput').value = firstVisiblePill.getAttribute('data-val');
             document.getElementById('categoryScroll').scrollLeft = 0;
         }
     }
     document.querySelectorAll('.btn-toggle').forEach(btn => { btn.addEventListener('click', () => switchType(btn.getAttribute('data-type'))); });
 
     // ==========================================
-    // 6. UPDATE GIAO DIỆN LỊCH SỬ (POPUP)
+    // 7. RENDER LỊCH SỬ GIAO DỊCH
     // ==========================================
-    ['searchInput', 'filterCategory'].forEach(id => {
-        document.getElementById(id).addEventListener('input', () => { currentDateLimit = DATES_PER_PAGE; updateUI(); });
-    });
+    const filterStartDate = document.getElementById('filterStartDate');
+    const filterEndDate = document.getElementById('filterEndDate');
+    const filterStartDateDisplay = document.getElementById('filterStartDateDisplay');
+    const filterEndDateDisplay = document.getElementById('filterEndDateDisplay');
+    const filterStartDateWrapper = document.getElementById('filterStartDateWrapper');
+    const filterEndDateWrapper = document.getElementById('filterEndDateWrapper');
+
+    function handleDateChange(inputEl, displayEl, wrapperEl, defaultText) {
+        inputEl.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if(val) {
+                displayEl.innerText = formatNiceDate(val).replace('Hôm nay, ', '');
+                wrapperEl.classList.add('active');
+            } else {
+                displayEl.innerText = defaultText;
+                wrapperEl.classList.remove('active');
+            }
+            currentDateLimit = DATES_PER_PAGE; 
+            updateUI();
+        });
+    }
+
+    handleDateChange(filterStartDate, filterStartDateDisplay, filterStartDateWrapper, 'Từ ngày');
+    handleDateChange(filterEndDate, filterEndDateDisplay, filterEndDateWrapper, 'Đến ngày');
+
+    document.getElementById('searchInput').addEventListener('input', () => { currentDateLimit = DATES_PER_PAGE; updateUI(); });
     
     document.getElementById('clearFilterBtn').addEventListener('click', () => {
-        filterDate.value = ''; filterDateDisplay.innerText = 'Lọc ngày'; filterDateWrapper.classList.remove('active');
-        document.getElementById('searchInput').value = ''; document.getElementById('filterCategory').value = '';
+        filterStartDate.value = ''; filterStartDateDisplay.innerText = 'Từ ngày'; filterStartDateWrapper.classList.remove('active');
+        filterEndDate.value = ''; filterEndDateDisplay.innerText = 'Đến ngày'; filterEndDateWrapper.classList.remove('active');
+        document.getElementById('searchInput').value = ''; 
+        
+        // Reset Cat Filter
+        const histCatScroll = document.getElementById('historyCategoryFilter');
+        histCatScroll.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+        histCatScroll.querySelector('.cat-pill[data-filter=""]').classList.add('active');
+        histCatScroll.scrollLeft = 0;
+        
         currentDateLimit = DATES_PER_PAGE; updateUI();
     });
 
     function updateUI() {
-        const fDate = filterDate.value;
+        const fStartDate = filterStartDate.value;
+        const fEndDate = filterEndDate.value;
         const sText = document.getElementById('searchInput').value.toLowerCase().trim();
-        const fCat = document.getElementById('filterCategory').value;
+        const fCat = document.querySelector('#historyCategoryFilter .cat-pill.active').getAttribute('data-filter');
+        
         const listEl = document.getElementById('transactionList');
+        const filteredSummary = document.getElementById('filteredSummary');
 
-        // BƯỚC 1: TÍNH TỔNG QUAN VÍ
         const totalIncomeAll = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
         const totalExpenseAll = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
         currentBalances = { total: totalIncomeAll - totalExpenseAll, income: totalIncomeAll, expense: totalExpenseAll };
         renderBalances();
 
-        // BƯỚC 2: RENDER LỊCH SỬ (TRONG POPUP)
         let displayData = [...transactions];
-        const isFiltering = fDate || sText || fCat;
+        const isFiltering = fStartDate || fEndDate || sText || fCat;
 
         if (isFiltering) {
             document.getElementById('clearFilterBtn').classList.remove('hide');
             displayData = transactions.filter(t => {
-                const matchDate = fDate ? t.date === fDate : true;
-                const matchCat = fCat ? t.category === fCat : true;
-                const matchSearch = sText ? (t.category.toLowerCase().includes(sText) || (t.note && t.note.toLowerCase().includes(sText))) : true;
+                let matchDate = true;
+                if (fStartDate && fEndDate) matchDate = t.date >= fStartDate && t.date <= fEndDate;
+                else if (fStartDate) matchDate = t.date >= fStartDate;
+                else if (fEndDate) matchDate = t.date <= fEndDate;
+                
+                const matchCat = fCat ? t.categoryName === fCat || t.category === fCat : true;
+                const matchSearch = sText ? (t.categoryName?.toLowerCase().includes(sText) || t.category?.toLowerCase().includes(sText) || (t.note && t.note.toLowerCase().includes(sText))) : true;
                 return matchDate && matchCat && matchSearch;
             });
+
+            filteredSummary.classList.remove('hide');
+            const fInc = displayData.filter(t => t.type === 'income').reduce((a,b)=>a+b.amount,0);
+            const fExp = displayData.filter(t => t.type === 'expense').reduce((a,b)=>a+b.amount,0);
+            document.getElementById('filterSumInc').innerText = '+' + formatter.format(fInc);
+            document.getElementById('filterSumExp').innerText = '-' + formatter.format(fExp);
+            document.getElementById('filterSumBal').innerText = 'Dư: ' + formatter.format(fInc - fExp);
         } else {
             document.getElementById('clearFilterBtn').classList.add('hide');
+            filteredSummary.classList.add('hide');
         }
 
         const grouped = {};
@@ -910,7 +1325,13 @@
         
         listEl.innerHTML = '';
         if(sortedDates.length === 0) {
-            listEl.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding: 40px 20px;">Không tìm thấy giao dịch nào.</p>';
+            listEl.innerHTML = `
+                <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px; opacity: 0.5;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <p style="font-size: 15px; font-weight: 500;">Chưa có giao dịch nào</p>
+                    <p style="font-size: 13px; margin-top: 4px;">Hãy thử thay đổi bộ lọc hoặc thêm mới.</p>
+                </div>
+            `;
             return;
         }
 
@@ -943,13 +1364,19 @@
                 const isInc = t.type === 'income';
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'transaction-item';
-                itemDiv.onclick = () => openActionSheet(t.id, t.category, t.amount);
                 
+                const cName = t.categoryName || t.category;
+                itemDiv.onclick = () => openActionSheet(t.id, cName, t.amount);
+                
+                const catObj = categories.find(c => c.id === t.categoryId);
+                const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
+                const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+
                 itemDiv.innerHTML = `
                     <div class="t-left">
-                        <div class="t-icon" data-cat="${t.category}">${svgIcons[t.category] || svgIcons['Khác']}</div>
+                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}">${iconSvg}</div>
                         <div class="t-info">
-                            <div class="t-title">${t.category}</div>
+                            <div class="t-title">${cName}</div>
                             <div class="t-note">${t.note || '...'}</div>
                         </div>
                     </div>
@@ -975,7 +1402,105 @@
     }
 
     // ==========================================
-    // 7. XỬ LÝ ACTION SHEET (SỬA / XÓA)
+    // 8. LOGIC VẼ BIỂU ĐỒ (CHART.JS)
+    // ==========================================
+    function renderCharts() {
+        if (!document.getElementById('analyticsView').classList.contains('active')) return;
+        
+        const currentMonthPrefix = new Date().toISOString().slice(0, 7);
+        const monthExpenses = transactions.filter(t => t.type === 'expense' && t.date.startsWith(currentMonthPrefix));
+        
+        const expenseByCat = {};
+        monthExpenses.forEach(t => {
+            const cName = t.categoryName || t.category;
+            if(!expenseByCat[cName]) {
+                const catObj = categories.find(c => c.id === t.categoryId);
+                expenseByCat[cName] = { amount: 0, colorHex: catObj ? THEMES[catObj.color].hex : '#8395a7' };
+            }
+            expenseByCat[cName].amount += t.amount;
+        });
+
+        const pieLabels = Object.keys(expenseByCat);
+        const pieData = pieLabels.map(k => expenseByCat[k].amount);
+        const pieColors = pieLabels.map(k => expenseByCat[k].colorHex);
+
+        if(pieChartInstance) pieChartInstance.destroy();
+        
+        if (pieData.length === 0) {
+            document.getElementById('pieChart').style.display = 'none';
+            document.getElementById('pieEmptyState').classList.remove('hide');
+        } else {
+            document.getElementById('pieChart').style.display = 'block';
+            document.getElementById('pieEmptyState').classList.add('hide');
+            
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            pieChartInstance = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: pieLabels,
+                    datasets: [{ data: pieData, backgroundColor: pieColors, borderWidth: 2, hoverOffset: 4 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    plugins: {
+                        legend: { position: 'right', labels: { usePointStyle: true, padding: 20, font: {size: 13, weight: '500'} } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed !== null) label += currencyFormatter.format(context.parsed);
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        const barLabels = [];
+        const inData = [];
+        const outData = [];
+        
+        for(let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().slice(0, 10);
+            barLabels.push(`${d.getDate()}/${d.getMonth()+1}`);
+            
+            const dayTxs = transactions.filter(t => t.date === dateStr);
+            inData.push(dayTxs.filter(t => t.type === 'income').reduce((s, t)=>s+t.amount, 0));
+            outData.push(dayTxs.filter(t => t.type === 'expense').reduce((s, t)=>s+t.amount, 0));
+        }
+
+        if(barChartInstance) barChartInstance.destroy();
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        barChartInstance = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: barLabels,
+                datasets: [
+                    { label: 'Tiền Thu', data: inData, backgroundColor: '#2ecc71', borderRadius: 6 },
+                    { label: 'Tiền Chi', data: outData, backgroundColor: '#e74c3c', borderRadius: 6 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { callback: function(value) { if(value===0) return 0; return (value/1000) + 'K'; } }, grid: { borderDash: [4, 4] } },
+                    x: { grid: { display: false } }
+                },
+                plugins: {
+                    legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: {size: 12} } },
+                    tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + currencyFormatter.format(context.parsed.y); } } }
+                }
+            }
+        });
+    }
+
+    // ==========================================
+    // 9. ACTION SHEET & LƯU GIAO DỊCH
     // ==========================================
     const sheetOverlay = document.getElementById('sheetOverlay');
     const actionSheet = document.getElementById('actionSheet');
@@ -992,21 +1517,15 @@
 
     sheetOverlay.addEventListener('click', closeActionSheet);
     document.getElementById('btnSheetCancel').addEventListener('click', closeActionSheet);
-    
-    document.getElementById('btnSheetEdit').addEventListener('click', () => { 
-        if(selectedSheetId) triggerEdit(selectedSheetId); closeActionSheet(); 
-    });
-    
-    document.getElementById('btnSheetDelete').addEventListener('click', () => { 
-        if(selectedSheetId) triggerDelete(selectedSheetId); closeActionSheet(); 
-    });
+    document.getElementById('btnSheetEdit').addEventListener('click', () => { if(selectedSheetId) triggerEdit(selectedSheetId); closeActionSheet(); });
+    document.getElementById('btnSheetDelete').addEventListener('click', () => { if(selectedSheetId) triggerDelete(selectedSheetId); closeActionSheet(); });
 
     function triggerEdit(id) {
         const t = transactions.find(x => x.id === id);
         if(!t) return;
         editingId = id;
         
-        closeHistoryModal();
+        switchTab('home'); 
         
         dateInput.value = t.date;
         formDateDisplay.innerText = formatNiceDate(t.date);
@@ -1016,13 +1535,10 @@
         amountInputDisplay.value = formatter.format(t.amount);
         
         switchType(t.type);
-        const targetPill = document.querySelector(`.cat-pill[data-val="${t.category}"]`);
-        if(targetPill) {
-            catPills.forEach(p => p.classList.remove('active'));
-            targetPill.classList.add('active');
-            categoryInput.value = t.category;
-            targetPill.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-        }
+        setTimeout(() => {
+            const targetPill = document.querySelector(`#categoryScroll .cat-pill[data-id="${t.categoryId}"]`);
+            if(targetPill) targetPill.click();
+        }, 50);
 
         document.getElementById('submitBtn').innerText = 'Lưu thay đổi';
         document.getElementById('submitBtn').classList.add('edit-mode');
@@ -1059,36 +1575,29 @@
         switchType('income'); 
     }
 
-    // ==========================================
-    // 8. SUBMIT FORM (LƯU LÊN FIREBASE)
-    // ==========================================
     document.getElementById('transactionForm').addEventListener('submit', (e) => {
         e.preventDefault();
-        
         if(!currentUser) { showToast('Vui lòng đăng nhập!', 'error'); return; }
 
         const amtStr = amountInputRaw.value;
         if(!amtStr || parseInt(amtStr) < 1000) { alert('Vui lòng nhập số tiền hợp lệ'); return; }
         
         const amt = parseInt(amtStr);
-        const cat = categoryInput.value;
+        const catId = document.getElementById('categoryIdInput').value;
+        const catName = document.getElementById('categoryNameInput').value;
         const note = document.getElementById('noteInput').value;
         const date = dateInput.value;
         const type = document.getElementById('typeInput').value;
 
-        const txData = { type, amount: amt, category: cat, note };
+        const txData = { type, amount: amt, categoryId: catId, categoryName: catName, note };
 
         if (editingId) {
             const oldTx = transactions.find(x => x.id === editingId);
             if (oldTx && oldTx.date !== date) {
                 db.ref(`users/${currentUser.uid}/transactions/${oldTx.date}/${editingId}`).remove();
-                db.ref(`users/${currentUser.uid}/transactions/${date}/${editingId}`).set(txData)
-                .then(() => showToast('Đã cập nhật giao dịch'))
-                .catch(err => { console.error(err); showToast('Lỗi lưu dữ liệu', 'error'); });
+                db.ref(`users/${currentUser.uid}/transactions/${date}/${editingId}`).set(txData).then(() => showToast('Đã cập nhật'));
             } else {
-                db.ref(`users/${currentUser.uid}/transactions/${date}/${editingId}`).update(txData)
-                .then(() => showToast('Đã cập nhật giao dịch'))
-                .catch(err => { console.error(err); showToast('Lỗi lưu dữ liệu', 'error'); });
+                db.ref(`users/${currentUser.uid}/transactions/${date}/${editingId}`).update(txData).then(() => showToast('Đã cập nhật'));
             }
         } else {
             const newId = Date.now();
@@ -1096,13 +1605,24 @@
             .then(() => {
                 currentDateLimit = DATES_PER_PAGE; 
                 showToast('Thêm thành công!');
-            }).catch(err => {
-                console.error("Lỗi Firebase:", err); 
-                showToast('Lỗi khi lưu dữ liệu!', 'error');
-            });
+            }).catch(err => { showToast('Lỗi khi lưu!', 'error'); });
         }
         resetFormState();
     });
+</script>
+<script>
+    // Đăng ký Service Worker cho PWA
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then((registration) => {
+                    console.log('ServiceWorker đăng ký thành công với scope: ', registration.scope);
+                })
+                .catch((error) => {
+                    console.error('ServiceWorker đăng ký thất bại: ', error);
+                });
+        });
+    }
 </script>
 </body>
 </html>

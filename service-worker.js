@@ -1,6 +1,6 @@
 const CACHE_NAME = 'qlct-cache-v1';
 const urlsToCache = [
-  './4.8.html',
+  './index.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'

@@ -1,8 +1,8 @@
 {
-  "name": "Quản Lý Chi Tiêu",
-  "short_name": "Chi Tiêu",
+  "name": "Quản lý chi tiêu",
+  "short_name": "Thu Chi",
   "description": "Ứng dụng quản lý tài chính và chi tiêu cá nhân",
-  "start_url": "./4.8.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f6f9",
   "theme_color": "#4361ee",

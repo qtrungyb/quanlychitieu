@@ -387,6 +387,20 @@
 
         /* 8. Viền Avatar */
         body.dark-theme .avatar-btn { background: #2d3748; border-color: #4a5568; }
+		/* 13. GIAO DIỆN TAB THÊM (CÀI ĐẶT) */
+        .settings-card { background: #fff; border-radius: var(--border-radius-lg); overflow: hidden; box-shadow: 0 8px 24px rgba(149, 157, 165, 0.1); margin-bottom: 20px;}
+        .settings-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #f8f9fa; cursor: pointer; transition: 0.2s; font-weight: 600; color: var(--text-main); font-size: 15px;}
+        .settings-item:last-child { border-bottom: none; }
+        .settings-item:active { background: #f8f9fa; }
+        .settings-item-left { display: flex; align-items: center; gap: 14px; }
+        .settings-item-left svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; color: var(--primary); }
+        .settings-item.text-danger .settings-item-left svg { color: var(--danger); }
+        .settings-item-right { color: #cbd5e1; font-size: 22px; margin-top: -2px;}
+        .settings-header { padding: 0 10px 10px 10px; font-size: 13px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
+        
+        body.dark-theme .settings-card { background-color: var(--card-bg) !important; border: 1px solid #2d3748; }
+        body.dark-theme .settings-item { border-bottom-color: #2d3748; background-color: transparent;}
+        body.dark-theme .settings-item:active { background-color: #2d3748; }
 	</style>
 </head>
 <body>
@@ -650,7 +664,53 @@
 			</div>
 		</div>
     </div>
+	<!-- ========================================= -->
+    <!-- TAB 4: THÊM (CÀI ĐẶT)                     -->
+    <!-- ========================================= -->
+    <div id="settingsView" class="view-section">
+        <div class="settings-header">Cá nhân hóa</div>
+        <div class="settings-card">
+            <div class="settings-item" id="btnSettingsCatManager">
+                <div class="settings-item-left">
+                    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    Quản lý danh mục
+                </div>
+                <div class="settings-item-right">›</div>
+            </div>
+            <div class="settings-item" id="btnSettingsWalletTheme">
+                <div class="settings-item-left">
+                    <svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.688h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+                    Đổi màu thẻ
+                </div>
+                <div class="settings-item-right">›</div>
+            </div>
+            <div class="settings-item" id="btnSettingsDarkMode">
+                <div class="settings-item-left">
+                    <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <span id="settingsDarkModeText">Chế độ tối</span>
+                </div>
+                <div class="settings-item-right">›</div>
+            </div>
+        </div>
 
+        <div class="settings-header" style="margin-top: 10px;">Tài khoản</div>
+        <div class="settings-card">
+            <div class="settings-item" id="btnSettingsChangePwd">
+                <div class="settings-item-left">
+                    <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                    Đổi mật khẩu
+                </div>
+                <div class="settings-item-right">›</div>
+            </div>
+            <div class="settings-item text-danger" id="btnSettingsLogout">
+                <div class="settings-item-left">
+                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Đăng xuất
+                </div>
+                <div class="settings-item-right"></div>
+            </div>
+        </div>
+    </div>
 </div> <!-- HẾT APP CONTAINER -->
 
 <!-- BOTTOM NAVIGATION BAR -->
@@ -666,6 +726,11 @@
     <div class="nav-item" id="tabStats">
         <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
         <span>Thống kê</span>
+    </div>
+    <!-- NÚT TAB THÊM MỚI -->
+    <div class="nav-item" id="tabSettings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span>Thêm</span>
     </div>
 </div>
 
@@ -923,19 +988,21 @@
     }
 
     // ==========================================
-    // 3. ĐIỀU HƯỚNG TAB (BOTTOM NAVIGATION)
+    // 3. ĐIỀU HƯỚNG TAB (BOTTOM NAVIGATION) & SETTINGS
     // ==========================================
     const tabHome = document.getElementById('tabHome');
     const tabHistory = document.getElementById('tabHistory');
     const tabStats = document.getElementById('tabStats');
+    const tabSettings = document.getElementById('tabSettings');
     
     const homeView = document.getElementById('homeView');
     const historyView = document.getElementById('historyView');
     const analyticsView = document.getElementById('analyticsView');
+    const settingsView = document.getElementById('settingsView');
 
     function switchTab(tabName) {
-        [tabHome, tabHistory, tabStats].forEach(t => t.classList.remove('active'));
-        [homeView, historyView, analyticsView].forEach(v => v.classList.remove('active'));
+        [tabHome, tabHistory, tabStats, tabSettings].forEach(t => t.classList.remove('active'));
+        [homeView, historyView, analyticsView, settingsView].forEach(v => v.classList.remove('active'));
 
         if (tabName === 'home') {
             tabHome.classList.add('active'); homeView.classList.add('active');
@@ -944,6 +1011,8 @@
         } else if (tabName === 'stats') {
             tabStats.classList.add('active'); analyticsView.classList.add('active');
             renderCharts();
+        } else if (tabName === 'settings') {
+            tabSettings.classList.add('active'); settingsView.classList.add('active');
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -951,6 +1020,25 @@
     tabHome.addEventListener('click', () => switchTab('home'));
     tabHistory.addEventListener('click', () => switchTab('history'));
     tabStats.addEventListener('click', () => switchTab('stats'));
+    tabSettings.addEventListener('click', () => switchTab('settings'));
+
+    // --- XỬ LÝ SỰ KIỆN KHI BẤM VÀO CÁC NÚT TRONG TAB THÊM ---
+    document.getElementById('btnSettingsCatManager').addEventListener('click', openCatManager);
+    document.getElementById('btnSettingsWalletTheme').addEventListener('click', openWalletThemeModal);
+    document.getElementById('btnSettingsChangePwd').addEventListener('click', () => { 
+        document.getElementById('changePwdOverlay').classList.remove('hide'); 
+    });
+    document.getElementById('btnSettingsLogout').addEventListener('click', () => {
+        if(confirm('Bạn muốn đăng xuất?')) {
+            auth.signOut().then(() => { if(txRef) txRef.off(); if(catRef) catRef.off(); showToast('Đã đăng xuất'); switchTab('home');});
+        }
+    });
+    document.getElementById('btnSettingsDarkMode').addEventListener('click', () => {
+        const newIsDark = !document.body.classList.contains('dark-theme');
+        applyDarkMode(newIsDark);
+        localStorage.setItem('darkMode', newIsDark);
+        if (document.getElementById('analyticsView').classList.contains('active')) renderCharts();
+    });
 
     // ==========================================
     // 4. LOGIC AUTH & TẢI DỮ LIỆU ĐỘNG
@@ -1870,16 +1958,19 @@
 
     // Hàm áp dụng/gỡ bỏ class Dark Mode
     function applyDarkMode(isDark) {
+        const settingsDarkModeText = document.getElementById('settingsDarkModeText');
         if(isDark) {
             document.body.classList.add('dark-theme');
             if(iconMoon) iconMoon.classList.add('hide');
             if(iconSun) iconSun.classList.remove('hide');
             if(darkModeText) darkModeText.innerText = 'Chế độ sáng';
+            if(settingsDarkModeText) settingsDarkModeText.innerText = 'Chế độ sáng';
         } else {
             document.body.classList.remove('dark-theme');
             if(iconSun) iconSun.classList.add('hide');
             if(iconMoon) iconMoon.classList.remove('hide');
             if(darkModeText) darkModeText.innerText = 'Chế độ tối';
+            if(settingsDarkModeText) settingsDarkModeText.innerText = 'Chế độ tối';
         }
     }
 
@@ -1887,19 +1978,14 @@
     const savedDarkMode = localStorage.getItem('darkMode') === 'true';
     applyDarkMode(savedDarkMode);
 
-    // Lắng nghe sự kiện khi người dùng bấm vào nút
+    // Lắng nghe sự kiện cho nút menu dropdown cũ (nếu bạn vẫn giữ)
     if(btnToggleDarkMode) {
         btnToggleDarkMode.addEventListener('click', () => {
-            const isCurrentlyDark = document.body.classList.contains('dark-theme');
-            const newIsDark = !isCurrentlyDark;
-            
+            const newIsDark = !document.body.classList.contains('dark-theme');
             applyDarkMode(newIsDark);
-            localStorage.setItem('darkMode', newIsDark); // Lưu lựa chọn vào thiết bị
-            
-            // Vẽ lại biểu đồ nếu đang ở Tab Thống kê để màu sắc không bị lỗi
+            localStorage.setItem('darkMode', newIsDark);
             if (document.getElementById('analyticsView').classList.contains('active')) renderCharts();
-            
-            document.getElementById('dropdownMenu').classList.remove('show'); // Đóng menu
+            document.getElementById('dropdownMenu').classList.remove('show');
         });
     }
 	// ==========================================

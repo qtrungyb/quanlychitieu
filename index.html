@@ -248,6 +248,8 @@
 			font-size: 11px;
 			font-weight: 700;
 			transition: 0.3s;
+			white-space: nowrap; /* BẮT BUỘC: Ngăn text bị rớt dòng chữ */
+			flex-shrink: 0; /* BẮT BUỘC: Ngăn nhãn bị bóp méo */
 		}
 		.trend-badge.good { background: var(--success-light); color: var(--success); }
 		.trend-badge.bad { background: var(--danger-light); color: var(--danger); }
@@ -687,13 +689,14 @@
                 <div class="kpi-desc" id="kpiNetFlowDesc">Thu: 0đ | Chi: 0đ</div>
             </div>
             <div class="kpi-card">
-			<div class="kpi-title">Trung bình chi</div>
-			<div style="display: flex; align-items: center; gap: 8px;">
-				<div class="kpi-value text-danger" id="kpiAvgExpense">0 đ</div>
-				<div class="trend-badge hide" id="kpiAvgExpenseTrend"></div>
+				<div class="kpi-title">Trung bình chi</div>
+				<!-- Đã thêm flex-wrap: wrap để nhãn rớt xuống dòng đẹp mắt nếu số tiền quá dài -->
+				<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+					<div class="kpi-value text-danger" id="kpiAvgExpense">0 đ</div>
+					<div class="trend-badge hide" id="kpiAvgExpenseTrend"></div>
+				</div>
+				<div class="kpi-desc">/ ngày (so với kỳ trước)</div>
 			</div>
-			<div class="kpi-desc">/ ngày (so với kỳ trước)</div>
-		</div>
             <div class="kpi-card">
                 <div class="kpi-title">Chi lớn nhất</div>
                 <div class="kpi-value" id="kpiMaxExpense">0 đ</div>

@@ -238,6 +238,25 @@
         
         /* Chế độ tối cho KPI */
         body.dark-theme .kpi-card { background-color: var(--card-bg) !important; border: 1px solid #2d3748; }
+		/* CSS cho Trend Indicator (Nhãn Tăng/Giảm) */
+		.trend-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			padding: 4px 8px;
+			border-radius: 12px;
+			font-size: 11px;
+			font-weight: 700;
+			transition: 0.3s;
+		}
+		.trend-badge.good { background: var(--success-light); color: var(--success); }
+		.trend-badge.bad { background: var(--danger-light); color: var(--danger); }
+		.trend-badge.neutral { background: var(--bg-gray); color: var(--text-muted); }
+
+		/* Chế độ tối cho Trend Indicator */
+		body.dark-theme .trend-badge.good { background: rgba(46, 204, 113, 0.15); }
+		body.dark-theme .trend-badge.bad { background: rgba(231, 76, 60, 0.15); }
+		body.dark-theme .trend-badge.neutral { background: rgba(131, 149, 167, 0.15); }
         /* =========================================
            9. BOTTOM NAVIGATION BAR
            ========================================= */
@@ -668,10 +687,13 @@
                 <div class="kpi-desc" id="kpiNetFlowDesc">Thu: 0đ | Chi: 0đ</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-title">Trung bình chi</div>
-                <div class="kpi-value text-danger" id="kpiAvgExpense">0 đ</div>
-                <div class="kpi-desc">/ ngày</div>
-            </div>
+			<div class="kpi-title">Trung bình chi</div>
+			<div style="display: flex; align-items: center; gap: 8px;">
+				<div class="kpi-value text-danger" id="kpiAvgExpense">0 đ</div>
+				<div class="trend-badge hide" id="kpiAvgExpenseTrend"></div>
+			</div>
+			<div class="kpi-desc">/ ngày (so với kỳ trước)</div>
+		</div>
             <div class="kpi-card">
                 <div class="kpi-title">Chi lớn nhất</div>
                 <div class="kpi-value" id="kpiMaxExpense">0 đ</div>
@@ -1988,6 +2010,67 @@
         }
         const elAvgExp = document.getElementById('kpiAvgExpense');
         if (elAvgExp) elAvgExp.innerText = currencyFormatter.format(Math.round(totalExpPeriod / daysToAverage));
+		// -- TÍNH TOÁN TREND: So sánh với cùng kỳ tháng trước --
+		const prevSDateObj = new Date(startDateStr); 
+		prevSDateObj.setMonth(prevSDateObj.getMonth() - 1);
+		const prevEDateObj = new Date(endDateStr); 
+		prevEDateObj.setMonth(prevEDateObj.getMonth() - 1);
+
+		const prevStartDateStr = `${prevSDateObj.getFullYear()}-${String(prevSDateObj.getMonth() + 1).padStart(2, '0')}-${String(prevSDateObj.getDate()).padStart(2, '0')}`;
+		const prevEndDateStr = `${prevEDateObj.getFullYear()}-${String(prevEDateObj.getMonth() + 1).padStart(2, '0')}-${String(prevEDateObj.getDate()).padStart(2, '0')}`;
+
+		// Tính số ngày của kỳ trước
+		let prevDaysToAverage = daysToAverage;
+		if (mode === 'month') {
+			const pY = prevSDateObj.getFullYear();
+			const pM = prevSDateObj.getMonth() + 1;
+			prevDaysToAverage = new Date(pY, pM, 0).getDate();
+			const now = new Date();
+			// Nếu kỳ trước vô tình rơi vào tháng hiện tại, chia theo số ngày đã qua
+			if (pY === now.getFullYear() && pM === (now.getMonth() + 1)) {
+				prevDaysToAverage = now.getDate();
+			}
+		}
+
+		// Lọc giao dịch và tính tổng chi của kỳ trước
+		const prevPeriodTxs = transactions.filter(t => t.date >= prevStartDateStr && t.date <= prevEndDateStr);
+		let prevTotalExp = 0;
+		prevPeriodTxs.forEach(t => { if (t.type === 'expense') prevTotalExp += t.amount; });
+
+		const currentAvgExp = Math.round(totalExpPeriod / daysToAverage);
+		const prevAvgExp = Math.round(prevTotalExp / prevDaysToAverage);
+
+		// Cập nhật giao diện (UI) cho Trend Badge
+		const elTrend = document.getElementById('kpiAvgExpenseTrend');
+		if (elTrend) {
+			elTrend.classList.remove('hide', 'good', 'bad', 'neutral');
+			
+			if (prevAvgExp === 0 && currentAvgExp === 0) {
+				// Không có chi tiêu ở cả 2 kỳ
+				elTrend.classList.add('neutral');
+				elTrend.innerHTML = '- 0%';
+			} else if (prevAvgExp === 0 && currentAvgExp > 0) {
+				// Kỳ trước không chi, kỳ này có chi
+				elTrend.classList.add('bad');
+				elTrend.innerHTML = '↑ 100%';
+			} else {
+				// Tính % thay đổi
+				const diffPercent = Math.round(((currentAvgExp - prevAvgExp) / prevAvgExp) * 100);
+				if (diffPercent > 0) {
+					// Tăng chi tiêu (Xấu -> Đỏ)
+					elTrend.classList.add('bad');
+					elTrend.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg> ${diffPercent}%`;
+				} else if (diffPercent < 0) {
+					// Giảm chi tiêu (Tốt -> Xanh)
+					elTrend.classList.add('good');
+					elTrend.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg> ${Math.abs(diffPercent)}%`;
+				} else {
+					// Không thay đổi
+					elTrend.classList.add('neutral');
+					elTrend.innerHTML = '- 0%';
+				}
+			}
+		}
 
         const elMaxExp = document.getElementById('kpiMaxExpense');
         if (elMaxExp) {

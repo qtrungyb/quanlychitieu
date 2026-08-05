@@ -659,18 +659,25 @@
             </div>
             <input type="hidden" id="statsFilterMode" value="range">
             
-            <!-- Chế độ chọn khoảng ngày (Mặc định hiển thị) -->
-            <div id="statsRangeContainer" style="display: flex; gap: 10px; align-items: center;">
-                <div style="flex: 1; display: flex; align-items: center; gap: 8px; background: var(--bg-color); border: 1px solid #e2e8f0; border-radius: 12px; padding: 0 12px; height: 44px;">
-                    <svg style="width: 18px; color: var(--primary); flex-shrink: 0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    <input type="date" id="statsStartDate" style="width: 100%; border: none; background: transparent; font-size: 13px; font-weight: 600; outline: none; color: var(--text-main);">
-                </div>
-                <span style="color: var(--text-muted); font-weight: bold;">-</span>
-                <div style="flex: 1; display: flex; align-items: center; gap: 8px; background: var(--bg-color); border: 1px solid #e2e8f0; border-radius: 12px; padding: 0 12px; height: 44px;">
-                    <svg style="width: 18px; color: var(--primary); flex-shrink: 0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    <input type="date" id="statsEndDate" style="width: 100%; border: none; background: transparent; font-size: 13px; font-weight: 600; outline: none; color: var(--text-main);">
-                </div>
-            </div>
+            <!-- Chế độ chọn khoảng ngày (Đồng bộ giao diện với tab Lịch sử) -->
+			<div id="statsRangeContainer" class="filter-row" style="width: 100%;">
+				<!-- Ô Từ ngày -->
+				<div class="filter-date-wrapper active" id="statsStartDateWrapper" style="min-width: 0;">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+					<span class="date-text" id="statsStartDateDisplay" style="overflow: hidden; text-overflow: ellipsis;">Từ ngày</span>
+					<input type="date" id="statsStartDate">
+				</div>
+				
+				<!-- Icon mũi tên ngang ở giữa -->
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted); flex-shrink: 0;"><path d="M5 12h14"></path></svg>
+				
+				<!-- Ô Đến ngày -->
+				<div class="filter-date-wrapper active" id="statsEndDateWrapper" style="min-width: 0;">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+					<span class="date-text" id="statsEndDateDisplay" style="overflow: hidden; text-overflow: ellipsis;">Đến ngày</span>
+					<input type="date" id="statsEndDate">
+				</div>
+			</div>
 
             <!-- Chế độ chọn tháng (Ẩn mặc định) -->
             <div id="statsMonthContainer" class="hide">
@@ -1269,6 +1276,33 @@
         document.getElementById('statsMonthPicker').value = `${y}-${m}`;
         document.getElementById('statsStartDate').value = `${y}-${m}-01`; // Mặc định ngày 1
         document.getElementById('statsEndDate').value = `${y}-${m}-${d}`; // Mặc định ngày hiện tại
+		// --- Code render UI ngày đồng bộ với Lịch Sử ---
+		function updateStatsDateUI() {
+			const sVal = document.getElementById('statsStartDate').value;
+			const eVal = document.getElementById('statsEndDate').value;
+			const sWrapper = document.getElementById('statsStartDateWrapper');
+			const eWrapper = document.getElementById('statsEndDateWrapper');
+
+			if(sVal) {
+				const [sy, sm, sd] = sVal.split('-');
+				document.getElementById('statsStartDateDisplay').innerText = `${sd}/${sm}/${sy}`;
+				sWrapper.classList.add('active'); // Bật màu xanh
+			} else {
+				document.getElementById('statsStartDateDisplay').innerText = 'Từ ngày';
+				sWrapper.classList.remove('active'); // Tắt màu xanh
+			}
+
+			if(eVal) {
+				const [ey, em, ed] = eVal.split('-');
+				document.getElementById('statsEndDateDisplay').innerText = `${ed}/${em}/${ey}`;
+				eWrapper.classList.add('active'); // Bật màu xanh
+			} else {
+				document.getElementById('statsEndDateDisplay').innerText = 'Đến ngày';
+				eWrapper.classList.remove('active'); // Tắt màu xanh
+			}
+		}
+		updateStatsDateUI(); // Gọi lần đầu để hiển thị ngày mặc định
+		// -------------------------------------------------------------
 
         // 2. Logic xử lý UI cho Nút gạt (Toggle) 2 chế độ
         const btnModeRange = document.getElementById('btnModeRange');
@@ -1308,8 +1342,8 @@
 
         // 3. Kích hoạt vẽ lại biểu đồ ngay khi người dùng đổi ngày/tháng
         document.getElementById('statsMonthPicker').addEventListener('change', renderCharts);
-        document.getElementById('statsStartDate').addEventListener('change', renderCharts);
-        document.getElementById('statsEndDate').addEventListener('change', renderCharts);
+        document.getElementById('statsStartDate').addEventListener('change', () => { updateStatsDateUI(); renderCharts(); });
+		document.getElementById('statsEndDate').addEventListener('change', () => { updateStatsDateUI(); renderCharts(); });
 
         // 4. Khôi phục tài khoản đăng nhập (Nếu có)
         if(localStorage.getItem('savedUsername')) {

@@ -547,14 +547,19 @@
         </div>
 
         <div class="chart-card">
-            <div class="chart-header">
-                <h3 class="chart-title">Thu / Chi</h3>
-                <span class="chart-subtitle">7 ngày qua</span>
-            </div>
-            <div class="chart-container">
-                <canvas id="barChart"></canvas>
-            </div>
-        </div>
+			<div class="chart-header">
+				<h3 class="chart-title">Thu / Chi</h3>
+				<!-- Thẻ select thay thế cho text cố định -->
+				<select id="barChartRange" class="chart-subtitle" style="border: none; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; padding-right: 24px; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%238d99ae%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 6px center;">
+					<option value="7">7 ngày qua</option>
+					<option value="14">14 ngày qua</option>
+					<option value="30">30 ngày qua</option>
+				</select>
+			</div>
+			<div class="chart-container">
+				<canvas id="barChart"></canvas>
+			</div>
+		</div>
     </div>
 
 </div> <!-- HẾT APP CONTAINER -->
@@ -1412,6 +1417,7 @@
     function renderCharts() {
         if (!document.getElementById('analyticsView').classList.contains('active')) return;
         
+        // --- 1. BIỂU ĐỒ TRÒN (PIE CHART) ---
         const currentMonthPrefix = new Date().toISOString().slice(0, 7);
         const monthExpenses = transactions.filter(t => t.type === 'expense' && t.date.startsWith(currentMonthPrefix));
         
@@ -1464,14 +1470,19 @@
             });
         }
 
+        // --- 2. BIỂU ĐỒ CỘT (BAR CHART - ĐÃ NÂNG CẤP) ---
+        const rangeSelect = document.getElementById('barChartRange');
+        const barRange = rangeSelect ? parseInt(rangeSelect.value) : 7;
+        
         const barLabels = [];
         const inData = [];
         const outData = [];
         
-        for(let i = 6; i >= 0; i--) {
+        for(let i = barRange - 1; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);
             const dateStr = d.toISOString().slice(0, 10);
+            
             barLabels.push(`${d.getDate()}/${d.getMonth()+1}`);
             
             const dayTxs = transactions.filter(t => t.date === dateStr);
@@ -1494,7 +1505,12 @@
                 responsive: true, maintainAspectRatio: false,
                 scales: {
                     y: { beginAtZero: true, ticks: { callback: function(value) { if(value===0) return 0; return (value/1000) + 'K'; } }, grid: { borderDash: [4, 4] } },
-                    x: { grid: { display: false } }
+                    x: { 
+                        grid: { display: false },
+                        ticks: { 
+                            maxTicksLimit: barRange === 30 ? 10 : barRange 
+                        }
+                    }
                 },
                 plugins: {
                     legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: {size: 12} } },
@@ -1614,6 +1630,8 @@
         }
         resetFormState();
     });
+	// Lắng nghe sự kiện thay đổi ngày thống kê
+    document.getElementById('barChartRange').addEventListener('change', renderCharts);
 </script>
 <script>
     // Đăng ký Service Worker cho PWA

@@ -660,6 +660,13 @@
                 </div>
                 <div class="settings-item-right">›</div>
             </div>
+			<div class="settings-item" id="btnSettingsAppTheme">
+                <div class="settings-item-left">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    Đổi hình nền ứng dụng
+                </div>
+                <div class="settings-item-right">›</div>
+            </div>
             <div class="settings-item" id="btnSettingsDarkMode">
                 <div class="settings-item-left">
                     <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
@@ -836,6 +843,19 @@
     </div>
 </div>
 <!-- ========================================= -->
+<!-- POPUP ĐỔI HÌNH NỀN ỨNG DỤNG               -->
+<!-- ========================================= -->
+<div class="history-overlay" id="appThemeOverlay" style="z-index: 10007;" onclick="closeAppThemeModal()"></div>
+<div class="history-modal" id="appThemeModal" style="z-index: 10008; height: 85vh; padding-bottom: env(safe-area-inset-bottom);">
+    <div class="history-modal-header">
+        <h3>Đổi hình nền ứng dụng</h3>
+        <button class="btn-close-modal" onclick="closeAppThemeModal()">&times;</button>
+    </div>
+    <div class="history-modal-body" style="padding: 20px 20px 40px 20px;">
+        <div class="color-grid" id="appThemeGrid"></div>
+    </div>
+</div>
+<!-- ========================================= -->
 <!-- ACTION SHEET (SỬA / XÓA GIAO DỊCH)        -->
 <!-- ========================================= -->
 <div class="sheet-overlay" id="sheetOverlay"></div>
@@ -1001,7 +1021,8 @@
     // --- XỬ LÝ SỰ KIỆN KHI BẤM VÀO CÁC NÚT TRONG TAB THÊM ---
     document.getElementById('btnSettingsCatManager').addEventListener('click', openCatManager);
     document.getElementById('btnSettingsWalletTheme').addEventListener('click', openWalletThemeModal);
-    document.getElementById('btnSettingsChangePwd').addEventListener('click', () => { 
+    document.getElementById('btnSettingsAppTheme').addEventListener('click', openAppThemeModal);
+	document.getElementById('btnSettingsChangePwd').addEventListener('click', () => { 
         document.getElementById('changePwdOverlay').classList.remove('hide'); 
     });
     document.getElementById('btnSettingsLogout').addEventListener('click', () => {
@@ -2089,6 +2110,135 @@
             }
         });
     }
+	// ==========================================
+    // LOGIC ĐỔI HÌNH NỀN ỨNG DỤNG - BỘ SƯU TẬP TỐI THƯỢNG (70 MÀU)
+    // ==========================================
+    const APP_THEMES = [
+        { id: 'bg-default', background: '' }, // Chế độ mặc định (Gốc)
+
+        // --- 1. MÀU TRƠN (Solid Colors) ---
+        { id: 'bg-solid-slate', background: '#f8fafc' },
+        { id: 'bg-solid-cream', background: '#fdfbf7' },
+        { id: 'bg-solid-mint', background: '#f0fdf4' },
+        { id: 'bg-solid-rose', background: '#fff1f2' },
+        { id: 'bg-solid-ivory', background: '#fffff0' },
+        { id: 'bg-solid-charcoal', background: '#36454f' },
+        { id: 'bg-solid-night', background: '#0f172a' },
+        { id: 'bg-solid-navy', background: '#1e1b4b' },
+
+        // --- 2. NỀN SÁNG & PASTEL (Light & Sweet) ---
+        { id: 'bg-sky', background: 'linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%)' },
+        { id: 'bg-peach', background: 'linear-gradient(120deg, #f6d365 0%, #fda085 100%)' },
+        { id: 'bg-mint-grad', background: 'linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)' },
+        { id: 'bg-warm', background: 'linear-gradient(to top, #fff1eb 0%, #ace0f9 100%)' },
+        { id: 'bg-clean', background: 'linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%)' },
+        { id: 'bg-pinkish', background: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)' },
+        { id: 'bg-lavender', background: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)' },
+        { id: 'bg-cotton-candy', background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' },
+        { id: 'bg-lemon', background: 'linear-gradient(120deg, #f6d365 0%, #ffb142 100%)' },
+        { id: 'bg-cloud', background: 'linear-gradient(to top, #accbee 0%, #e7f0fd 100%)' },
+        { id: 'bg-rose-water', background: 'linear-gradient(to right, #ffecd2 0%, #fcb69f 100%)' },
+
+        // --- 3. NỀN ĐẬM & SANG TRỌNG (Dark & Elegant) ---
+        { id: 'bg-night-grad', background: 'linear-gradient(to right, #434343 0%, black 100%)' },
+        { id: 'bg-deepsea', background: 'linear-gradient(to right, #0f2027, #203a43, #2c5364)' },
+        { id: 'bg-purple-dark', background: 'linear-gradient(to top, #30cfd0 0%, #330867 100%)' },
+        { id: 'bg-forest-dark', background: 'linear-gradient(to right, #134e5e, #71b280)' },
+        { id: 'bg-midnight', background: 'linear-gradient(135deg, #141e30 0%, #243b55 100%)' },
+        { id: 'bg-space', background: 'linear-gradient(to right, #141517, #2e2f33)' },
+        { id: 'bg-obsidian', background: 'linear-gradient(to right, #000000, #434343)' },
+        { id: 'bg-abyss', background: 'linear-gradient(to right, #000428, #004e92)' },
+        { id: 'bg-berry-dark', background: 'linear-gradient(to right, #240b36, #c31432)' },
+        { id: 'bg-dark-ocean', background: 'linear-gradient(to top, #09203f 0%, #537895 100%)' },
+        { id: 'bg-void', background: 'linear-gradient(to right, #000000 0%, #1a1a1a 100%)' },
+
+        // --- 4. NỀN RỰC RỠ & NÓNG (Vibrant & Warm) ---
+        { id: 'bg-sunset', background: 'linear-gradient(to right, #ff4e50, #f9d423)' },
+        { id: 'bg-cherry', background: 'linear-gradient(to right, #eb3349, #f45c43)' },
+        { id: 'bg-mango', background: 'linear-gradient(to right, #ffe259, #ffa751)' },
+        { id: 'bg-fire', background: 'linear-gradient(to right, #f12711, #f5af19)' },
+        { id: 'bg-blood', background: 'linear-gradient(to right, #ed213a, #93291e)' },
+        { id: 'bg-flame', background: 'linear-gradient(to top, #ff0844 0%, #ffb199 100%)' },
+        { id: 'bg-orange-juice', background: 'linear-gradient(120deg, #f6d365 0%, #fda085 100%)' },
+
+        // --- 5. NỀN THIÊN NHIÊN (Nature & Earth) ---
+        { id: 'bg-ocean', background: 'linear-gradient(to right, #2193b0, #6dd5ed)' },
+        { id: 'bg-leaf', background: 'linear-gradient(to right, #11998e, #38ef7d)' },
+        { id: 'bg-sand', background: 'linear-gradient(to right, #c9d6ff, #e2e2e2)' },
+        { id: 'bg-wood', background: 'linear-gradient(to right, #603813, #b29f94)' },
+        { id: 'bg-water', background: 'linear-gradient(to right, #00c9ff, #92fe9d)' },
+        { id: 'bg-moss', background: 'linear-gradient(to top, #13547a 0%, #80d0c7 100%)' },
+        { id: 'bg-earth', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' },
+        { id: 'bg-stone', background: 'linear-gradient(to right, #8e9eab 0%, #eef2f3 100%)' },
+
+        // --- 6. MÀU GIAO THOA HIỆN ĐẠI (Modern Mesh & Aurora) ---
+        { id: 'bg-aurora', background: 'linear-gradient(45deg, #00d2ff 0%, #3a7bd5 100%)' },
+        { id: 'bg-cyber', background: 'linear-gradient(45deg, #ff00cc 0%, #333399 100%)' },
+        { id: 'bg-holographic', background: 'linear-gradient(45deg, #8a2387 0%, #e94057 50%, #f27121 100%)' },
+        { id: 'bg-glass', background: 'linear-gradient(45deg, #a8c0ff 0%, #3f2b96 100%)' },
+        { id: 'bg-dusk-grad', background: 'linear-gradient(45deg, #ffd89b 0%, #19547b 100%)' },
+        { id: 'bg-twilight', background: 'linear-gradient(45deg, #ff512f 0%, #dd2476 100%)' },
+        { id: 'bg-northern-lights', background: 'linear-gradient(45deg, #43e97b 0%, #38f9d7 100%)' },
+        { id: 'bg-synthwave', background: 'linear-gradient(to top, #b92b27 0%, #1565c0 100%)' },
+        { id: 'bg-neon-blue', background: 'linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%)' },
+        { id: 'bg-miami', background: 'linear-gradient(to right, #fc4a1a, #f7b733)' },
+        { id: 'bg-retro', background: 'linear-gradient(to right, #3f2b96, #a8c0ff)' }
+    ];
+
+    function initAppThemes() {
+        const grid = document.getElementById('appThemeGrid');
+        if(!grid) return;
+        grid.innerHTML = '';
+        
+        APP_THEMES.forEach(theme => {
+            const div = document.createElement('div');
+            div.className = 'color-circle';
+            
+            if(theme.id === 'bg-default') {
+                // Khối nút Mặc định
+                div.style.background = 'var(--bg-color)';
+                div.innerHTML = '<span style="font-size:10px; font-weight:800; color:var(--text-muted);">GỐC</span>';
+                div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.justifyContent = 'center';
+            } else {
+                div.style.background = theme.background;
+            }
+            
+            div.style.boxShadow = '0 0 0 2px var(--bg-color) inset, 0 4px 10px rgba(0,0,0,0.1)';
+            div.onclick = () => {
+                applyAppTheme(theme.id);
+                closeAppThemeModal();
+            };
+            grid.appendChild(div);
+        });
+    }
+
+    function applyAppTheme(themeId) {
+        const theme = APP_THEMES.find(t => t.id === themeId) || APP_THEMES[0];
+        
+        if (theme.id === 'bg-default') {
+            document.body.style.background = '';
+            document.body.style.backgroundAttachment = '';
+        } else {
+            // Áp dụng gradient trực tiếp lên body và cố định hình nền khi cuộn
+            document.body.style.background = theme.background;
+            document.body.style.backgroundAttachment = 'fixed'; 
+            document.body.style.backgroundSize = 'cover';
+        }
+        localStorage.setItem('appTheme', themeId);
+    }
+
+    function openAppThemeModal() {
+        document.getElementById('appThemeOverlay').classList.add('show');
+        document.getElementById('appThemeModal').classList.add('show');
+    }
+    function closeAppThemeModal() {
+        document.getElementById('appThemeOverlay').classList.remove('show');
+        document.getElementById('appThemeModal').classList.remove('show');
+    }
+
+    // Khởi tạo hình nền khi trang vừa tải
+    applyAppTheme(localStorage.getItem('appTheme') || 'bg-default');
+    initAppThemes();
 </script>
 <script>
     // Đăng ký Service Worker cho PWA

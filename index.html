@@ -467,36 +467,12 @@
     <div class="top-nav">
         <h1>QUẢN LÝ CHI TIÊU</h1>
         <div class="user-menu" id="userMenu">
-            <button class="avatar-btn" id="btnAvatar"><img src="" alt="Avatar" id="avatarImg"></button>
-            <div class="dropdown-menu" id="dropdownMenu">
-                <div class="dropdown-header"><span class="dropdown-name" id="dropdownName">TÀI KHOẢN</span></div>
-                
-                <button class="dropdown-item" id="btnOpenCatManager">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<circle cx="12" cy="12" r="3"></circle>
-						<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-					</svg>
-					Quản lý danh mục
-				</button>
-                <button class="dropdown-item" id="btnOpenChangePwd">
-                    <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg> Đổi mật khẩu
-                </button>
-				<button class="dropdown-item" id="btnOpenWalletTheme">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.688h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
-                    Đổi màu thẻ
-                </button>
-				<button class="dropdown-item" id="btnToggleDarkMode">
-                    <svg id="iconMoon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                    <svg id="iconSun" class="hide" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                    <span id="darkModeText">Chế độ tối</span>
-                </button>
-                <button class="dropdown-item text-danger" id="btnLogout">
-                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Đăng xuất
-                </button>
+            <!-- Đổi button thành div và bỏ hiệu ứng con trỏ chuột -->
+            <div class="avatar-btn" style="cursor: default;">
+                <img src="" alt="Avatar" id="avatarImg">
             </div>
         </div>
     </div>
-
     <!-- ========================================= -->
     <!-- TAB 1: NHẬP LIỆU (HOME)                   -->
     <!-- ========================================= -->
@@ -1073,7 +1049,6 @@
             document.getElementById('authOverlay').classList.add('hide'); 
             
             const username = user.email.split('@')[0];
-            document.getElementById('dropdownName').innerText = ('XIN CHÀO, ' + username).toUpperCase();
             document.getElementById('avatarImg').src = `https://ui-avatars.com/api/?name=${username}&background=4361ee&color=fff&bold=true`;
 
             catRef = db.ref(`users/${currentUser.uid}/categories`);
@@ -1144,21 +1119,7 @@
             .catch(err => showToast(getAuthErrorVN(err.code), 'error'));
     });
 
-    const btnAvatar = document.getElementById('btnAvatar');
-    const dropdownMenu = document.getElementById('dropdownMenu');
-    
-    btnAvatar.addEventListener('click', (e) => { e.stopPropagation(); dropdownMenu.classList.toggle('show'); });
-    document.addEventListener('click', (e) => { if(!dropdownMenu.contains(e.target) && e.target !== btnAvatar) dropdownMenu.classList.remove('show'); });
-
-    document.getElementById('btnLogout').addEventListener('click', () => {
-        dropdownMenu.classList.remove('show');
-        if(confirm('Bạn muốn đăng xuất?')) {
-            auth.signOut().then(() => { if(txRef) txRef.off(); if(catRef) catRef.off(); showToast('Đã đăng xuất'); switchTab('home');});
-        }
-    });
-
     const changePwdOverlay = document.getElementById('changePwdOverlay');
-    document.getElementById('btnOpenChangePwd').addEventListener('click', () => { dropdownMenu.classList.remove('show'); changePwdOverlay.classList.remove('hide'); });
     document.getElementById('btnCancelChangePwd').addEventListener('click', () => { changePwdOverlay.classList.add('hide'); document.getElementById('oldPasswordInput').value = ''; document.getElementById('newPasswordInput').value = ''; });
 
     document.getElementById('btnSubmitChangePwd').addEventListener('click', () => {
@@ -1181,13 +1142,6 @@
         });
     });
 
-    document.getElementById('btnOpenCatManager').addEventListener('click', () => {
-        dropdownMenu.classList.remove('show'); openCatManager();
-    });
-	document.getElementById('btnOpenWalletTheme').addEventListener('click', () => {
-        document.getElementById('dropdownMenu').classList.remove('show'); 
-        openWalletThemeModal();
-    });
     document.getElementById('btnToggleEye').addEventListener('click', () => {
         isBalanceHidden = !isBalanceHidden;
         if(isBalanceHidden) { document.getElementById('iconEyeOpen').classList.add('hide'); document.getElementById('iconEyeClosed').classList.remove('hide'); } 

@@ -1027,7 +1027,19 @@
     });
     document.getElementById('btnSettingsLogout').addEventListener('click', () => {
         if(confirm('Bạn muốn đăng xuất?')) {
-            auth.signOut().then(() => { if(txRef) txRef.off(); if(catRef) catRef.off(); showToast('Đã đăng xuất'); switchTab('home');});
+            auth.signOut().then(() => { 
+                if(txRef) txRef.off(); 
+                if(catRef) catRef.off(); 
+                
+                // Trả về màu mặc định khi đăng xuất để không bị dính màu của người trước
+                applyWalletTheme('wt-blue', false);
+                applyAppTheme('bg-default', false);
+                localStorage.removeItem('walletTheme');
+                localStorage.removeItem('appTheme');
+
+                showToast('Đã đăng xuất'); 
+                switchTab('home');
+            });
         }
     });
     document.getElementById('btnSettingsDarkMode').addEventListener('click', () => {
@@ -1102,6 +1114,23 @@
                 updateUI();
                 renderCharts(); 
             });
+			const settingsRef = db.ref(`users/${currentUser.uid}/settings`);
+            settingsRef.on('value', (snap) => {
+                if (snap.exists()) {
+                    const settings = snap.val();
+                    if (settings.walletTheme) applyWalletTheme(settings.walletTheme, false);
+                    if (settings.appTheme) applyAppTheme(settings.appTheme, false);
+                } else {
+                    applyWalletTheme('wt-blue', false);
+                    applyAppTheme('bg-default', false);
+                }
+                
+                // ĐỢI TẢI XONG MÀU TỪ FIREBASE RỒI MỚI ẨN MÀN HÌNH CHỜ
+                if (isFirstLoad) {
+                    document.getElementById('splashScreen').classList.add('hide');
+                    isFirstLoad = false;
+                }
+            });
         } else {
             currentUser = null;
             document.getElementById('authOverlay').classList.remove('hide'); 
@@ -1109,11 +1138,12 @@
             
             if(pieChartInstance) pieChartInstance.destroy();
             if(barChartInstance) barChartInstance.destroy();
-        }
-        
-        if (isFirstLoad) {
-            document.getElementById('splashScreen').classList.add('hide');
-            isFirstLoad = false;
+            
+            // ẨN MÀN HÌNH CHỜ NẾU CHƯA ĐĂNG NHẬP
+            if (isFirstLoad) {
+                document.getElementById('splashScreen').classList.add('hide');
+                isFirstLoad = false;
+            }
         }
     });
 
@@ -2061,13 +2091,38 @@
         });
     }
 
-    function applyWalletTheme(themeId) {
+    function applyWalletTheme(themeId, saveToDb = true) {
         const theme = WALLET_THEMES.find(t => t.id === themeId) || WALLET_THEMES[0];
         const walletCard = document.querySelector('.wallet-card');
         if(walletCard) {
             walletCard.style.background = theme.background;
         }
-        localStorage.setItem('walletTheme', themeId);
+        localStorage.setItem('walletTheme', themeId); // Vẫn lưu local để backup mượt mà
+
+        // Đẩy lên Firebase nếu user đang đăng nhập
+        if (saveToDb && currentUser) {
+            db.ref(`users/${currentUser.uid}/settings/walletTheme`).set(themeId);
+        }
+    }
+
+    function applyAppTheme(themeId, saveToDb = true) {
+        const theme = APP_THEMES.find(t => t.id === themeId) || APP_THEMES[0];
+        
+        if (theme.id === 'bg-default') {
+            document.body.style.background = '';
+            document.body.style.backgroundAttachment = '';
+        } else {
+            // Áp dụng gradient trực tiếp lên body và cố định hình nền khi cuộn
+            document.body.style.background = theme.background;
+            document.body.style.backgroundAttachment = 'fixed'; 
+            document.body.style.backgroundSize = 'cover';
+        }
+        localStorage.setItem('appTheme', themeId);
+
+        // Đẩy lên Firebase nếu user đang đăng nhập
+        if (saveToDb && currentUser) {
+            db.ref(`users/${currentUser.uid}/settings/appTheme`).set(themeId);
+        }
     }
 
     function openWalletThemeModal() {
@@ -2079,8 +2134,6 @@
         document.getElementById('walletThemeModal').classList.remove('show');
     }
 
-    // Khởi tạo màu thẻ khi trang vừa tải
-    applyWalletTheme(localStorage.getItem('walletTheme') || 'wt-blue');
     initWalletThemes();
 	// Lắng nghe sự kiện thay đổi ngày ở biểu đồ cột
     document.getElementById('barChartRange').addEventListener('change', renderCharts);
@@ -2236,8 +2289,6 @@
         document.getElementById('appThemeModal').classList.remove('show');
     }
 
-    // Khởi tạo hình nền khi trang vừa tải
-    applyAppTheme(localStorage.getItem('appTheme') || 'bg-default');
     initAppThemes();
 </script>
 <script>

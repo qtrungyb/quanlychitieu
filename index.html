@@ -645,7 +645,55 @@
 
     </div>
 </div>
+<!-- ========================================= -->
+<!-- POPUP SỬA GIAO DỊCH                       -->
+<!-- ========================================= -->
+<div class="history-overlay" id="editTxOverlay" style="z-index: 10003;" onclick="closeEditTxModal()"></div>
+<div class="history-modal" id="editTxModal" style="z-index: 10004; height: 90vh;">
+    <div class="history-modal-header">
+        <h3>Sửa giao dịch</h3>
+        <button class="btn-close-modal" onclick="closeEditTxModal()">&times;</button>
+    </div>
+    
+    <div class="history-modal-body" style="background: #fff;">
+        <div class="type-toggle" style="margin-bottom: 24px;">
+            <button type="button" class="btn-toggle income" id="btnEditTxInc" onclick="setEditTxType('income')">Tiền Thu</button>
+            <button type="button" class="btn-toggle expense" id="btnEditTxExp" onclick="setEditTxType('expense')">Tiền Chi</button>
+        </div>
+        <input type="hidden" id="editTxTypeInput" value="income">
 
+        <div class="form-group">
+            <div class="modern-date-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span class="date-text" id="editTxDateDisplay"></span>
+                <input type="date" id="editTxDateInput" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="amount-wrapper">
+                <input type="text" id="editTxAmountDisplay" class="form-control input-amount" placeholder="0" inputmode="numeric" required>
+                <span class="amount-currency">đ</span>
+            </div>
+            <input type="hidden" id="editTxAmountRaw" required>
+        </div>
+
+        <div class="form-group">
+            <div class="category-scroll" id="editTxCategoryScroll"></div>
+            <input type="hidden" id="editTxCategoryId" required>
+            <input type="hidden" id="editTxCategoryName" required>
+        </div>
+
+        <div class="form-group">
+            <input type="text" id="editTxNote" class="form-control" placeholder="Ghi chú (Không bắt buộc)">
+        </div>
+        
+        <button type="button" class="btn-submit edit-mode" id="btnSaveEditTx" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 30px; margin-top: 20px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Lưu thay đổi
+        </button>
+    </div>
+</div>
 <!-- ========================================= -->
 <!-- ACTION SHEET (SỬA / XÓA GIAO DỊCH)        -->
 <!-- ========================================= -->
@@ -716,13 +764,21 @@
     };
 
     const THEMES = {
+        // --- 7 Màu gốc ---
         'theme-orange': { color: 'var(--c-orange)', bg: 'var(--bg-orange)', hex: '#ff9f43' },
         'theme-blue': { color: 'var(--c-blue)', bg: 'var(--bg-blue)', hex: '#0abde3' },
         'theme-pink': { color: 'var(--c-pink)', bg: 'var(--bg-pink)', hex: '#f368e0' },
         'theme-purple': { color: 'var(--c-purple)', bg: 'var(--bg-purple)', hex: '#5f27cd' },
         'theme-green': { color: 'var(--c-green)', bg: 'var(--bg-green)', hex: '#10ac84' },
         'theme-red': { color: 'var(--c-red)', bg: 'var(--bg-red)', hex: '#e74c3c' },
-        'theme-gray': { color: 'var(--text-main)', bg: 'var(--bg-gray)', hex: '#8395a7' }
+        'theme-gray': { color: 'var(--text-main)', bg: 'var(--bg-gray)', hex: '#8395a7' },
+        
+        // --- 5 Màu mới bổ sung ---
+        'theme-yellow': { color: '#f1c40f', bg: '#fef9e7', hex: '#f1c40f' },
+        'theme-cyan': { color: '#00cec9', bg: '#e6fbfc', hex: '#00cec9' },
+        'theme-indigo': { color: '#3c40c6', bg: '#ebebfa', hex: '#3c40c6' },
+        'theme-chocolate': { color: '#d35400', bg: '#faeee6', hex: '#d35400' },
+        'theme-teal': { color: '#006266', bg: '#e6efef', hex: '#006266' }
     };
 
     const DEFAULT_CATEGORIES = {
@@ -1557,26 +1613,19 @@
         if(!t) return;
         editingId = id;
         
-        switchTab('home'); 
+        // Đổ dữ liệu vào Popup Sửa
+        document.getElementById('editTxDateInput').value = t.date;
+        document.getElementById('editTxDateDisplay').innerText = formatNiceDate(t.date);
+        document.getElementById('editTxNote').value = t.note || '';
+        document.getElementById('editTxAmountRaw').value = t.amount;
+        document.getElementById('editTxAmountDisplay').value = formatter.format(t.amount);
         
-        dateInput.value = t.date;
-        formDateDisplay.innerText = formatNiceDate(t.date);
+        // Gọi hàm render danh mục tương ứng
+        setEditTxType(t.type);
         
-        document.getElementById('noteInput').value = t.note || '';
-        amountInputRaw.value = t.amount;
-        amountInputDisplay.value = formatter.format(t.amount);
-        
-        switchType(t.type);
-        setTimeout(() => {
-            const targetPill = document.querySelector(`#categoryScroll .cat-pill[data-id="${t.categoryId}"]`);
-            if(targetPill) targetPill.click();
-        }, 50);
-
-        document.getElementById('submitBtn').innerText = 'Lưu thay đổi';
-        document.getElementById('submitBtn').classList.add('edit-mode');
-        document.getElementById('formCard').classList.add('edit-mode');
-        document.getElementById('cancelEditBtn').classList.remove('hide');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Hiển thị popup
+        document.getElementById('editTxOverlay').classList.add('show');
+        document.getElementById('editTxModal').classList.add('show');
     }
 
     function triggerDelete(id) {
@@ -1585,26 +1634,103 @@
             if(t && currentUser) {
                 db.ref(`users/${currentUser.uid}/transactions/${t.date}/${id}`).remove()
                 .then(() => {
-                    if(editingId === id) resetFormState(); 
+                    if(editingId === id) closeEditTxModal(); 
                     showToast('Đã xóa giao dịch');
                 }).catch(err => { showToast('Lỗi khi xóa!', 'error'); });
             }
         }
     }
 
-    document.getElementById('cancelEditBtn').addEventListener('click', resetFormState);
-
-    function resetFormState() {
+    // ==========================================
+    // LOGIC CHO POPUP SỬA GIAO DỊCH
+    // ==========================================
+    function closeEditTxModal() {
+        document.getElementById('editTxOverlay').classList.remove('show');
+        document.getElementById('editTxModal').classList.remove('show');
         editingId = null;
+    }
+
+    function setEditTxType(type) {
+        document.getElementById('btnEditTxInc').className = 'btn-toggle income' + (type === 'income' ? ' active' : '');
+        document.getElementById('btnEditTxExp').className = 'btn-toggle expense' + (type === 'expense' ? ' active' : '');
+        document.getElementById('editTxTypeInput').value = type;
+
+        const scroll = document.getElementById('editTxCategoryScroll');
+        scroll.innerHTML = '';
+        
+        const filteredCats = categories.filter(c => c.type === type);
+        filteredCats.forEach(c => {
+            const div = document.createElement('div');
+            div.className = `cat-pill`;
+            div.setAttribute('data-id', c.id);
+            div.setAttribute('data-val', c.name);
+            div.style.setProperty('--cat-color', THEMES[c.color].color);
+            div.style.setProperty('--cat-bg', THEMES[c.color].bg);
+            div.innerHTML = `<div class="pill-icon" style="color: var(--cat-color)">${SVG_LIB[c.icon]}</div> ${c.name}`;
+            
+            div.onclick = () => {
+                scroll.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+                div.classList.add('active');
+                document.getElementById('editTxCategoryId').value = c.id;
+                document.getElementById('editTxCategoryName').value = c.name;
+                div.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            };
+            scroll.appendChild(div);
+        });
+
+        const currentTx = transactions.find(x => x.id === editingId);
+        let targetId = (currentTx && currentTx.type === type) ? currentTx.categoryId : (filteredCats[0] ? filteredCats[0].id : null);
+        
+        if (targetId) {
+            const activePill = scroll.querySelector(`.cat-pill[data-id="${targetId}"]`);
+            if (activePill) activePill.click();
+        }
+    }
+
+    document.getElementById('editTxAmountDisplay').addEventListener('input', function(e) {
+        let val = this.value.replace(/\D/g, '');
+        if (val === '') { document.getElementById('editTxAmountRaw').value = ''; this.value = ''; return; }
+        document.getElementById('editTxAmountRaw').value = val; this.value = formatter.format(parseInt(val));
+    });
+
+    document.getElementById('editTxDateInput').addEventListener('change', (e) => { 
+        document.getElementById('editTxDateDisplay').innerText = formatNiceDate(e.target.value); 
+    });
+
+    document.getElementById('btnSaveEditTx').addEventListener('click', () => {
+        if(!currentUser) return;
+        const amtStr = document.getElementById('editTxAmountRaw').value;
+        if(!amtStr || parseInt(amtStr) < 1000) { alert('Vui lòng nhập số tiền hợp lệ'); return; }
+        
+        const amt = parseInt(amtStr);
+        const catId = document.getElementById('editTxCategoryId').value;
+        const catName = document.getElementById('editTxCategoryName').value;
+        const note = document.getElementById('editTxNote').value;
+        const date = document.getElementById('editTxDateInput').value;
+        const type = document.getElementById('editTxTypeInput').value;
+
+        const txData = { type, amount: amt, categoryId: catId, categoryName: catName, note };
+
+        const oldTx = transactions.find(x => x.id === editingId);
+        if (oldTx && oldTx.date !== date) {
+            db.ref(`users/${currentUser.uid}/transactions/${oldTx.date}/${editingId}`).remove();
+            db.ref(`users/${currentUser.uid}/transactions/${date}/${editingId}`).set(txData).then(() => {
+                showToast('Đã cập nhật'); closeEditTxModal();
+            });
+        } else if(oldTx) {
+            db.ref(`users/${currentUser.uid}/transactions/${date}/${editingId}`).update(txData).then(() => {
+                showToast('Đã cập nhật'); closeEditTxModal();
+            });
+        }
+    });
+
+    // ==========================================
+    // LOGIC CHO TAB THÊM MỚI (HOME)
+    // ==========================================
+    function resetFormState() {
         amountInputDisplay.value = ''; amountInputRaw.value = ''; document.getElementById('noteInput').value = '';
         dateInput.value = todayStr; formDateDisplay.innerText = formatNiceDate(todayStr);
-        
-        document.getElementById('submitBtn').innerText = 'Thêm giao dịch';
-        document.getElementById('submitBtn').classList.remove('edit-mode');
-        document.getElementById('formCard').classList.remove('edit-mode');
-        document.getElementById('cancelEditBtn').classList.add('hide');
-        
-        switchType('income'); 
+        switchType('expense'); // Reset về mặc định
     }
 
     document.getElementById('transactionForm').addEventListener('submit', (e) => {
@@ -1623,26 +1749,14 @@
 
         const txData = { type, amount: amt, categoryId: catId, categoryName: catName, note };
 
-        if (editingId) {
-            const oldTx = transactions.find(x => x.id === editingId);
-            if (oldTx && oldTx.date !== date) {
-                db.ref(`users/${currentUser.uid}/transactions/${oldTx.date}/${editingId}`).remove();
-                db.ref(`users/${currentUser.uid}/transactions/${date}/${editingId}`).set(txData).then(() => showToast('Đã cập nhật'));
-            } else {
-                db.ref(`users/${currentUser.uid}/transactions/${date}/${editingId}`).update(txData).then(() => showToast('Đã cập nhật'));
-            }
-        } else {
-            const newId = Date.now();
-            db.ref(`users/${currentUser.uid}/transactions/${date}/${newId}`).set(txData)
-            .then(() => {
-                currentDateLimit = DATES_PER_PAGE; 
-                showToast('Thêm thành công!');
-            }).catch(err => { showToast('Lỗi khi lưu!', 'error'); });
-        }
-        resetFormState();
+        const newId = Date.now();
+        db.ref(`users/${currentUser.uid}/transactions/${date}/${newId}`).set(txData)
+        .then(() => {
+            currentDateLimit = DATES_PER_PAGE; 
+            showToast('Thêm thành công!');
+            resetFormState();
+        }).catch(err => { showToast('Lỗi khi lưu!', 'error'); });
     });
-	// Lắng nghe sự kiện thay đổi ngày thống kê
-    document.getElementById('barChartRange').addEventListener('change', renderCharts);
 </script>
 <script>
     // Đăng ký Service Worker cho PWA

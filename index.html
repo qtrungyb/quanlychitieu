@@ -227,38 +227,22 @@
         .empty-chart { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: var(--text-muted); text-align: center;}
         .empty-chart svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
 		/* =========================================
-           THẺ KPI (TAB THỐNG KÊ)
+           THẺ KPI (TAB THỐNG KÊ) - CẢI TIẾN HERO
            ========================================= */
-        .kpi-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-        .kpi-card { background: #fff; border-radius: 20px; padding: 16px; box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08); display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden;}
-        .kpi-card.full-width { grid-column: span 2; }
+        .hero-kpi { text-align: center; padding: 10px 0 28px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .hero-kpi .kpi-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .hero-kpi-value { font-size: 38px; font-weight: 800; color: var(--text-main); letter-spacing: -1px; line-height: 1.2; transition: 0.3s;}
+        .hero-kpi .kpi-desc { font-size: 14px; font-weight: 600; background: var(--card-bg); border: 1px solid #e2e8f0; padding: 8px 18px; border-radius: 20px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);}
+        
+        .kpi-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+        .kpi-card { background: var(--card-bg); border-radius: 20px; padding: 16px; box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08); display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden;}
         .kpi-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; z-index: 1;}
         .kpi-value { font-size: 20px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; z-index: 1;}
         .kpi-desc { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; z-index: 1;}
         
-        /* Chế độ tối cho KPI */
+        /* Dark mode cho Hero KPI */
+        body.dark-theme .hero-kpi .kpi-desc { background: var(--card-bg); border-color: #2d3748; }
         body.dark-theme .kpi-card { background-color: var(--card-bg) !important; border: 1px solid #2d3748; }
-		/* CSS cho Trend Indicator (Nhãn Tăng/Giảm) */
-		.trend-badge {
-			display: inline-flex;
-			align-items: center;
-			gap: 4px;
-			padding: 4px 8px;
-			border-radius: 12px;
-			font-size: 11px;
-			font-weight: 700;
-			transition: 0.3s;
-			white-space: nowrap; /* BẮT BUỘC: Ngăn text bị rớt dòng chữ */
-			flex-shrink: 0; /* BẮT BUỘC: Ngăn nhãn bị bóp méo */
-		}
-		.trend-badge.good { background: var(--success-light); color: var(--success); }
-		.trend-badge.bad { background: var(--danger-light); color: var(--danger); }
-		.trend-badge.neutral { background: var(--bg-gray); color: var(--text-muted); }
-
-		/* Chế độ tối cho Trend Indicator */
-		body.dark-theme .trend-badge.good { background: rgba(46, 204, 113, 0.15); }
-		body.dark-theme .trend-badge.bad { background: rgba(231, 76, 60, 0.15); }
-		body.dark-theme .trend-badge.neutral { background: rgba(131, 149, 167, 0.15); }
         /* =========================================
            9. BOTTOM NAVIGATION BAR
            ========================================= */
@@ -688,16 +672,21 @@
             </div>
         </div>
 
-        <!-- THẺ KPI TỔNG QUAN -->
-        <div class="kpi-container">
-            <div class="kpi-card full-width">
-                <div class="kpi-title">Số dư khả dụng</div>
-                <div class="kpi-value" id="kpiNetFlow">0 đ</div>
-                <div class="kpi-desc" id="kpiNetFlowDesc">Thu: 0đ | Chi: 0đ</div>
+        <!-- KHỐI HERO KPI TỔNG QUAN -->
+        <div class="hero-kpi">
+            <div class="kpi-title">Số dư khả dụng</div>
+            <div class="hero-kpi-value" id="kpiNetFlow">0 đ</div>
+            <div class="kpi-desc" id="kpiNetFlowDesc">
+                <span>Thu: <span class="text-success">0đ</span></span>
+                <span style="color: #cbd5e1;">|</span>
+                <span>Chi: <span class="text-danger">0đ</span></span>
             </div>
+        </div>
+
+        <!-- 2 THẺ KPI NHỎ BÊN DƯỚI -->
+        <div class="kpi-container">
             <div class="kpi-card">
 				<div class="kpi-title">Trung bình chi</div>
-				<!-- Đã thêm flex-wrap: wrap để nhãn rớt xuống dòng đẹp mắt nếu số tiền quá dài -->
 				<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
 					<div class="kpi-value text-danger" id="kpiAvgExpense">0 đ</div>
 					<div class="trend-badge hide" id="kpiAvgExpenseTrend"></div>
@@ -707,11 +696,11 @@
             <div class="kpi-card">
                 <div class="kpi-title">Chi lớn nhất</div>
                 <div class="kpi-value" id="kpiMaxExpense">0 đ</div>
-                <div class="kpi-desc" id="kpiMaxExpenseName" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Chưa có dữ liệu</div>
+                <div class="kpi-desc" id="kpiMaxExpenseName">Chưa có dữ liệu</div>
             </div>
         </div>
 
-        <!-- 1. BIỂU ĐỒ TRÒN (CƠ CẤU THU / CHI) -->
+        <!-- 1. BIỂU ĐỒ TRÒN VÀ TOP 5 (CƠ CẤU THU / CHI) -->
         <div class="chart-card">
             <div class="chart-header" style="flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -724,12 +713,23 @@
                     <button type="button" class="btn-toggle income" id="btnPieInc" style="height: 36px; font-size: 14px;">Tiền Thu</button>
                 </div>
             </div>
+            
             <div class="chart-container">
                 <canvas id="pieChart"></canvas>
             </div>
             <div id="pieEmptyState" class="empty-chart hide">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                 <p id="pieEmptyText">Chưa có dữ liệu</p>
+            </div>
+
+            <!-- TÍCH HỢP KHỐI TOP 5 VÀO NGAY DƯỚI CANVAS TRÒN -->
+            <div id="top5Container" style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
+                <div class="chart-header" style="margin-bottom: 12px;">
+                    <h3 class="chart-title" style="font-size: 14px;" id="top5Title">Top 5 khoản chi lớn nhất</h3>
+                </div>
+                <div class="transaction-list" id="topExpenseList" style="gap: 0;">
+                    <div class="loading-text">Đang tải dữ liệu...</div>
+                </div>
             </div>
         </div>
 
@@ -745,7 +745,7 @@
         </div>
 
         <!-- 3. BIỂU ĐỒ ĐƯỜNG (XU HƯỚNG SỐ DƯ) -->
-        <div class="chart-card">
+        <div class="chart-card" style="margin-bottom: 20px;">
             <div class="chart-header">
                 <h3 class="chart-title">Xu hướng số dư</h3>
                 <span class="chart-subtitle">Đang tải...</span>
@@ -754,20 +754,9 @@
                 <canvas id="lineChart"></canvas>
             </div>
         </div>
+    </div> <!-- HẾT TAB THỐNG KÊ (ANALYTICS) -->
 
-        <!-- 4. DANH SÁCH TOP 5 CHI TIÊU CAO NHẤT -->
-        <div class="chart-card" style="margin-bottom: 20px;">
-            <div class="chart-header">
-                <h3 class="chart-title">Top 5 khoản chi lớn nhất</h3>
-                <span class="chart-subtitle text-danger">Đang tải...</span>
-            </div>
-            <!-- Tận dụng class transaction-list có sẵn để hiển thị -->
-            <div class="transaction-list" id="topExpenseList" style="gap: 0;">
-                <div class="loading-text">Đang tải dữ liệu...</div>
-            </div>
-        </div>
-    </div>
-	<!-- ========================================= -->
+    <!-- ========================================= -->
     <!-- TAB 4: THÊM (CÀI ĐẶT)                     -->
     <!-- ========================================= -->
     <div id="settingsView" class="view-section">
@@ -805,7 +794,7 @@
 
         <div class="settings-header" style="margin-top: 10px;">Tài khoản</div>
         <div class="settings-card">
-            <!-- NÚT THÔNG TIN CÁ NHÂN (MỚI THÊM) -->
+            <!-- NÚT THÔNG TIN CÁ NHÂN -->
             <div class="settings-item" id="btnSettingsProfile">
                 <div class="settings-item-left">
                     <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -2042,7 +2031,7 @@
         const elNetFlow = document.getElementById('kpiNetFlow');
         if (elNetFlow) {
             elNetFlow.innerText = currencyFormatter.format(netFlow);
-            elNetFlow.className = 'kpi-value ' + (netFlow >= 0 ? 'text-success' : 'text-danger');
+            elNetFlow.className = 'hero-kpi-value ' + (netFlow >= 0 ? 'text-success' : 'text-danger');
             document.getElementById('kpiNetFlowDesc').innerHTML = `Thu: <span class="text-success">+${formatter.format(totalIncPeriod)}</span> | Chi: <span class="text-danger">-${formatter.format(totalExpPeriod)}</span>`;
         }
         const elAvgExp = document.getElementById('kpiAvgExpense');
@@ -2120,38 +2109,55 @@
             }
         }
 
-        // 4. CẬP NHẬT TOP 5
-        const topExpenseList = document.getElementById('topExpenseList');
-        if (topExpenseList) {
-            const top5Expenses = allPeriodTransactions.filter(t => t.type === 'expense').sort((a, b) => b.amount - a.amount).slice(0, 5);
-            topExpenseList.innerHTML = '';
-            if (top5Expenses.length === 0) {
-                topExpenseList.innerHTML = `<div style="text-align:center; padding: 20px 0; color: var(--text-muted); font-size: 13px;">Không có chi tiêu nào</div>`;
-            } else {
-                top5Expenses.forEach(t => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'transaction-item';
-                    itemDiv.style.padding = '12px 0'; itemDiv.style.borderBottom = '1px solid #f8f9fa'; itemDiv.style.cursor = 'default';
-                    
-                    const catObj = categories.find(c => c.id === t.categoryId);
-                    const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
-                    const shortDate = `${t.date.split('-')[2]}/${t.date.split('-')[1]}/${t.date.split('-')[0].substring(2)}`;
+       // 4. CẬP NHẬT TOP 5 (TÍCH HỢP NGỮ CẢNH DƯỚI PIE CHART)
+		const top5Container = document.getElementById('top5Container');
+		const topExpenseList = document.getElementById('topExpenseList');
+		const top5Title = document.getElementById('top5Title');
 
-                    itemDiv.innerHTML = `
-                        <div class="t-left">
-                            <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">${catObj ? SVG_LIB[catObj.icon] : SVG_LIB['other']}</div>
-                            <div class="t-info">
-                                <div class="t-title" style="font-size: 15px;">${t.categoryName || t.category}</div>
-                                <div class="t-note" style="font-size: 12px;">${shortDate} ${t.note ? ' • ' + t.note : ''}</div>
-                            </div>
-                        </div>
-                        <div class="t-action"><div class="t-amount text-danger" style="font-size: 15px;">-${formatter.format(t.amount)}</div></div>
-                    `;
-                    topExpenseList.appendChild(itemDiv);
-                });
-                if (topExpenseList.lastChild) topExpenseList.lastChild.style.borderBottom = 'none';
-            }
-        }
+		if (top5Container && topExpenseList) {
+			// 1. Tự động đổi Tiêu đề theo chế độ Thu/Chi đang xem trên biểu đồ
+			top5Title.innerText = currentPieType === 'expense' ? 'Top 5 khoản chi lớn nhất' : 'Top 5 khoản thu lớn nhất';
+			
+			// 2. Lọc danh sách tương ứng với currentPieType
+			const top5Txs = allPeriodTransactions
+				.filter(t => t.type === currentPieType)
+				.sort((a, b) => b.amount - a.amount)
+				.slice(0, 5);
+				
+			topExpenseList.innerHTML = '';
+			
+			if (top5Txs.length === 0) {
+				topExpenseList.innerHTML = `<div style="text-align:center; padding: 20px 0; color: var(--text-muted); font-size: 13px;">Không có dữ liệu</div>`;
+			} else {
+				top5Txs.forEach(t => {
+					const itemDiv = document.createElement('div');
+					// Dùng CSS class có sẵn để tự động xử lý darkmode và viền
+					itemDiv.className = 'transaction-item';
+					itemDiv.style.padding = '12px 0'; 
+					itemDiv.style.cursor = 'default';
+					
+					const catObj = categories.find(c => c.id === t.categoryId);
+					const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+					const shortDate = `${t.date.split('-')[2]}/${t.date.split('-')[1]}/${t.date.split('-')[0].substring(2)}`;
+					
+					// Phân biệt màu sắc Tiền và Dấu (+/-)
+					const amountClass = currentPieType === 'expense' ? 'text-danger' : 'text-success';
+					const amountPrefix = currentPieType === 'expense' ? '-' : '+';
+
+					itemDiv.innerHTML = `
+						<div class="t-left">
+							<div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">${catObj ? SVG_LIB[catObj.icon] : SVG_LIB['other']}</div>
+							<div class="t-info">
+								<div class="t-title" style="font-size: 15px;">${t.categoryName || t.category}</div>
+								<div class="t-note" style="font-size: 12px;">${shortDate} ${t.note ? ' • ' + t.note : ''}</div>
+							</div>
+						</div>
+						<div class="t-action"><div class="t-amount ${amountClass}" style="font-size: 15px;">${amountPrefix}${formatter.format(t.amount)}</div></div>
+					`;
+					topExpenseList.appendChild(itemDiv);
+				});
+			}
+		}
 
         // 1. BIỂU ĐỒ TRÒN
         const targetTypeTxs = allPeriodTransactions.filter(t => t.type === currentPieType);

@@ -310,41 +310,83 @@
         .hide { display: none !important; }
         .loading-text { text-align: center; color: var(--primary); font-weight: 600; padding: 20px; }
 		/* =========================================
-           12. DARK MODE (CHẾ ĐỘ TỐI)
+           12. DARK MODE (CHẾ ĐỘ TỐI) CHUYÊN SÂU
            ========================================= */
         body.dark-theme {
             --bg-color: #121212; 
             --card-bg: #1e1e1e;
-            --text-main: #f5f6fa; 
+            --text-main: #e2e8f0; /* Chữ trắng dịu hơn */
             --text-muted: #a0aec0;
+            
+            /* Làm dịu màu nền của các icon danh mục để không chói mắt */
+            --bg-orange: rgba(255, 159, 67, 0.15);
+            --bg-blue: rgba(10, 189, 227, 0.15);
+            --bg-pink: rgba(243, 104, 224, 0.15);
+            --bg-purple: rgba(95, 39, 205, 0.15);
+            --bg-green: rgba(16, 172, 132, 0.15);
+            --bg-gray: rgba(131, 149, 167, 0.15);
+            --bg-red: rgba(231, 76, 60, 0.15);
         }
+
+        /* 1. Nền tổng thể và ghi đè CSS inline (style="background: #fff") */
         body.dark-theme .card, body.dark-theme .auth-card, body.dark-theme .dropdown-menu,
-        body.dark-theme .history-modal-header, body.dark-theme .history-modal-body,
+        body.dark-theme .history-modal-header, 
+        body.dark-theme .history-modal-body, 
         body.dark-theme .bottom-sheet, body.dark-theme .bottom-nav,
-        body.dark-theme .history-filters-card, body.dark-theme .date-group-items,
-        body.dark-theme .chart-card {
-            background-color: var(--card-bg);
-            border-color: #2d3748;
+        body.dark-theme .history-filters-card, body.dark-theme .chart-card {
+            background-color: var(--card-bg) !important;
+            border-color: #2d3748 !important;
         }
+
+        /* Giữ nền đen nhánh cho background của popup Danh mục / Sửa / Thêm */
+        body.dark-theme #catManagerModal .history-modal-body,
+        body.dark-theme #catFormModal .history-modal-body,
+        body.dark-theme #editTxModal .history-modal-body {
+            background-color: var(--bg-color) !important;
+        }
+
+        /* 2. Form, Khối nhập liệu, Nút bấm phụ */
         body.dark-theme .form-control, body.dark-theme .modern-date-wrapper, 
         body.dark-theme .search-box input, body.dark-theme .filter-date-wrapper,
-        body.dark-theme .cat-item, body.dark-theme .icon-box, body.dark-theme .cat-pill {
+        body.dark-theme .cat-item, body.dark-theme .icon-box, body.dark-theme .cat-pill,
+        body.dark-theme .btn-toggle, body.dark-theme .chart-subtitle,
+        body.dark-theme .btn-cancel, body.dark-theme .btn-quick {
             background-color: #2d3748;
             color: var(--text-main);
-            border-color: #4a5568;
+            border-color: #4a5568 !important;
         }
-        body.dark-theme .dropdown-item, body.dark-theme .sheet-btn, 
-        body.dark-theme .btn-cancel, body.dark-theme .btn-quick {
-            background-color: var(--card-bg);
-            color: var(--text-main);
-        }
+
+        /* 3. Nút Đóng, Xóa Lọc, Thêm DM */
+        body.dark-theme .btn-close-modal { background-color: #2d3748; color: var(--text-muted); }
+        body.dark-theme .btn-close-modal:active { background-color: #4a5568; }
+        body.dark-theme .btn-add-cat-inline { background-color: rgba(67, 97, 238, 0.2); color: #829fff; }
+        body.dark-theme .btn-clear-filter { background-color: rgba(231, 76, 60, 0.2); color: #ff7668; }
+
+        /* 4. Trạng thái Đang chọn (Active) */
+        body.dark-theme .icon-box.active { background-color: rgba(67, 97, 238, 0.2) !important; border-color: #829fff !important; }
+        body.dark-theme .icon-box.active svg { stroke: #829fff; }
+        body.dark-theme .cat-pill.active { background-color: #2d3748 !important; border-color: var(--cat-color) !important; color: var(--cat-color); }
+        body.dark-theme .color-circle { box-shadow: 0 0 0 2px var(--bg-color) inset; }
+
+        /* 5. Menu thả xuống & List */
+        body.dark-theme .dropdown-item { background-color: transparent; color: var(--text-main); }
         body.dark-theme .dropdown-item:active, body.dark-theme .transaction-item:active { background-color: #2d3748; }
-        body.dark-theme .dropdown-header { background: #2d3748; border-color: #4a5568; }
+        body.dark-theme .dropdown-header { background: #2d3748; border-bottom: 1px solid #4a5568; border-color: #4a5568; }
+
+        /* 6. Danh sách lịch sử giao dịch (Xóa các viền kẻ trắng) */
         body.dark-theme .date-group-header { background-color: rgba(18, 18, 18, 0.95); }
-        body.dark-theme .bottom-nav { border-top: 1px solid #2d3748; box-shadow: 0 -4px 20px rgba(0,0,0,0.5); }
-        body.dark-theme .cat-pill.active { background: var(--cat-bg); color: var(--cat-color); border-color: var(--cat-color); }
-        body.dark-theme .avatar-btn { background: #2d3748; }
-        body.dark-theme .btn-load-more { background: #2d3748; border-color: #4a5568;}
+        body.dark-theme .date-group-items { background-color: var(--card-bg); border-color: #2d3748; }
+        body.dark-theme .transaction-item { border-bottom-color: #2d3748; }
+        body.dark-theme .btn-load-more { background: #2d3748; border-color: #4a5568; color: #829fff; }
+        
+        /* 7. Action Sheet (Popup Tùy chọn dưới cùng) */
+        body.dark-theme .sheet-indicator { background-color: #4a5568; }
+        body.dark-theme .btn-sheet-edit { background-color: rgba(67, 97, 238, 0.15) !important; color: #829fff !important; }
+        body.dark-theme .btn-sheet-delete { background-color: rgba(231, 76, 60, 0.15) !important; color: #ff7668 !important; }
+        body.dark-theme .btn-sheet-cancel { background-color: #2d3748 !important; color: var(--text-main) !important; }
+
+        /* 8. Viền Avatar */
+        body.dark-theme .avatar-btn { background: #2d3748; border-color: #4a5568; }
 	</style>
 </head>
 <body>
@@ -425,6 +467,10 @@
                 <button class="dropdown-item" id="btnOpenChangePwd">
                     <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg> Đổi mật khẩu
                 </button>
+				<button class="dropdown-item" id="btnOpenWalletTheme">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.688h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+                    Đổi màu thẻ
+                </button>
 				<button class="dropdown-item" id="btnToggleDarkMode">
                     <svg id="iconMoon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                     <svg id="iconSun" class="hide" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -445,11 +491,13 @@
         <div class="wallet-card">
             <div class="card-header">
                 <span>Tổng số dư</span>
+                <!-- Chỉ giữ lại nút con mắt ẩn/hiện -->
                 <button class="btn-eye" id="btnToggleEye">
                     <svg id="iconEyeOpen" class="hide" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     <svg id="iconEyeClosed" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
                 </button>
             </div>
+
             <div class="card-balance" id="totalBalance">******</div>
             <div class="card-stats">
                 <div class="stat-col">
@@ -731,6 +779,19 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
             Lưu thay đổi
         </button>
+    </div>
+</div>
+<!-- ========================================= -->
+<!-- POPUP ĐỔI MÀU THẺ SỐ DƯ                   -->
+<!-- ========================================= -->
+<div class="history-overlay" id="walletThemeOverlay" style="z-index: 10005;" onclick="closeWalletThemeModal()"></div>
+<div class="history-modal" id="walletThemeModal" style="z-index: 10006; height: auto; padding-bottom: env(safe-area-inset-bottom);">
+    <div class="history-modal-header">
+        <h3>Đổi màu thẻ</h3>
+        <button class="btn-close-modal" onclick="closeWalletThemeModal()">&times;</button>
+    </div>
+    <div class="history-modal-body" style="padding: 20px 20px 40px 20px; overflow: visible;">
+        <div class="color-grid" id="walletThemeGrid"></div>
     </div>
 </div>
 <!-- ========================================= -->
@@ -1035,7 +1096,10 @@
     document.getElementById('btnOpenCatManager').addEventListener('click', () => {
         dropdownMenu.classList.remove('show'); openCatManager();
     });
-
+	document.getElementById('btnOpenWalletTheme').addEventListener('click', () => {
+        document.getElementById('dropdownMenu').classList.remove('show'); 
+        openWalletThemeModal();
+    });
     document.getElementById('btnToggleEye').addEventListener('click', () => {
         isBalanceHidden = !isBalanceHidden;
         if(isBalanceHidden) { document.getElementById('iconEyeOpen').classList.add('hide'); document.getElementById('iconEyeClosed').classList.remove('hide'); } 
@@ -1838,6 +1902,125 @@
             document.getElementById('dropdownMenu').classList.remove('show'); // Đóng menu
         });
     }
+	// ==========================================
+    // LOGIC ĐỔI MÀU THẺ SỐ DƯ - BỘ SƯU TẬP KHỔNG LỒ (57 MÀU)
+    // ==========================================
+    const WALLET_THEMES = [
+        // --- 0. CÁC MÀU GỐC ---
+        { id: 'wt-blue', background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' }, 
+        { id: 'wt-green', background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' }, 
+        { id: 'wt-purple', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }, 
+        { id: 'wt-orange', background: 'linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%)' }, 
+        { id: 'wt-dark', background: 'linear-gradient(135deg, #232526 0%, #414345 100%)' }, 
+        { id: 'wt-pink', background: 'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)' }, 
+        { id: 'wt-cyan', background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)' }, 
+
+        // --- 1. SẮC NÓNG & RỰC RỠ (Vibrant & Warm) ---
+        { id: 'wt-red', background: 'linear-gradient(135deg, #ed213a 0%, #93291e 100%)' }, 
+        { id: 'wt-sunset', background: 'linear-gradient(135deg, #ff4e50 0%, #f9d423 100%)' }, 
+        { id: 'wt-cherry', background: 'linear-gradient(135deg, #eb3349 0%, #f45c43 100%)' }, 
+        { id: 'wt-gold', background: 'linear-gradient(135deg, #fceabb 0%, #f8b500 100%)' }, 
+        { id: 'wt-flare', background: 'linear-gradient(135deg, #f12711 0%, #f5af19 100%)' }, 
+        { id: 'wt-mango', background: 'linear-gradient(135deg, #ffe259 0%, #ffa751 100%)' }, 
+        { id: 'wt-kyoto', background: 'linear-gradient(135deg, #c21500 0%, #ffc500 100%)' },
+        { id: 'wt-peach', background: 'linear-gradient(135deg, #ed4264 0%, #ffedbc 100%)' },
+        { id: 'wt-blood-orange', background: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)' },
+        { id: 'wt-sun-veg', background: 'linear-gradient(135deg, #f09819 0%, #edde5d 100%)' },
+
+        // --- 2. SẮC LẠNH & BIỂN CẢ (Cool & Ocean) ---
+        { id: 'wt-ocean', background: 'linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)' }, 
+        { id: 'wt-frost', background: 'linear-gradient(135deg, #000428 0%, #004e92 100%)' }, 
+        { id: 'wt-sea-blizz', background: 'linear-gradient(135deg, #1cd8d2 0%, #93edc7 100%)' }, 
+        { id: 'wt-dusk', background: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)' }, 
+        { id: 'wt-deep-sea', background: 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)' },
+        { id: 'wt-blue-sky', background: 'linear-gradient(135deg, #56ccf2 0%, #2f80ed 100%)' },
+        { id: 'wt-water', background: 'linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%)' },
+        { id: 'wt-blue-raspberry', background: 'linear-gradient(135deg, #00b4db 0%, #0083b0 100%)' },
+        { id: 'wt-clear-water', background: 'linear-gradient(135deg, #396afc 0%, #2948ff 100%)' },
+
+        // --- 3. SẮC TỐI & SANG TRỌNG (Dark & Elegant) ---
+        { id: 'wt-midnight', background: 'linear-gradient(135deg, #141e30 0%, #243b55 100%)' }, 
+        { id: 'wt-deep-purple', background: 'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)' }, 
+        { id: 'wt-mauve', background: 'linear-gradient(135deg, #42275a 0%, #734b6d 100%)' }, 
+        { id: 'wt-50-shades', background: 'linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%)' }, 
+        { id: 'wt-berry', background: 'linear-gradient(135deg, #c31432 0%, #240b36 100%)' }, 
+        { id: 'wt-namn', background: 'linear-gradient(135deg, #a73737 0%, #7a2828 100%)' }, 
+        { id: 'wt-coal', background: 'linear-gradient(135deg, #eb5757 0%, #000000 100%)' },
+        { id: 'wt-space', background: 'linear-gradient(135deg, #434343 0%, #000000 100%)' },
+        { id: 'wt-royal', background: 'linear-gradient(135deg, #141517 0%, #2e2f33 100%)' },
+
+        // --- 4. SẮC NGỌT NGÀO & PASTEL (Sweet & Pastel) ---
+        { id: 'wt-rose', background: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)' }, 
+        { id: 'wt-piglet', background: 'linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%)' }, 
+        { id: 'wt-bloody-mary', background: 'linear-gradient(135deg, #ff512f 0%, #dd2476 100%)' },
+        { id: 'wt-cotton-candy', background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' },
+        { id: 'wt-lavender', background: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)' },
+        { id: 'wt-pink-water', background: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)' },
+        { id: 'wt-milky', background: 'linear-gradient(135deg, #e6e9f0 0%, #eef1f5 100%)' },
+
+        // --- 5. SẮC XANH THIÊN NHIÊN (Nature Green) ---
+        { id: 'wt-teal', background: 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)' }, 
+        { id: 'wt-emerald', background: 'linear-gradient(135deg, #348F50 0%, #56B4D3 100%)' }, 
+        { id: 'wt-forest', background: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)' }, 
+        { id: 'wt-lush', background: 'linear-gradient(135deg, #56ab2f 0%, #a8e063 100%)' }, 
+        { id: 'wt-green-beach', background: 'linear-gradient(135deg, #02aab0 0%, #00cdac 100%)' },
+        { id: 'wt-bamboo', background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' },
+
+        // --- 6. NEON & CYBERPUNK (Cực chất) ---
+        { id: 'wt-cyberpunk', background: 'linear-gradient(135deg, #ff00cc 0%, #333399 100%)' },
+        { id: 'wt-synthwave', background: 'linear-gradient(135deg, #b92b27 0%, #1565c0 100%)' },
+        { id: 'wt-neon-blue', background: 'linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%)' },
+        { id: 'wt-matrix', background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' },
+        { id: 'wt-disco', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+
+        // --- 7. MÀU ĐƠN SẮC PHẨNG (Flat UI Minimalist) ---
+        { id: 'wt-flat-blue', background: '#3498db' },
+        { id: 'wt-flat-green', background: '#2ecc71' },
+        { id: 'wt-flat-purple', background: '#9b59b6' },
+        { id: 'wt-flat-navy', background: '#34495e' },
+        { id: 'wt-flat-orange', background: '#e67e22' },
+        { id: 'wt-flat-red', background: '#e74c3c' },
+        { id: 'wt-flat-teal', background: '#1abc9c' }
+    ];
+
+    function initWalletThemes() {
+        const grid = document.getElementById('walletThemeGrid');
+        if(!grid) return;
+        grid.innerHTML = '';
+        WALLET_THEMES.forEach(theme => {
+            const div = document.createElement('div');
+            div.className = 'color-circle';
+            div.style.background = theme.background;
+            div.style.boxShadow = '0 0 0 2px var(--bg-color) inset, 0 4px 10px rgba(0,0,0,0.1)';
+            div.onclick = () => {
+                applyWalletTheme(theme.id);
+                closeWalletThemeModal();
+            };
+            grid.appendChild(div);
+        });
+    }
+
+    function applyWalletTheme(themeId) {
+        const theme = WALLET_THEMES.find(t => t.id === themeId) || WALLET_THEMES[0];
+        const walletCard = document.querySelector('.wallet-card');
+        if(walletCard) {
+            walletCard.style.background = theme.background;
+        }
+        localStorage.setItem('walletTheme', themeId);
+    }
+
+    function openWalletThemeModal() {
+        document.getElementById('walletThemeOverlay').classList.add('show');
+        document.getElementById('walletThemeModal').classList.add('show');
+    }
+    function closeWalletThemeModal() {
+        document.getElementById('walletThemeOverlay').classList.remove('show');
+        document.getElementById('walletThemeModal').classList.remove('show');
+    }
+
+    // Khởi tạo màu thẻ khi trang vừa tải
+    applyWalletTheme(localStorage.getItem('walletTheme') || 'wt-blue');
+    initWalletThemes();
 	// Lắng nghe sự kiện thay đổi ngày ở biểu đồ cột
     document.getElementById('barChartRange').addEventListener('change', renderCharts);
 </script>

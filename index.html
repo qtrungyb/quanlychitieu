@@ -2063,8 +2063,8 @@
     initWalletThemes();
 	// Lắng nghe sự kiện thay đổi ngày ở biểu đồ cột
     document.getElementById('barChartRange').addEventListener('change', renderCharts);
-	// ==========================================
-    // TÍNH NĂNG ĐẶC BIỆT: AVATAR MA THUẬT & THÀNH TỰU
+    // ==========================================
+    // TÍNH NĂNG ĐẶC BIỆT: AVATAR ĐỔI MÀU MA THUẬT
     // ==========================================
     const avatarBtn = document.querySelector('.avatar-btn');
     if (avatarBtn) {
@@ -2073,35 +2073,12 @@
         
         avatarBtn.addEventListener('click', () => {
             // 1. TRƯỢT MÀU MA THUẬT (Magic Theme Switcher)
-            // Lấy ngẫu nhiên 1 màu trong danh sách 57 màu hiện có
+            // Lấy ngẫu nhiên 1 màu trong danh sách màu hiện có
             const randomIndex = Math.floor(Math.random() * WALLET_THEMES.length);
             const randomTheme = WALLET_THEMES[randomIndex];
             applyWalletTheme(randomTheme.id);
-
-            // 2. BẢNG THÀNH TỰU CÁ NHÂN (Gamification)
-            // Đếm tổng số giao dịch đã nhập để xếp hạng
-            const txCount = transactions.length;
-            let rank = "";
             
-            if (txCount === 0) {
-                rank = "Tân binh tập sự 🐣";
-            } else if (txCount < 10) {
-                rank = "Hệ khởi động 🌱";
-            } else if (txCount < 30) {
-                rank = "Chăm chỉ ghi chép ✍️";
-            } else if (txCount < 80) {
-                rank = "Tay hòm chìa khóa 🗝️";
-            } else if (txCount < 200) {
-                rank = "Bậc thầy chi tiêu 💎";
-            } else {
-                rank = "Chiến thần tài chính 👑";
-            }
-
-            // Hiển thị Toast thông báo kết hợp cả 2 hành động
-            // Lưu ý: Tận dụng hàm showToast có sẵn của bạn
-            showToast(`🎨 Đổi màu! Cấp độ: ${rank} (${txCount} GD)`);
-            
-            // Tạo thêm hiệu ứng rung nhẹ (nhún) cho thẻ số dư để thêm phần sinh động
+            // 2. Tạo hiệu ứng rung nhẹ (nhún) cho thẻ số dư
             const walletCard = document.querySelector('.wallet-card');
             if (walletCard) {
                 walletCard.style.transform = 'scale(0.97)';

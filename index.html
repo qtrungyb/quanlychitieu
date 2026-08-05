@@ -1948,9 +1948,9 @@
                     `;
                     
                     // Cho phép click vào để mở Action Sheet (Sửa/Xóa) như ở Tab Lịch sử
-                    itemDiv.onclick = () => openActionSheet(t.id, cName, t.amount);
-                    
-                    topExpenseList.appendChild(itemDiv);
+                    itemDiv.style.cursor = 'default'; // Chuyển con trỏ chuột về mặc định để báo hiệu không click được
+
+					topExpenseList.appendChild(itemDiv);
                 });
                 
                 // Xóa viền border của phần tử cuối cùng cho đẹp mắt

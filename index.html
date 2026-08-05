@@ -226,7 +226,18 @@
         
         .empty-chart { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: var(--text-muted); text-align: center;}
         .empty-chart svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
-
+		/* =========================================
+           THẺ KPI (TAB THỐNG KÊ)
+           ========================================= */
+        .kpi-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .kpi-card { background: #fff; border-radius: 20px; padding: 16px; box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08); display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden;}
+        .kpi-card.full-width { grid-column: span 2; }
+        .kpi-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; z-index: 1;}
+        .kpi-value { font-size: 20px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; z-index: 1;}
+        .kpi-desc { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; z-index: 1;}
+        
+        /* Chế độ tối cho KPI */
+        body.dark-theme .kpi-card { background-color: var(--card-bg) !important; border: 1px solid #2d3748; }
         /* =========================================
            9. BOTTOM NAVIGATION BAR
            ========================================= */
@@ -617,24 +628,33 @@
     <!-- TAB 3: THỐNG KÊ (ANALYTICS)               -->
     <!-- ========================================= -->
     <div id="analyticsView" class="view-section">
+        
+        <!-- 1. BIỂU ĐỒ TRÒN (CƠ CẤU THU / CHI) -->
         <div class="chart-card">
-            <div class="chart-header">
-                <h3 class="chart-title">Chi tiêu</h3>
-                <span class="chart-subtitle">Tháng này</span>
+            <div class="chart-header" style="flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 class="chart-title">Cơ cấu danh mục</h3>
+                    <span class="chart-subtitle">Tháng này</span>
+                </div>
+                <!-- Toggle Thu / Chi -->
+                <div class="type-toggle" style="margin-bottom: 0;">
+                    <button type="button" class="btn-toggle active expense" id="btnPieExp" style="height: 36px; font-size: 14px;">Tiền Chi</button>
+                    <button type="button" class="btn-toggle income" id="btnPieInc" style="height: 36px; font-size: 14px;">Tiền Thu</button>
+                </div>
             </div>
             <div class="chart-container">
                 <canvas id="pieChart"></canvas>
             </div>
             <div id="pieEmptyState" class="empty-chart hide">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                <p>Chưa có dữ liệu chi tiêu tháng này</p>
+                <p id="pieEmptyText">Chưa có dữ liệu chi tiêu tháng này</p>
             </div>
         </div>
 
+        <!-- 2. BIỂU ĐỒ CỘT (SO SÁNH THU CHI) -->
         <div class="chart-card">
 			<div class="chart-header">
 				<h3 class="chart-title">Thu / Chi</h3>
-				<!-- Thẻ select thay thế cho text cố định -->
 				<select id="barChartRange" class="chart-subtitle" style="border: none; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; padding-right: 24px; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%238d99ae%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 6px center;">
 					<option value="7">7 ngày qua</option>
 					<option value="14">14 ngày qua</option>
@@ -645,6 +665,18 @@
 				<canvas id="barChart"></canvas>
 			</div>
 		</div>
+
+        <!-- 3. BIỂU ĐỒ ĐƯỜNG (XU HƯỚNG SỐ DƯ) -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Xu hướng số dư</h3>
+                <span class="chart-subtitle">Tháng này</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+
     </div>
 	<!-- ========================================= -->
     <!-- TAB 4: THÊM (CÀI ĐẶT)                     -->
@@ -946,6 +978,8 @@
     
     let pieChartInstance = null;
     let barChartInstance = null;
+	let lineChartInstance = null; // Khai báo thêm Line Chart
+    let currentPieType = 'expense'; // Theo dõi trạng thái Thu/Chi của Pie Chart
 
     const SVG_LIB = {
         'food': `<svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`,
@@ -1079,6 +1113,20 @@
     tabHistory.addEventListener('click', () => switchTab('history'));
     tabStats.addEventListener('click', () => switchTab('stats'));
     tabSettings.addEventListener('click', () => switchTab('settings'));
+	// Sự kiện chuyển đổi Thu/Chi ở Biểu đồ Tròn
+    document.getElementById('btnPieExp').addEventListener('click', function() {
+        this.classList.add('active', 'expense');
+        document.getElementById('btnPieInc').classList.remove('active', 'income');
+        currentPieType = 'expense';
+        renderCharts();
+    });
+    
+    document.getElementById('btnPieInc').addEventListener('click', function() {
+        this.classList.add('active', 'income');
+        document.getElementById('btnPieExp').classList.remove('active', 'expense');
+        currentPieType = 'income';
+        renderCharts();
+    });
 
     // --- XỬ LÝ SỰ KIỆN KHI BẤM VÀO CÁC NÚT TRONG TAB THÊM ---
     document.getElementById('btnSettingsCatManager').addEventListener('click', openCatManager);
@@ -1767,29 +1815,39 @@
     function renderCharts() {
         if (!document.getElementById('analyticsView').classList.contains('active')) return;
         
-        // --- 1. BIỂU ĐỒ TRÒN (PIE CHART) ---
-        const currentMonthPrefix = new Date().toISOString().slice(0, 7);
-        const monthExpenses = transactions.filter(t => t.type === 'expense' && t.date.startsWith(currentMonthPrefix));
+        const dateObj = new Date();
+        const currentYear = dateObj.getFullYear();
+        const currentMonth = dateObj.getMonth() + 1;
+        const currentMonthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
         
-        const expenseByCat = {};
-        monthExpenses.forEach(t => {
+        // ==========================================
+        // 1. BIỂU ĐỒ TRÒN (PIE CHART - HỖ TRỢ THU & CHI)
+        // ==========================================
+        const monthTransactions = transactions.filter(t => t.type === currentPieType && t.date.startsWith(currentMonthPrefix));
+        
+        const txByCat = {};
+        monthTransactions.forEach(t => {
             const cName = t.categoryName || t.category;
-            if(!expenseByCat[cName]) {
+            if(!txByCat[cName]) {
                 const catObj = categories.find(c => c.id === t.categoryId);
-                expenseByCat[cName] = { amount: 0, colorHex: catObj ? THEMES[catObj.color].hex : '#8395a7' };
+                txByCat[cName] = { amount: 0, colorHex: catObj ? THEMES[catObj.color].hex : '#8395a7' };
             }
-            expenseByCat[cName].amount += t.amount;
+            txByCat[cName].amount += t.amount;
         });
 
-        const pieLabels = Object.keys(expenseByCat);
-        const pieData = pieLabels.map(k => expenseByCat[k].amount);
-        const pieColors = pieLabels.map(k => expenseByCat[k].colorHex);
+        const pieLabels = Object.keys(txByCat);
+        const pieData = pieLabels.map(k => txByCat[k].amount);
+        const pieColors = pieLabels.map(k => txByCat[k].colorHex);
 
         if(pieChartInstance) pieChartInstance.destroy();
         
         if (pieData.length === 0) {
             document.getElementById('pieChart').style.display = 'none';
             document.getElementById('pieEmptyState').classList.remove('hide');
+            // Cập nhật text trạng thái trống tương ứng
+            document.getElementById('pieEmptyText').innerText = currentPieType === 'expense' 
+                ? 'Chưa có dữ liệu chi tiêu tháng này' 
+                : 'Chưa có dữ liệu tiền thu tháng này';
         } else {
             document.getElementById('pieChart').style.display = 'block';
             document.getElementById('pieEmptyState').classList.add('hide');
@@ -1820,7 +1878,9 @@
             });
         }
 
-        // --- 2. BIỂU ĐỒ CỘT (BAR CHART - ĐÃ NÂNG CẤP) ---
+        // ==========================================
+        // 2. BIỂU ĐỒ CỘT (BAR CHART)
+        // ==========================================
         const rangeSelect = document.getElementById('barChartRange');
         const barRange = rangeSelect ? parseInt(rangeSelect.value) : 7;
         
@@ -1855,16 +1915,106 @@
                 responsive: true, maintainAspectRatio: false,
                 scales: {
                     y: { beginAtZero: true, ticks: { callback: function(value) { if(value===0) return 0; return (value/1000) + 'K'; } }, grid: { borderDash: [4, 4] } },
-                    x: { 
-                        grid: { display: false },
-                        ticks: { 
-                            maxTicksLimit: barRange === 30 ? 10 : barRange 
-                        }
-                    }
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: barRange === 30 ? 10 : barRange } }
                 },
                 plugins: {
                     legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: {size: 12} } },
                     tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + currencyFormatter.format(context.parsed.y); } } }
+                }
+            }
+        });
+
+        // ==========================================
+        // 3. BIỂU ĐỒ ĐƯỜNG (LINE CHART - XU HƯỚNG SỐ DƯ THÁNG NÀY)
+        // ==========================================
+        const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+        let todayDay = dateObj.getDate();
+        
+        // Tìm ngày xa nhất trong tháng này có giao dịch (trường hợp ng dùng nhập trước tương lai)
+        let maxTxDay = todayDay;
+        transactions.forEach(t => {
+            if (t.date.startsWith(currentMonthPrefix)) {
+                let txDay = parseInt(t.date.split('-')[2]);
+                if (txDay > maxTxDay) maxTxDay = txDay;
+            }
+        });
+
+        let lineLabels = [];
+        let lineData = [];
+        let runningBalance = 0;
+
+        // Tính toán số dư mang từ các tháng trước (Số dư đầu kỳ của tháng này)
+        transactions.forEach(t => {
+            if (t.date < `${currentMonthPrefix}-01`) {
+                runningBalance += (t.type === 'income' ? t.amount : -t.amount);
+            }
+        });
+
+        // Chạy từng ngày trong tháng để cộng dồn số dư
+        for (let i = 1; i <= maxTxDay; i++) {
+            let dayStr = String(i).padStart(2, '0');
+            let dateStr = `${currentMonthPrefix}-${dayStr}`;
+            
+            let dayTxs = transactions.filter(t => t.date === dateStr);
+            let dayIn = dayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+            let dayOut = dayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+            
+            runningBalance += (dayIn - dayOut);
+            
+            lineLabels.push(`${i}/${currentMonth}`);
+            lineData.push(runningBalance);
+        }
+
+        if(lineChartInstance) lineChartInstance.destroy();
+        const ctxLine = document.getElementById('lineChart').getContext('2d');
+        
+        // Tạo gradient background mờ đẹp mắt bên dưới đường kẻ
+        let gradient = ctxLine.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)'); // var(--primary) mờ
+        gradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
+
+        lineChartInstance = new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: lineLabels,
+                datasets: [{
+                    label: 'Số dư',
+                    data: lineData,
+                    borderColor: '#4361ee', // Màu primary của app
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#4361ee',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.3 // Làm đường cong mềm mại
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                scales: {
+                    y: { 
+                        ticks: { callback: function(value) { return (value / 1000) + 'K'; } }, 
+                        grid: { borderDash: [4, 4] } 
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { maxTicksLimit: 7 }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { 
+                        callbacks: { 
+                            label: function(context) { 
+                                return 'Số dư: ' + currencyFormatter.format(context.parsed.y); 
+                            } 
+                        } 
+                    }
                 }
             }
         });

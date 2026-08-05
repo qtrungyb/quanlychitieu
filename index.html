@@ -629,35 +629,62 @@
     <!-- ========================================= -->
     <div id="analyticsView" class="view-section">
         
-        <!-- BỘ LỌC THỜI GIAN THỐNG KÊ KÉP -->
-        <div class="chart-card" style="margin-bottom: 20px; padding: 16px 20px; background: var(--primary); color: white; display: flex; flex-direction: column; gap: 12px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 700; font-size: 15px;">Thời gian thống kê:</span>
-                <select id="statsFilterMode" style="height: 32px; border-radius: 8px; border: none; padding: 0 12px; outline: none; font-size: 13px; font-weight: 600; color: var(--text-main); cursor: pointer;">
-                    <option value="month">Theo tháng</option>
-                    <option value="range">Tùy chỉnh ngày</option>
-                </select>
+        <!-- BỘ LỌC THỜI GIAN THỐNG KÊ KÉP (GIAO DIỆN MỚI) -->
+        <div class="chart-card" style="margin-bottom: 8px; padding: 16px;">
+            <div class="type-toggle" style="margin-bottom: 16px;">
+                <!-- Nút Tùy chỉnh ngày làm mặc định (Màu xanh Primary) -->
+                <button type="button" class="btn-toggle active" id="btnModeRange" style="font-size: 14px; background: var(--primary); color: white;">Tùy chỉnh ngày</button>
+                <button type="button" class="btn-toggle" id="btnModeMonth" style="font-size: 14px;">Theo tháng</button>
             </div>
+            <input type="hidden" id="statsFilterMode" value="range">
             
-            <!-- Chế độ chọn tháng -->
-            <div id="statsMonthContainer" style="display: flex;">
-                <input type="month" id="statsMonthPicker" style="height: 40px; width: 100%; padding: 0 12px; font-size: 15px; font-weight: 700; text-align: center; border: none; border-radius: 8px; outline: none; cursor: pointer; color: var(--text-main);">
+            <!-- Chế độ chọn khoảng ngày (Mặc định hiển thị) -->
+            <div id="statsRangeContainer" style="display: flex; gap: 10px; align-items: center;">
+                <div style="flex: 1; display: flex; align-items: center; gap: 8px; background: var(--bg-color); border: 1px solid #e2e8f0; border-radius: 12px; padding: 0 12px; height: 44px;">
+                    <svg style="width: 18px; color: var(--primary); flex-shrink: 0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <input type="date" id="statsStartDate" style="width: 100%; border: none; background: transparent; font-size: 13px; font-weight: 600; outline: none; color: var(--text-main);">
+                </div>
+                <span style="color: var(--text-muted); font-weight: bold;">-</span>
+                <div style="flex: 1; display: flex; align-items: center; gap: 8px; background: var(--bg-color); border: 1px solid #e2e8f0; border-radius: 12px; padding: 0 12px; height: 44px;">
+                    <svg style="width: 18px; color: var(--primary); flex-shrink: 0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <input type="date" id="statsEndDate" style="width: 100%; border: none; background: transparent; font-size: 13px; font-weight: 600; outline: none; color: var(--text-main);">
+                </div>
             </div>
 
-            <!-- Chế độ chọn khoảng ngày -->
-            <div id="statsRangeContainer" class="hide" style="display: flex; gap: 10px; align-items: center;">
-                <input type="date" id="statsStartDate" style="flex: 1; height: 40px; padding: 0 8px; font-size: 13px; font-weight: 600; border: none; border-radius: 8px; outline: none; text-align: center; color: var(--text-main);">
-                <span style="font-weight: bold; font-size: 16px;">-</span>
-                <input type="date" id="statsEndDate" style="flex: 1; height: 40px; padding: 0 8px; font-size: 13px; font-weight: 600; border: none; border-radius: 8px; outline: none; text-align: center; color: var(--text-main);">
+            <!-- Chế độ chọn tháng (Ẩn mặc định) -->
+            <div id="statsMonthContainer" class="hide">
+                <div style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--bg-color); border: 1px solid #e2e8f0; border-radius: 12px; padding: 0 12px; height: 44px;">
+                    <svg style="width: 18px; color: var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <input type="month" id="statsMonthPicker" style="border: none; background: transparent; font-size: 15px; font-weight: 700; outline: none; color: var(--text-main);">
+                </div>
             </div>
         </div>
-        
+
+        <!-- THẺ KPI TỔNG QUAN -->
+        <div class="kpi-container">
+            <div class="kpi-card full-width">
+                <div class="kpi-title">Số dư khả dụng</div>
+                <div class="kpi-value" id="kpiNetFlow">0 đ</div>
+                <div class="kpi-desc" id="kpiNetFlowDesc">Thu: 0đ | Chi: 0đ</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Trung bình chi</div>
+                <div class="kpi-value text-danger" id="kpiAvgExpense">0 đ</div>
+                <div class="kpi-desc">/ ngày</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Chi lớn nhất</div>
+                <div class="kpi-value" id="kpiMaxExpense">0 đ</div>
+                <div class="kpi-desc" id="kpiMaxExpenseName" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Chưa có dữ liệu</div>
+            </div>
+        </div>
+
         <!-- 1. BIỂU ĐỒ TRÒN (CƠ CẤU THU / CHI) -->
         <div class="chart-card">
             <div class="chart-header" style="flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h3 class="chart-title">Cơ cấu danh mục</h3>
-                    <span class="chart-subtitle">Tháng này</span>
+                    <span class="chart-subtitle">Đang tải...</span>
                 </div>
                 <!-- Toggle Thu / Chi -->
                 <div class="type-toggle" style="margin-bottom: 0;">
@@ -670,7 +697,7 @@
             </div>
             <div id="pieEmptyState" class="empty-chart hide">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                <p id="pieEmptyText">Chưa có dữ liệu chi tiêu tháng này</p>
+                <p id="pieEmptyText">Chưa có dữ liệu</p>
             </div>
         </div>
 
@@ -678,7 +705,7 @@
         <div class="chart-card">
             <div class="chart-header">
                 <h3 class="chart-title">Thu / Chi</h3>
-                <span class="chart-subtitle">Tháng này</span>
+                <span class="chart-subtitle">Đang tải...</span>
             </div>
             <div class="chart-container">
                 <canvas id="barChart"></canvas>
@@ -689,17 +716,18 @@
         <div class="chart-card">
             <div class="chart-header">
                 <h3 class="chart-title">Xu hướng số dư</h3>
-                <span class="chart-subtitle">Tháng này</span>
+                <span class="chart-subtitle">Đang tải...</span>
             </div>
             <div class="chart-container">
                 <canvas id="lineChart"></canvas>
             </div>
         </div>
-		<!-- 4. DANH SÁCH TOP 5 CHI TIÊU CAO NHẤT -->
+
+        <!-- 4. DANH SÁCH TOP 5 CHI TIÊU CAO NHẤT -->
         <div class="chart-card" style="margin-bottom: 20px;">
             <div class="chart-header">
                 <h3 class="chart-title">Top 5 khoản chi lớn nhất</h3>
-                <span class="chart-subtitle text-danger">Tháng này</span>
+                <span class="chart-subtitle text-danger">Đang tải...</span>
             </div>
             <!-- Tận dụng class transaction-list có sẵn để hiển thị -->
             <div class="transaction-list" id="topExpenseList" style="gap: 0;">
@@ -1207,41 +1235,65 @@
     let expSortable = null;
 
     window.addEventListener('DOMContentLoaded', () => {
-	// Khởi tạo ngày/tháng mặc định cho bộ lọc Thống kê
+        // 1. Khởi tạo ngày/tháng mặc định cho bộ lọc Thống kê (Từ ngày 1 đến ngày hiện tại)
         const t = new Date();
         const y = t.getFullYear();
         const m = String(t.getMonth() + 1).padStart(2, '0');
         const d = String(t.getDate()).padStart(2, '0');
         
         document.getElementById('statsMonthPicker').value = `${y}-${m}`;
-        document.getElementById('statsStartDate').value = `${y}-${m}-01`;
-        document.getElementById('statsEndDate').value = `${y}-${m}-${d}`;
+        document.getElementById('statsStartDate').value = `${y}-${m}-01`; // Mặc định ngày 1
+        document.getElementById('statsEndDate').value = `${y}-${m}-${d}`; // Mặc định ngày hiện tại
 
-        // Chuyển đổi qua lại giữa 2 chế độ hiển thị
-        document.getElementById('statsFilterMode').addEventListener('change', function() {
-            if(this.value === 'month') {
+        // 2. Logic xử lý UI cho Nút gạt (Toggle) 2 chế độ
+        const btnModeRange = document.getElementById('btnModeRange');
+        const btnModeMonth = document.getElementById('btnModeMonth');
+        const statsFilterMode = document.getElementById('statsFilterMode');
+        
+        function switchStatsMode(mode) {
+            statsFilterMode.value = mode;
+            if (mode === 'range') {
+                btnModeRange.classList.add('active');
+                btnModeRange.style.background = 'var(--primary)';
+                btnModeRange.style.color = 'white';
+                
+                btnModeMonth.classList.remove('active');
+                btnModeMonth.style.background = 'var(--bg-color)';
+                btnModeMonth.style.color = 'var(--text-muted)';
+                
+                document.getElementById('statsRangeContainer').classList.remove('hide');
+                document.getElementById('statsMonthContainer').classList.add('hide');
+            } else {
+                btnModeMonth.classList.add('active');
+                btnModeMonth.style.background = 'var(--primary)';
+                btnModeMonth.style.color = 'white';
+                
+                btnModeRange.classList.remove('active');
+                btnModeRange.style.background = 'var(--bg-color)';
+                btnModeRange.style.color = 'var(--text-muted)';
+                
                 document.getElementById('statsMonthContainer').classList.remove('hide');
                 document.getElementById('statsRangeContainer').classList.add('hide');
-            } else {
-                document.getElementById('statsMonthContainer').classList.add('hide');
-                document.getElementById('statsRangeContainer').classList.remove('hide');
             }
             renderCharts();
-        });
+        }
 
-        // Kích hoạt vẽ lại biểu đồ ngay khi người dùng đổi ngày/tháng
+        btnModeRange.addEventListener('click', () => switchStatsMode('range'));
+        btnModeMonth.addEventListener('click', () => switchStatsMode('month'));
+
+        // 3. Kích hoạt vẽ lại biểu đồ ngay khi người dùng đổi ngày/tháng
         document.getElementById('statsMonthPicker').addEventListener('change', renderCharts);
         document.getElementById('statsStartDate').addEventListener('change', renderCharts);
         document.getElementById('statsEndDate').addEventListener('change', renderCharts);
-	// Khởi tạo ngày mặc định cho bộ lọc tháng ở tab thống kê
-        const todayForPicker = new Date();
-        document.getElementById('globalMonthPicker').value = `${todayForPicker.getFullYear()}-${String(todayForPicker.getMonth() + 1).padStart(2, '0')}`;
-        document.getElementById('globalMonthPicker').addEventListener('change', renderCharts);
+
+        // 4. Khôi phục tài khoản đăng nhập (Nếu có)
         if(localStorage.getItem('savedUsername')) {
             document.getElementById('usernameInput').value = localStorage.getItem('savedUsername');
             document.getElementById('passwordInput').value = localStorage.getItem('savedPassword');
             document.getElementById('rememberMe').checked = true;
         }
+        
+        // 5. Khởi tạo Grid icon và màu sắc cho form
         initCatFormGrids(); 
     });
 

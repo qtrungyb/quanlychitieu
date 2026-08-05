@@ -629,22 +629,26 @@
     <!-- ========================================= -->
     <div id="analyticsView" class="view-section">
         
-        <!-- THẺ KPI TỔNG QUAN MỚI THÊM -->
-        <div class="kpi-container">
-            <div class="kpi-card full-width">
-                <div class="kpi-title">Số dư khả dụng (Tháng này)</div>
-                <div class="kpi-value" id="kpiNetFlow">0 đ</div>
-                <div class="kpi-desc" id="kpiNetFlowDesc">Thu: 0đ | Chi: 0đ</div>
+        <!-- BỘ LỌC THỜI GIAN THỐNG KÊ KÉP -->
+        <div class="chart-card" style="margin-bottom: 20px; padding: 16px 20px; background: var(--primary); color: white; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; font-size: 15px;">Thời gian thống kê:</span>
+                <select id="statsFilterMode" style="height: 32px; border-radius: 8px; border: none; padding: 0 12px; outline: none; font-size: 13px; font-weight: 600; color: var(--text-main); cursor: pointer;">
+                    <option value="month">Theo tháng</option>
+                    <option value="range">Tùy chỉnh ngày</option>
+                </select>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-title">Trung bình chi</div>
-                <div class="kpi-value text-danger" id="kpiAvgExpense">0 đ</div>
-                <div class="kpi-desc">/ ngày (Tháng này)</div>
+            
+            <!-- Chế độ chọn tháng -->
+            <div id="statsMonthContainer" style="display: flex;">
+                <input type="month" id="statsMonthPicker" style="height: 40px; width: 100%; padding: 0 12px; font-size: 15px; font-weight: 700; text-align: center; border: none; border-radius: 8px; outline: none; cursor: pointer; color: var(--text-main);">
             </div>
-            <div class="kpi-card">
-                <div class="kpi-title">Chi lớn nhất</div>
-                <div class="kpi-value" id="kpiMaxExpense">0 đ</div>
-                <div class="kpi-desc" id="kpiMaxExpenseName">Chưa có dữ liệu</div>
+
+            <!-- Chế độ chọn khoảng ngày -->
+            <div id="statsRangeContainer" class="hide" style="display: flex; gap: 10px; align-items: center;">
+                <input type="date" id="statsStartDate" style="flex: 1; height: 40px; padding: 0 8px; font-size: 13px; font-weight: 600; border: none; border-radius: 8px; outline: none; text-align: center; color: var(--text-main);">
+                <span style="font-weight: bold; font-size: 16px;">-</span>
+                <input type="date" id="statsEndDate" style="flex: 1; height: 40px; padding: 0 8px; font-size: 13px; font-weight: 600; border: none; border-radius: 8px; outline: none; text-align: center; color: var(--text-main);">
             </div>
         </div>
         
@@ -672,18 +676,14 @@
 
         <!-- 2. BIỂU ĐỒ CỘT (SO SÁNH THU CHI) -->
         <div class="chart-card">
-			<div class="chart-header">
-				<h3 class="chart-title">Thu / Chi</h3>
-				<select id="barChartRange" class="chart-subtitle" style="border: none; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; padding-right: 24px; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%238d99ae%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 6px center;">
-					<option value="7">7 ngày qua</option>
-					<option value="14">14 ngày qua</option>
-					<option value="30">30 ngày qua</option>
-				</select>
-			</div>
-			<div class="chart-container">
-				<canvas id="barChart"></canvas>
-			</div>
-		</div>
+            <div class="chart-header">
+                <h3 class="chart-title">Thu / Chi</h3>
+                <span class="chart-subtitle">Tháng này</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
 
         <!-- 3. BIỂU ĐỒ ĐƯỜNG (XU HƯỚNG SỐ DƯ) -->
         <div class="chart-card">
@@ -1207,6 +1207,36 @@
     let expSortable = null;
 
     window.addEventListener('DOMContentLoaded', () => {
+	// Khởi tạo ngày/tháng mặc định cho bộ lọc Thống kê
+        const t = new Date();
+        const y = t.getFullYear();
+        const m = String(t.getMonth() + 1).padStart(2, '0');
+        const d = String(t.getDate()).padStart(2, '0');
+        
+        document.getElementById('statsMonthPicker').value = `${y}-${m}`;
+        document.getElementById('statsStartDate').value = `${y}-${m}-01`;
+        document.getElementById('statsEndDate').value = `${y}-${m}-${d}`;
+
+        // Chuyển đổi qua lại giữa 2 chế độ hiển thị
+        document.getElementById('statsFilterMode').addEventListener('change', function() {
+            if(this.value === 'month') {
+                document.getElementById('statsMonthContainer').classList.remove('hide');
+                document.getElementById('statsRangeContainer').classList.add('hide');
+            } else {
+                document.getElementById('statsMonthContainer').classList.add('hide');
+                document.getElementById('statsRangeContainer').classList.remove('hide');
+            }
+            renderCharts();
+        });
+
+        // Kích hoạt vẽ lại biểu đồ ngay khi người dùng đổi ngày/tháng
+        document.getElementById('statsMonthPicker').addEventListener('change', renderCharts);
+        document.getElementById('statsStartDate').addEventListener('change', renderCharts);
+        document.getElementById('statsEndDate').addEventListener('change', renderCharts);
+	// Khởi tạo ngày mặc định cho bộ lọc tháng ở tab thống kê
+        const todayForPicker = new Date();
+        document.getElementById('globalMonthPicker').value = `${todayForPicker.getFullYear()}-${String(todayForPicker.getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('globalMonthPicker').addEventListener('change', renderCharts);
         if(localStorage.getItem('savedUsername')) {
             document.getElementById('usernameInput').value = localStorage.getItem('savedUsername');
             document.getElementById('passwordInput').value = localStorage.getItem('savedPassword');
@@ -1844,128 +1874,117 @@
     function renderCharts() {
         if (!document.getElementById('analyticsView').classList.contains('active')) return;
         
-        const dateObj = new Date();
-        const currentYear = dateObj.getFullYear();
-        const currentMonth = dateObj.getMonth() + 1;
-        const currentMonthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-        
-        // ==========================================
-        // 0. CẬP NHẬT KPI CARDS (THÁNG NÀY)
-        // ==========================================
-        const allMonthTransactions = transactions.filter(t => t.date.startsWith(currentMonthPrefix));
-        
-        let totalIncMonth = 0;
-        let totalExpMonth = 0;
-        let maxExpTx = null;
+        const mode = document.getElementById('statsFilterMode').value;
+        let startDateStr = ''; let endDateStr = ''; let displayTitleText = ''; let daysToAverage = 1;
 
-        allMonthTransactions.forEach(t => {
-            if (t.type === 'income') totalIncMonth += t.amount;
+        // XỬ LÝ LẤY KHOẢNG THỜI GIAN THEO CHẾ ĐỘ
+        if (mode === 'month') {
+            const monthVal = document.getElementById('statsMonthPicker').value;
+            if (!monthVal) return;
+            const y = parseInt(monthVal.split('-')[0]); const m = parseInt(monthVal.split('-')[1]);
+            startDateStr = `${y}-${String(m).padStart(2, '0')}-01`;
+            const lastDay = new Date(y, m, 0).getDate();
+            endDateStr = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+            
+            displayTitleText = `Tháng ${m}/${y}`;
+            const now = new Date();
+            daysToAverage = (y === now.getFullYear() && m === (now.getMonth() + 1)) ? now.getDate() : lastDay;
+
+        } else {
+            startDateStr = document.getElementById('statsStartDate').value;
+            endDateStr = document.getElementById('statsEndDate').value;
+            if (!startDateStr || !endDateStr) return;
+            
+            // Tự hoán đổi nếu user vô tình chọn ngày bắt đầu lớn hơn ngày kết thúc
+            if (startDateStr > endDateStr) {
+                let temp = startDateStr; startDateStr = endDateStr; endDateStr = temp;
+                document.getElementById('statsStartDate').value = startDateStr;
+                document.getElementById('statsEndDate').value = endDateStr;
+            }
+
+            const formatVN = (d) => `${d.split('-')[2]}/${d.split('-')[1]}`;
+            displayTitleText = `${formatVN(startDateStr)} - ${formatVN(endDateStr)}`;
+
+            const sDate = new Date(startDateStr); const eDate = new Date(endDateStr);
+            daysToAverage = Math.floor((eDate - sDate) / (1000 * 60 * 60 * 24)) + 1;
+            if (daysToAverage < 1) daysToAverage = 1;
+        }
+
+        // Cập nhật text phụ trợ trên UI
+        document.querySelectorAll('#analyticsView .chart-subtitle').forEach(el => el.innerText = displayTitleText);
+        const kpiMaxDesc = document.querySelector('#kpiMaxExpense ~ .kpi-desc');
+
+        // LỌC DỮ LIỆU CHUẨN XÁC VỚI KHOẢNG NGÀY ĐÃ TÍNH
+        const allPeriodTransactions = transactions.filter(t => t.date >= startDateStr && t.date <= endDateStr);
+        let totalIncPeriod = 0; let totalExpPeriod = 0; let maxExpTx = null;
+
+        allPeriodTransactions.forEach(t => {
+            if (t.type === 'income') totalIncPeriod += t.amount;
             if (t.type === 'expense') {
-                totalExpMonth += t.amount;
-                if (!maxExpTx || t.amount > maxExpTx.amount) {
-                    maxExpTx = t;
-                }
+                totalExpPeriod += t.amount;
+                if (!maxExpTx || t.amount > maxExpTx.amount) maxExpTx = t;
             }
         });
 
-        const netFlow = totalIncMonth - totalExpMonth;
-        
-        // 1. Số dư khả dụng
+        // 0. VẼ LẠI THẺ KPI
+        const netFlow = totalIncPeriod - totalExpPeriod;
         const elNetFlow = document.getElementById('kpiNetFlow');
         if (elNetFlow) {
             elNetFlow.innerText = currencyFormatter.format(netFlow);
             elNetFlow.className = 'kpi-value ' + (netFlow >= 0 ? 'text-success' : 'text-danger');
-            document.getElementById('kpiNetFlowDesc').innerHTML = `Thu: <span class="text-success">+${formatter.format(totalIncMonth)}</span> | Chi: <span class="text-danger">-${formatter.format(totalExpMonth)}</span>`;
+            document.getElementById('kpiNetFlowDesc').innerHTML = `Thu: <span class="text-success">+${formatter.format(totalIncPeriod)}</span> | Chi: <span class="text-danger">-${formatter.format(totalExpPeriod)}</span>`;
         }
-
-        // 2. Trung bình chi / ngày
         const elAvgExp = document.getElementById('kpiAvgExpense');
-        if (elAvgExp) {
-            const currentDay = dateObj.getDate();
-            // Chia cho số ngày hiện tại của tháng thay vì 30 để độ chính xác cao hơn cho "Tháng này"
-            const avgDaily = totalExpMonth / currentDay;
-            elAvgExp.innerText = currencyFormatter.format(Math.round(avgDaily));
-        }
+        if (elAvgExp) elAvgExp.innerText = currencyFormatter.format(Math.round(totalExpPeriod / daysToAverage));
 
-        // 3. Chi tiêu lớn nhất
         const elMaxExp = document.getElementById('kpiMaxExpense');
         if (elMaxExp) {
             if (maxExpTx) {
                 elMaxExp.innerText = currencyFormatter.format(maxExpTx.amount);
-                document.getElementById('kpiMaxExpenseName').innerText = maxExpTx.categoryName || maxExpTx.category || 'Khác';
+                const maxShortDate = `${maxExpTx.date.split('-')[2]}/${maxExpTx.date.split('-')[1]}`;
+                kpiMaxDesc.innerText = (maxExpTx.categoryName || maxExpTx.category || 'Khác') + ` (${maxShortDate})`;
             } else {
-                elMaxExp.innerText = '0 đ';
-                document.getElementById('kpiMaxExpenseName').innerText = 'Chưa có giao dịch';
+                elMaxExp.innerText = '0 đ'; kpiMaxDesc.innerText = 'Chưa có dữ liệu';
             }
         }
-        // ==========================================
-        // 4. TOP 5 GIAO DỊCH CHI TIÊU CAO NHẤT (THÁNG NÀY)
-        // ==========================================
+
+        // 4. CẬP NHẬT TOP 5
         const topExpenseList = document.getElementById('topExpenseList');
         if (topExpenseList) {
-            // Lọc các giao dịch chi tiêu trong tháng này, sắp xếp giảm dần theo số tiền và lấy 5 phần tử đầu tiên
-            const top5Expenses = transactions
-                .filter(t => t.type === 'expense' && t.date.startsWith(currentMonthPrefix))
-                .sort((a, b) => b.amount - a.amount)
-                .slice(0, 5);
-
+            const top5Expenses = allPeriodTransactions.filter(t => t.type === 'expense').sort((a, b) => b.amount - a.amount).slice(0, 5);
             topExpenseList.innerHTML = '';
-
             if (top5Expenses.length === 0) {
-                topExpenseList.innerHTML = `
-                    <div style="text-align:center; padding: 20px 0; color: var(--text-muted); font-size: 13px;">
-                        Chưa có dữ liệu chi tiêu tháng này
-                    </div>`;
+                topExpenseList.innerHTML = `<div style="text-align:center; padding: 20px 0; color: var(--text-muted); font-size: 13px;">Không có chi tiêu nào</div>`;
             } else {
                 top5Expenses.forEach(t => {
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'transaction-item';
-                    itemDiv.style.padding = '12px 0'; // Thu gọn padding cho hợp với dạng list trong card
-                    itemDiv.style.borderBottom = '1px solid #f8f9fa';
+                    itemDiv.style.padding = '12px 0'; itemDiv.style.borderBottom = '1px solid #f8f9fa'; itemDiv.style.cursor = 'default';
                     
-                    const cName = t.categoryName || t.category;
                     const catObj = categories.find(c => c.id === t.categoryId);
-                    const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
                     const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
-                    
-                    // Xử lý hiển thị ngày tháng
-                    const dateParts = t.date.split('-');
-                    const shortDate = `${dateParts[2]}/${dateParts[1]}`;
+                    const shortDate = `${t.date.split('-')[2]}/${t.date.split('-')[1]}/${t.date.split('-')[0].substring(2)}`;
 
                     itemDiv.innerHTML = `
                         <div class="t-left">
-                            <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">
-                                ${iconSvg}
-                            </div>
+                            <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">${catObj ? SVG_LIB[catObj.icon] : SVG_LIB['other']}</div>
                             <div class="t-info">
-                                <div class="t-title" style="font-size: 15px;">${cName}</div>
+                                <div class="t-title" style="font-size: 15px;">${t.categoryName || t.category}</div>
                                 <div class="t-note" style="font-size: 12px;">${shortDate} ${t.note ? ' • ' + t.note : ''}</div>
                             </div>
                         </div>
-                        <div class="t-action">
-                            <div class="t-amount text-danger" style="font-size: 15px;">-${formatter.format(t.amount)}</div>
-                        </div>
+                        <div class="t-action"><div class="t-amount text-danger" style="font-size: 15px;">-${formatter.format(t.amount)}</div></div>
                     `;
-                    
-                    // Cho phép click vào để mở Action Sheet (Sửa/Xóa) như ở Tab Lịch sử
-                    itemDiv.style.cursor = 'default'; // Chuyển con trỏ chuột về mặc định để báo hiệu không click được
-
-					topExpenseList.appendChild(itemDiv);
+                    topExpenseList.appendChild(itemDiv);
                 });
-                
-                // Xóa viền border của phần tử cuối cùng cho đẹp mắt
-                if (topExpenseList.lastChild) {
-                    topExpenseList.lastChild.style.borderBottom = 'none';
-                }
+                if (topExpenseList.lastChild) topExpenseList.lastChild.style.borderBottom = 'none';
             }
         }
-        // ==========================================
-        // 1. BIỂU ĐỒ TRÒN (PIE CHART - HỖ TRỢ THU & CHI)
-        // ==========================================
-        const monthTransactions = transactions.filter(t => t.type === currentPieType && t.date.startsWith(currentMonthPrefix));
-        
+
+        // 1. BIỂU ĐỒ TRÒN
+        const targetTypeTxs = allPeriodTransactions.filter(t => t.type === currentPieType);
         const txByCat = {};
-        monthTransactions.forEach(t => {
+        targetTypeTxs.forEach(t => {
             const cName = t.categoryName || t.category;
             if(!txByCat[cName]) {
                 const catObj = categories.find(c => c.id === t.categoryId);
@@ -1974,188 +1993,64 @@
             txByCat[cName].amount += t.amount;
         });
 
-        const pieLabels = Object.keys(txByCat);
-        const pieData = pieLabels.map(k => txByCat[k].amount);
-        const pieColors = pieLabels.map(k => txByCat[k].colorHex);
-
         if(pieChartInstance) pieChartInstance.destroy();
-        
-        if (pieData.length === 0) {
+        const pieLabels = Object.keys(txByCat);
+        if (pieLabels.length === 0) {
             document.getElementById('pieChart').style.display = 'none';
             document.getElementById('pieEmptyState').classList.remove('hide');
-            // Cập nhật text trạng thái trống tương ứng
-            document.getElementById('pieEmptyText').innerText = currentPieType === 'expense' 
-                ? 'Chưa có dữ liệu chi tiêu tháng này' 
-                : 'Chưa có dữ liệu tiền thu tháng này';
+            document.getElementById('pieEmptyText').innerText = currentPieType === 'expense' ? `Chưa có chi tiêu` : `Chưa có tiền thu`;
         } else {
             document.getElementById('pieChart').style.display = 'block';
             document.getElementById('pieEmptyState').classList.add('hide');
-            
-            const ctxPie = document.getElementById('pieChart').getContext('2d');
-            pieChartInstance = new Chart(ctxPie, {
+            pieChartInstance = new Chart(document.getElementById('pieChart').getContext('2d'), {
                 type: 'doughnut',
-                data: {
-                    labels: pieLabels,
-                    datasets: [{ data: pieData, backgroundColor: pieColors, borderWidth: 2, hoverOffset: 4 }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false, cutout: '65%',
-                    plugins: {
-                        legend: { position: 'right', labels: { usePointStyle: true, padding: 20, font: {size: 13, weight: '500'} } },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.label || '';
-                                    if (label) label += ': ';
-                                    if (context.parsed !== null) label += currencyFormatter.format(context.parsed);
-                                    return label;
-                                }
-                            }
-                        }
-                    }
-                }
+                data: { labels: pieLabels, datasets: [{ data: pieLabels.map(k => txByCat[k].amount), backgroundColor: pieLabels.map(k => txByCat[k].colorHex), borderWidth: 2, hoverOffset: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 20, font: {size: 13, weight: '500'} } }, tooltip: { callbacks: { label: function(c) { return (c.label ? c.label + ': ' : '') + currencyFormatter.format(c.parsed); } } } } }
             });
         }
 
-        // ==========================================
-        // 2. BIỂU ĐỒ CỘT (BAR CHART)
-        // ==========================================
-        const rangeSelect = document.getElementById('barChartRange');
-        const barRange = rangeSelect ? parseInt(rangeSelect.value) : 7;
-        
-        const barLabels = [];
-        const inData = [];
-        const outData = [];
-        
-        for(let i = barRange - 1; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const dateStr = d.toISOString().slice(0, 10);
-            
-            barLabels.push(`${d.getDate()}/${d.getMonth()+1}`);
-            
-            const dayTxs = transactions.filter(t => t.date === dateStr);
-            inData.push(dayTxs.filter(t => t.type === 'income').reduce((s, t)=>s+t.amount, 0));
-            outData.push(dayTxs.filter(t => t.type === 'expense').reduce((s, t)=>s+t.amount, 0));
+        // CHUẨN BỊ MẢNG NGÀY CHO BAR/LINE CHART (Từ ngày Bắt đầu đến ngày Kết thúc)
+        let dateList = []; let currDate = new Date(startDateStr); let eDate = new Date(endDateStr);
+        while(currDate <= eDate) {
+            let y = currDate.getFullYear(); let m = String(currDate.getMonth() + 1).padStart(2, '0'); let d = String(currDate.getDate()).padStart(2, '0');
+            dateList.push(`${y}-${m}-${d}`);
+            currDate.setDate(currDate.getDate() + 1);
         }
 
+        const barLabels = []; const inData = []; const outData = [];
+        let lineLabels = []; let lineData = []; let runningBalance = 0;
+
+        // Cộng dồn Số dư ban đầu từ tất cả các giao dịch nằm trước Khoảng thời gian đang lọc
+        transactions.forEach(t => { if (t.date < startDateStr) runningBalance += (t.type === 'income' ? t.amount : -t.amount); });
+
+        dateList.forEach(dateStr => {
+            let shortLabel = `${dateStr.split('-')[2]}/${dateStr.split('-')[1]}`;
+            barLabels.push(shortLabel); lineLabels.push(shortLabel);
+            
+            const dayTxs = allPeriodTransactions.filter(t => t.date === dateStr);
+            let dayIn = dayTxs.filter(t => t.type === 'income').reduce((s, t)=>s+t.amount, 0);
+            let dayOut = dayTxs.filter(t => t.type === 'expense').reduce((s, t)=>s+t.amount, 0);
+            
+            inData.push(dayIn); outData.push(dayOut);
+            runningBalance += (dayIn - dayOut); lineData.push(runningBalance);
+        });
+
+        // 2. BIỂU ĐỒ CỘT
         if(barChartInstance) barChartInstance.destroy();
-        const ctxBar = document.getElementById('barChart').getContext('2d');
-        barChartInstance = new Chart(ctxBar, {
+        barChartInstance = new Chart(document.getElementById('barChart').getContext('2d'), {
             type: 'bar',
-            data: {
-                labels: barLabels,
-                datasets: [
-                    { label: 'Tiền Thu', data: inData, backgroundColor: '#2ecc71', borderRadius: 6 },
-                    { label: 'Tiền Chi', data: outData, backgroundColor: '#e74c3c', borderRadius: 6 }
-                ]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true, ticks: { callback: function(value) { if(value===0) return 0; return (value/1000) + 'K'; } }, grid: { borderDash: [4, 4] } },
-                    x: { grid: { display: false }, ticks: { maxTicksLimit: barRange === 30 ? 10 : barRange } }
-                },
-                plugins: {
-                    legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: {size: 12} } },
-                    tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + currencyFormatter.format(context.parsed.y); } } }
-                }
-            }
+            data: { labels: barLabels, datasets: [{ label: 'Tiền Thu', data: inData, backgroundColor: '#2ecc71', borderRadius: 4 }, { label: 'Tiền Chi', data: outData, backgroundColor: '#e74c3c', borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return v === 0 ? 0 : (v/1000) + 'K'; } }, grid: { borderDash: [4, 4] } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 15 } } }, plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: {size: 12} } }, tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + currencyFormatter.format(c.parsed.y); } } } } }
         });
 
-        // ==========================================
-        // 3. BIỂU ĐỒ ĐƯỜNG (LINE CHART - XU HƯỚNG SỐ DƯ THÁNG NÀY)
-        // ==========================================
-        const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
-        let todayDay = dateObj.getDate();
-        
-        // Tìm ngày xa nhất trong tháng này có giao dịch (trường hợp ng dùng nhập trước tương lai)
-        let maxTxDay = todayDay;
-        transactions.forEach(t => {
-            if (t.date.startsWith(currentMonthPrefix)) {
-                let txDay = parseInt(t.date.split('-')[2]);
-                if (txDay > maxTxDay) maxTxDay = txDay;
-            }
-        });
-
-        let lineLabels = [];
-        let lineData = [];
-        let runningBalance = 0;
-
-        // Tính toán số dư mang từ các tháng trước (Số dư đầu kỳ của tháng này)
-        transactions.forEach(t => {
-            if (t.date < `${currentMonthPrefix}-01`) {
-                runningBalance += (t.type === 'income' ? t.amount : -t.amount);
-            }
-        });
-
-        // Chạy từng ngày trong tháng để cộng dồn số dư
-        for (let i = 1; i <= maxTxDay; i++) {
-            let dayStr = String(i).padStart(2, '0');
-            let dateStr = `${currentMonthPrefix}-${dayStr}`;
-            
-            let dayTxs = transactions.filter(t => t.date === dateStr);
-            let dayIn = dayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-            let dayOut = dayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-            
-            runningBalance += (dayIn - dayOut);
-            
-            lineLabels.push(`${i}/${currentMonth}`);
-            lineData.push(runningBalance);
-        }
-
+        // 3. BIỂU ĐỒ ĐƯỜNG
         if(lineChartInstance) lineChartInstance.destroy();
         const ctxLine = document.getElementById('lineChart').getContext('2d');
-        
-        // Tạo gradient background mờ đẹp mắt bên dưới đường kẻ
-        let gradient = ctxLine.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)'); // var(--primary) mờ
-        gradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
-
+        let gradient = ctxLine.createLinearGradient(0, 0, 0, 400); gradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)'); gradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
         lineChartInstance = new Chart(ctxLine, {
             type: 'line',
-            data: {
-                labels: lineLabels,
-                datasets: [{
-                    label: 'Số dư',
-                    data: lineData,
-                    borderColor: '#4361ee', // Màu primary của app
-                    backgroundColor: gradient,
-                    borderWidth: 3,
-                    pointBackgroundColor: '#ffffff',
-                    pointBorderColor: '#4361ee',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    fill: true,
-                    tension: 0.3 // Làm đường cong mềm mại
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { intersect: false, mode: 'index' },
-                scales: {
-                    y: { 
-                        ticks: { callback: function(value) { return (value / 1000) + 'K'; } }, 
-                        grid: { borderDash: [4, 4] } 
-                    },
-                    x: { 
-                        grid: { display: false },
-                        ticks: { maxTicksLimit: 7 }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { 
-                        callbacks: { 
-                            label: function(context) { 
-                                return 'Số dư: ' + currencyFormatter.format(context.parsed.y); 
-                            } 
-                        } 
-                    }
-                }
-            }
+            data: { labels: lineLabels, datasets: [{ label: 'Số dư', data: lineData, borderColor: '#4361ee', backgroundColor: gradient, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#4361ee', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.3 }] },
+            options: { responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' }, scales: { y: { ticks: { callback: function(v) { return (v / 1000) + 'K'; } }, grid: { borderDash: [4, 4] } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 15 } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c) { return 'Số dư: ' + currencyFormatter.format(c.parsed.y); } } } } }
         });
     }
 
@@ -2511,8 +2406,6 @@
     }
 
     initWalletThemes();
-	// Lắng nghe sự kiện thay đổi ngày ở biểu đồ cột
-    document.getElementById('barChartRange').addEventListener('change', renderCharts);
     // ==========================================
     // LOGIC MENU XỔ XUỐNG CỦA AVATAR
     // ==========================================

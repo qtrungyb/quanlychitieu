@@ -629,6 +629,25 @@
     <!-- ========================================= -->
     <div id="analyticsView" class="view-section">
         
+        <!-- THẺ KPI TỔNG QUAN MỚI THÊM -->
+        <div class="kpi-container">
+            <div class="kpi-card full-width">
+                <div class="kpi-title">Số dư khả dụng (Tháng này)</div>
+                <div class="kpi-value" id="kpiNetFlow">0 đ</div>
+                <div class="kpi-desc" id="kpiNetFlowDesc">Thu: 0đ | Chi: 0đ</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Trung bình chi</div>
+                <div class="kpi-value text-danger" id="kpiAvgExpense">0 đ</div>
+                <div class="kpi-desc">/ ngày (Tháng này)</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Chi lớn nhất</div>
+                <div class="kpi-value" id="kpiMaxExpense">0 đ</div>
+                <div class="kpi-desc" id="kpiMaxExpenseName">Chưa có dữ liệu</div>
+            </div>
+        </div>
+        
         <!-- 1. BIỂU ĐỒ TRÒN (CƠ CẤU THU / CHI) -->
         <div class="chart-card">
             <div class="chart-header" style="flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 20px;">
@@ -653,18 +672,15 @@
 
         <!-- 2. BIỂU ĐỒ CỘT (SO SÁNH THU CHI) -->
         <div class="chart-card">
-			<div class="chart-header">
-				<h3 class="chart-title">Thu / Chi</h3>
-				<select id="barChartRange" class="chart-subtitle" style="border: none; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; padding-right: 24px; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%238d99ae%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 6px center;">
-					<option value="7">7 ngày qua</option>
-					<option value="14">14 ngày qua</option>
-					<option value="30">30 ngày qua</option>
-				</select>
-			</div>
-			<div class="chart-container">
-				<canvas id="barChart"></canvas>
-			</div>
-		</div>
+            <div class="chart-header">
+                <h3 class="chart-title">Thu / Chi</h3>
+                <!-- NÂNG CẤP: Thay Select 7,14,30 ngày bằng Input Month Picker -->
+                <input type="month" id="barChartMonth" class="chart-subtitle" style="border: 1px solid #e2e8f0; outline: none; border-radius: 8px; padding: 4px 8px; font-weight: 600; font-family: inherit; background: var(--bg-color); color: var(--text-main); cursor: pointer;">
+            </div>
+            <div class="chart-container">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
 
         <!-- 3. BIỂU ĐỒ ĐƯỜNG (XU HƯỚNG SỐ DƯ) -->
         <div class="chart-card">
@@ -676,7 +692,17 @@
                 <canvas id="lineChart"></canvas>
             </div>
         </div>
-
+		<!-- 4. DANH SÁCH TOP 5 CHI TIÊU CAO NHẤT -->
+        <div class="chart-card" style="margin-bottom: 20px;">
+            <div class="chart-header">
+                <h3 class="chart-title">Top 5 khoản chi lớn nhất</h3>
+                <span class="chart-subtitle text-danger">Tháng này</span>
+            </div>
+            <!-- Tận dụng class transaction-list có sẵn để hiển thị -->
+            <div class="transaction-list" id="topExpenseList" style="gap: 0;">
+                <div class="loading-text">Đang tải dữ liệu...</div>
+            </div>
+        </div>
     </div>
 	<!-- ========================================= -->
     <!-- TAB 4: THÊM (CÀI ĐẶT)                     -->
@@ -948,7 +974,19 @@
     </button>
     <button class="sheet-btn btn-sheet-cancel" id="btnSheetCancel">Đóng</button>
 </div>
-
+<!-- ========================================= -->
+<!-- POPUP CHI TIẾT TỪ BIỂU ĐỒ TRÒN (DRILL-DOWN)-->
+<!-- ========================================= -->
+<div class="history-overlay" id="pieDrillDownOverlay" style="z-index: 10011;" onclick="closePieDrillDown()"></div>
+<div class="history-modal" id="pieDrillDownModal" style="z-index: 10012; height: 80vh;">
+    <div class="history-modal-header">
+        <h3 id="pieDrillDownTitle">Chi tiết danh mục</h3>
+        <button class="btn-close-modal" onclick="closePieDrillDown()">&times;</button>
+    </div>
+    <div class="history-modal-body" style="background: var(--bg-color); padding: 0 20px 40px 20px;">
+        <div class="transaction-list" id="pieDrillDownList" style="margin-top: 16px;"></div>
+    </div>
+</div>
 <script>
     // ==========================================
     // 1. FIREBASE INIT
@@ -1808,7 +1846,64 @@
             listEl.appendChild(loadMoreBtn);
         }
     }
+	// ==========================================
+    // HÀM XỬ LÝ DRILL-DOWN BIỂU ĐỒ TRÒN
+    // ==========================================
+    function showPieDrillDown(catName, monthPrefix) {
+        document.getElementById('pieDrillDownTitle').innerText = `Chi tiết: ${catName}`;
+        const listEl = document.getElementById('pieDrillDownList');
+        listEl.innerHTML = '';
+        
+        // Lọc giao dịch tương ứng với category, tháng, và loại (thu/chi)
+        const filteredTxs = transactions.filter(t => 
+            t.type === currentPieType && 
+            t.date.startsWith(monthPrefix) && 
+            (t.categoryName || t.category) === catName
+        ).sort((a, b) => b.id - a.id); // Sắp xếp mới nhất lên đầu
+        
+        filteredTxs.forEach(t => {
+            const isInc = t.type === 'income';
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'transaction-item';
+            itemDiv.style.background = '#fff';
+            itemDiv.style.borderRadius = '16px';
+            itemDiv.style.marginBottom = '10px';
+            itemDiv.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)';
+            
+            const catObj = categories.find(c => c.id === t.categoryId);
+            const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
+            const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+            
+            itemDiv.innerHTML = `
+                <div class="t-left">
+                    <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}">${iconSvg}</div>
+                    <div class="t-info">
+                        <div class="t-title">${formatNiceDate(t.date).replace('Hôm nay, ', '')}</div>
+                        <div class="t-note">${t.note || 'Không có ghi chú'}</div>
+                    </div>
+                </div>
+                <div class="t-action">
+                    <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                </div>
+            `;
+            
+            // Cho phép nhấn vào chi tiết để Sửa/Xóa
+            itemDiv.onclick = () => {
+                closePieDrillDown();
+                openActionSheet(t.id, catName, t.amount);
+            };
+            
+            listEl.appendChild(itemDiv);
+        });
+        
+        document.getElementById('pieDrillDownOverlay').classList.add('show');
+        document.getElementById('pieDrillDownModal').classList.add('show');
+    }
 
+    function closePieDrillDown() {
+        document.getElementById('pieDrillDownOverlay').classList.remove('show');
+        document.getElementById('pieDrillDownModal').classList.remove('show');
+    }
     // ==========================================
     // 8. LOGIC VẼ BIỂU ĐỒ (CHART.JS)
     // ==========================================
@@ -1820,6 +1915,116 @@
         const currentMonth = dateObj.getMonth() + 1;
         const currentMonthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
         
+        // ==========================================
+        // 0. CẬP NHẬT KPI CARDS (THÁNG NÀY)
+        // ==========================================
+        const allMonthTransactions = transactions.filter(t => t.date.startsWith(currentMonthPrefix));
+        
+        let totalIncMonth = 0;
+        let totalExpMonth = 0;
+        let maxExpTx = null;
+
+        allMonthTransactions.forEach(t => {
+            if (t.type === 'income') totalIncMonth += t.amount;
+            if (t.type === 'expense') {
+                totalExpMonth += t.amount;
+                if (!maxExpTx || t.amount > maxExpTx.amount) {
+                    maxExpTx = t;
+                }
+            }
+        });
+
+        const netFlow = totalIncMonth - totalExpMonth;
+        
+        // 1. Số dư khả dụng
+        const elNetFlow = document.getElementById('kpiNetFlow');
+        if (elNetFlow) {
+            elNetFlow.innerText = currencyFormatter.format(netFlow);
+            elNetFlow.className = 'kpi-value ' + (netFlow >= 0 ? 'text-success' : 'text-danger');
+            document.getElementById('kpiNetFlowDesc').innerHTML = `Thu: <span class="text-success">+${formatter.format(totalIncMonth)}</span> | Chi: <span class="text-danger">-${formatter.format(totalExpMonth)}</span>`;
+        }
+
+        // 2. Trung bình chi / ngày
+        const elAvgExp = document.getElementById('kpiAvgExpense');
+        if (elAvgExp) {
+            const currentDay = dateObj.getDate();
+            // Chia cho số ngày hiện tại của tháng thay vì 30 để độ chính xác cao hơn cho "Tháng này"
+            const avgDaily = totalExpMonth / currentDay;
+            elAvgExp.innerText = currencyFormatter.format(Math.round(avgDaily));
+        }
+
+        // 3. Chi tiêu lớn nhất
+        const elMaxExp = document.getElementById('kpiMaxExpense');
+        if (elMaxExp) {
+            if (maxExpTx) {
+                elMaxExp.innerText = currencyFormatter.format(maxExpTx.amount);
+                document.getElementById('kpiMaxExpenseName').innerText = maxExpTx.categoryName || maxExpTx.category || 'Khác';
+            } else {
+                elMaxExp.innerText = '0 đ';
+                document.getElementById('kpiMaxExpenseName').innerText = 'Chưa có giao dịch';
+            }
+        }
+        // ==========================================
+        // 4. TOP 5 GIAO DỊCH CHI TIÊU CAO NHẤT (THÁNG NÀY)
+        // ==========================================
+        const topExpenseList = document.getElementById('topExpenseList');
+        if (topExpenseList) {
+            // Lọc các giao dịch chi tiêu trong tháng này, sắp xếp giảm dần theo số tiền và lấy 5 phần tử đầu tiên
+            const top5Expenses = transactions
+                .filter(t => t.type === 'expense' && t.date.startsWith(currentMonthPrefix))
+                .sort((a, b) => b.amount - a.amount)
+                .slice(0, 5);
+
+            topExpenseList.innerHTML = '';
+
+            if (top5Expenses.length === 0) {
+                topExpenseList.innerHTML = `
+                    <div style="text-align:center; padding: 20px 0; color: var(--text-muted); font-size: 13px;">
+                        Chưa có dữ liệu chi tiêu tháng này
+                    </div>`;
+            } else {
+                top5Expenses.forEach(t => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'transaction-item';
+                    itemDiv.style.padding = '12px 0'; // Thu gọn padding cho hợp với dạng list trong card
+                    itemDiv.style.borderBottom = '1px solid #f8f9fa';
+                    
+                    const cName = t.categoryName || t.category;
+                    const catObj = categories.find(c => c.id === t.categoryId);
+                    const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
+                    const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+                    
+                    // Xử lý hiển thị ngày tháng
+                    const dateParts = t.date.split('-');
+                    const shortDate = `${dateParts[2]}/${dateParts[1]}`;
+
+                    itemDiv.innerHTML = `
+                        <div class="t-left">
+                            <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">
+                                ${iconSvg}
+                            </div>
+                            <div class="t-info">
+                                <div class="t-title" style="font-size: 15px;">${cName}</div>
+                                <div class="t-note" style="font-size: 12px;">${shortDate} ${t.note ? ' • ' + t.note : ''}</div>
+                            </div>
+                        </div>
+                        <div class="t-action">
+                            <div class="t-amount text-danger" style="font-size: 15px;">-${formatter.format(t.amount)}</div>
+                        </div>
+                    `;
+                    
+                    // Cho phép click vào để mở Action Sheet (Sửa/Xóa) như ở Tab Lịch sử
+                    itemDiv.onclick = () => openActionSheet(t.id, cName, t.amount);
+                    
+                    topExpenseList.appendChild(itemDiv);
+                });
+                
+                // Xóa viền border của phần tử cuối cùng cho đẹp mắt
+                if (topExpenseList.lastChild) {
+                    topExpenseList.lastChild.style.borderBottom = 'none';
+                }
+            }
+        }
         // ==========================================
         // 1. BIỂU ĐỒ TRÒN (PIE CHART - HỖ TRỢ THU & CHI)
         // ==========================================
@@ -1861,6 +2066,15 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    // THÊM SỰ KIỆN CLICK VÀO ĐÂY
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const dataIndex = elements[0].index;
+                            const catName = pieLabels[dataIndex];
+                            showPieDrillDown(catName, currentMonthPrefix);
+                        }
+                    },
+                    // =========================
                     plugins: {
                         legend: { position: 'right', labels: { usePointStyle: true, padding: 20, font: {size: 13, weight: '500'} } },
                         tooltip: {
@@ -1879,25 +2093,31 @@
         }
 
         // ==========================================
-        // 2. BIỂU ĐỒ CỘT (BAR CHART)
+        // 2. BIỂU ĐỒ CỘT (BAR CHART) LỌC THEO THÁNG
         // ==========================================
-        const rangeSelect = document.getElementById('barChartRange');
-        const barRange = rangeSelect ? parseInt(rangeSelect.value) : 7;
+        const monthInput = document.getElementById('barChartMonth');
+        // Gán tháng hiện tại làm mặc định nếu người dùng chưa chọn
+        if (!monthInput.value) monthInput.value = currentMonthPrefix; 
+        
+        const selectedMonth = monthInput.value;
+        const [selYear, selMonth] = selectedMonth.split('-');
+        
+        // Tính số ngày trong tháng được chọn
+        const daysInSelectedMonth = new Date(selYear, selMonth, 0).getDate();
         
         const barLabels = [];
         const inData = [];
         const outData = [];
         
-        for(let i = barRange - 1; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const dateStr = d.toISOString().slice(0, 10);
+        for (let i = 1; i <= daysInSelectedMonth; i++) {
+            let dayStr = String(i).padStart(2, '0');
+            let dateStr = `${selectedMonth}-${dayStr}`;
             
-            barLabels.push(`${d.getDate()}/${d.getMonth()+1}`);
+            barLabels.push(`${i}/${parseInt(selMonth)}`);
             
             const dayTxs = transactions.filter(t => t.date === dateStr);
-            inData.push(dayTxs.filter(t => t.type === 'income').reduce((s, t)=>s+t.amount, 0));
-            outData.push(dayTxs.filter(t => t.type === 'expense').reduce((s, t)=>s+t.amount, 0));
+            inData.push(dayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0));
+            outData.push(dayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0));
         }
 
         if(barChartInstance) barChartInstance.destroy();
@@ -1915,7 +2135,7 @@
                 responsive: true, maintainAspectRatio: false,
                 scales: {
                     y: { beginAtZero: true, ticks: { callback: function(value) { if(value===0) return 0; return (value/1000) + 'K'; } }, grid: { borderDash: [4, 4] } },
-                    x: { grid: { display: false }, ticks: { maxTicksLimit: barRange === 30 ? 10 : barRange } }
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } } // Chỉ hiện tối đa 10 mốc ngày để tránh rối mắt
                 },
                 plugins: {
                     legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: {size: 12} } },

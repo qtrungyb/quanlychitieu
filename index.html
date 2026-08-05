@@ -1223,8 +1223,9 @@
     });
 
     function switchType(type) {
-        document.querySelectorAll('.btn-toggle').forEach(b => b.classList.remove('active', 'income', 'expense'));
-        document.querySelector(`.btn-toggle[data-type="${type}"]`).classList.add('active', type);
+        // Chỉ chọn và thay đổi các nút toggle nằm trong transactionForm
+        document.querySelectorAll('#transactionForm .btn-toggle').forEach(b => b.classList.remove('active', 'income', 'expense'));
+        document.querySelector(`#transactionForm .btn-toggle[data-type="${type}"]`).classList.add('active', type);
         document.getElementById('typeInput').value = type;
 
         document.querySelectorAll('#categoryScroll .cat-pill[data-val]').forEach(opt => {
@@ -1241,7 +1242,11 @@
             document.getElementById('categoryScroll').scrollLeft = 0;
         }
     }
-    document.querySelectorAll('.btn-toggle').forEach(btn => { btn.addEventListener('click', () => switchType(btn.getAttribute('data-type'))); });
+    
+    // Gắn sự kiện click chỉ cho các nút toggle của màn hình chính
+    document.querySelectorAll('#transactionForm .btn-toggle').forEach(btn => { 
+        btn.addEventListener('click', () => switchType(btn.getAttribute('data-type'))); 
+    });
 
     // ==========================================
     // 7. RENDER LỊCH SỬ GIAO DỊCH

@@ -1106,9 +1106,13 @@
 				<!-- KHU VỰC UPLOAD AVATAR MỚI -->
 				<div class="avatar-edit-wrapper">
 					<img id="profileAvatarPreview" class="avatar-edit-preview" src="">
-					<label for="avatarUploadInput" class="avatar-edit-btn">
+					
+					<!-- Thay thẻ label bằng div và thêm sự kiện onclick -->
+					<div class="avatar-edit-btn" onclick="openAvatarActionSheet()">
 						<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-					</label>
+					</div>
+					
+					<!-- Giữ nguyên thẻ input nhưng để ẩn -->
 					<input type="file" id="avatarUploadInput" accept="image/*" style="display: none;">
 				</div>
 				<!-- KẾT THÚC KHU VỰC UPLOAD AVATAR -->
@@ -1150,7 +1154,26 @@
     </button>
     <button class="sheet-btn btn-sheet-cancel" id="btnSheetCancel">Đóng</button>
 </div>
-
+<!-- ACTION SHEET CHO AVATAR -->
+<div class="sheet-overlay" id="avatarSheetOverlay" onclick="closeAvatarActionSheet()"></div>
+<div class="bottom-sheet" id="avatarActionSheet">
+    <div class="sheet-indicator"></div>
+    <div class="sheet-header" style="margin-bottom: 16px;">Ảnh đại diện</div>
+    
+    <!-- Nút này sẽ kích hoạt hộp thoại chọn ảnh tự động của Hệ điều hành (Camera, Thư viện, Tệp) -->
+    <button class="sheet-btn" style="background: #eef2ff; color: var(--primary);" onclick="triggerAvatarUpload()">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        Chọn ảnh mới
+    </button>
+    
+    <!-- Nút xóa ảnh về mặc định -->
+    <button class="sheet-btn btn-sheet-delete" onclick="setDefaultAvatar()" style="margin-top: 12px;">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        Xóa ảnh (Mặc định)
+    </button>
+    
+    <button class="sheet-btn btn-sheet-cancel" onclick="closeAvatarActionSheet()">Đóng</button>
+</div>
 <script>
     // ==========================================
     // 1. FIREBASE INIT
@@ -2368,7 +2391,29 @@
             pieChartInstance = new Chart(document.getElementById('pieChart').getContext('2d'), {
                 type: 'doughnut',
                 data: { labels: pieLabels, datasets: [{ data: pieLabels.map(k => txByCat[k].amount), backgroundColor: pieLabels.map(k => txByCat[k].colorHex), borderWidth: 2, hoverOffset: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 20, font: {size: 13, weight: '500'} } }, tooltip: { callbacks: { label: function(c) { return (c.label ? c.label + ': ' : '') + currencyFormatter.format(c.parsed); } } } } }
+                options: { 
+					responsive: true, 
+					maintainAspectRatio: false, 
+					cutout: '65%', 
+					plugins: { 
+						legend: { 
+							position: 'right', 
+							labels: { usePointStyle: true, padding: 20, font: {size: 13, weight: '500'} } 
+						}, 
+						tooltip: { 
+							callbacks: { 
+								// Hiển thị tên danh mục ở dòng trên cùng
+								title: function(context) { 
+									return context[0].label; 
+								},
+								// Chỉ hiển thị số tiền ở dòng dưới (Chart.js sẽ tự động thêm ô màu bên cạnh)
+								label: function(context) { 
+									return ' ' + currencyFormatter.format(context.parsed); 
+								} 
+							} 
+						} 
+					} 
+				}
             });
         }
 
@@ -2403,7 +2448,40 @@
         barChartInstance = new Chart(document.getElementById('barChart').getContext('2d'), {
             type: 'bar',
             data: { labels: barLabels, datasets: [{ label: 'Tiền Thu', data: inData, backgroundColor: '#2ecc71', borderRadius: 4 }, { label: 'Tiền Chi', data: outData, backgroundColor: '#e74c3c', borderRadius: 4 }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return v === 0 ? 0 : (v/1000) + 'K'; } }, grid: { borderDash: [4, 4] } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 15 } } }, plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: {size: 12} } }, tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + currencyFormatter.format(c.parsed.y); } } } } }
+            options: { 
+				responsive: true, 
+				maintainAspectRatio: false, 
+				scales: { 
+					y: { 
+						beginAtZero: true, 
+						ticks: { callback: function(v) { return v === 0 ? 0 : (v/1000) + 'K'; } }, 
+						grid: { borderDash: [4, 4] } 
+					}, 
+					x: { 
+						grid: { display: false }, 
+						ticks: { maxTicksLimit: 15 } 
+					} 
+				}, 
+				plugins: { 
+					legend: { 
+						position: 'top', 
+						align: 'end', 
+						labels: { usePointStyle: true, boxWidth: 8, font: {size: 12} } 
+					}, 
+					tooltip: { 
+						callbacks: { 
+							// Hiển thị ngày tháng ở dòng trên cùng
+							title: function(context) {
+								return context[0].label;
+							},
+							// Chỉ hiển thị số tiền (Bỏ chữ Tiền Thu / Tiền Chi đi)
+							label: function(context) { 
+								return ' ' + currencyFormatter.format(context.parsed.y); 
+							} 
+						} 
+					} 
+				} 
+			}
         });
 
         // 3. BIỂU ĐỒ ĐƯỜNG
@@ -3086,7 +3164,39 @@
         document.getElementById('profileOverlay').classList.remove('show');
         document.getElementById('profileModal').classList.remove('show');
     }
+	// Các hàm điều khiển Action Sheet của Avatar
+	function openAvatarActionSheet() {
+		document.getElementById('avatarSheetOverlay').classList.add('show');
+		document.getElementById('avatarActionSheet').classList.add('show');
+	}
 
+	function closeAvatarActionSheet() {
+		document.getElementById('avatarSheetOverlay').classList.remove('show');
+		document.getElementById('avatarActionSheet').classList.remove('show');
+	}
+
+	function triggerAvatarUpload() {
+		// Kích hoạt input file ẩn để HĐH mở Camera/Thư viện
+		document.getElementById('avatarUploadInput').click();
+		closeAvatarActionSheet();
+	}
+
+	function setDefaultAvatar() {
+		if(!currentUser) return;
+		
+		// Lấy tên hiện tại để tạo chữ cái mặc định (Ví dụ: tên Trung -> chữ T)
+		const inputName = document.getElementById('profileName').value.trim();
+		const avatarName = inputName ? inputName : currentUser.email.split('@')[0];
+		const defaultUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=4361ee&color=fff&bold=true`;
+		
+		// Đổi ảnh hiển thị về mặc định
+		document.getElementById('profileAvatarPreview').src = defaultUrl;
+		
+		// Gắn cờ đặc biệt để khi bấm "Lưu thông tin", hệ thống sẽ biết để xóa ảnh trên Firebase
+		currentBase64Avatar = "DELETE_AVATAR"; 
+		
+		closeAvatarActionSheet();
+	}
     // Lắng nghe sự kiện mở modal
     document.getElementById('btnSettingsProfile').addEventListener('click', openProfileModal);
 
@@ -3145,29 +3255,33 @@
 
     // Cập nhật lại nút "Lưu thông tin" để đẩy cả avatar lên Firebase
     document.getElementById('btnSaveProfile').addEventListener('click', () => {
-        if(!currentUser) return;
-        
-        const name = document.getElementById('profileName').value.trim();
-        const dob = document.getElementById('profileDob').value;
-        const phone = document.getElementById('profilePhone').value.trim();
-        
-        // Tạo object dữ liệu
-        const profileData = { name, dob, phone };
-        // Nếu có ảnh mới được nén, thêm vào object
-        if (currentBase64Avatar) {
-            profileData.avatarData = currentBase64Avatar;
-        }
+		if(!currentUser) return;
+		
+		const name = document.getElementById('profileName').value.trim();
+		const dob = document.getElementById('profileDob').value;
+		const phone = document.getElementById('profilePhone').value.trim();
+		
+		// Tạo object dữ liệu
+		const profileData = { name, dob, phone };
+		
+		// XỬ LÝ ẢNH
+		if (currentBase64Avatar === "DELETE_AVATAR") {
+			// Gán null để Firebase xóa hoàn toàn đường dẫn ảnh cũ khỏi database
+			profileData.avatarData = null; 
+		} else if (currentBase64Avatar) {
+			// Nếu có ảnh mới upload
+			profileData.avatarData = currentBase64Avatar; 
+		}
 
-        // Dùng update() thay vì set() để không xóa mất ảnh nếu user không tải ảnh mới ở lần chỉnh sửa sau
-        db.ref(`users/${currentUser.uid}/profile`).update(profileData)
-        .then(() => {
-            showToast('Đã lưu thông tin cá nhân!');
-            closeProfileModal();
-            currentBase64Avatar = null; // Reset biến tạm
-        }).catch(err => {
-            showToast('Lỗi khi lưu!', 'error');
-        });
-    });
+		db.ref(`users/${currentUser.uid}/profile`).update(profileData)
+		.then(() => {
+			showToast('Đã lưu thông tin cá nhân!');
+			closeProfileModal();
+			currentBase64Avatar = null; // Reset biến tạm
+		}).catch(err => {
+			showToast('Lỗi khi lưu!', 'error');
+		});
+	});
 </script>
 <script>
     // Đăng ký Service Worker cho PWA

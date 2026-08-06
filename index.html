@@ -1913,7 +1913,11 @@
             updateUI();
         });
     });
-
+	// Lắng nghe sự kiện khi người dùng gõ vào ô tìm kiếm (DÁN VÀO ĐÂY)
+    document.getElementById('searchInput').addEventListener('input', () => {
+        currentDateLimit = DATES_PER_PAGE; 
+        updateUI();
+    });
     // Cập nhật lại logic hàm updateUI() để render Thẻ Dashboard mới
     function updateUI() {
         const fStartDate = filterStartDate.value;

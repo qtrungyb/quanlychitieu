@@ -252,9 +252,10 @@
             align-items: center; z-index: 900; padding-bottom: env(safe-area-inset-bottom); border-radius: 24px 24px 0 0;
         }
         .nav-item {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #a0aec0; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 80px;
-        }
+			display: flex; flex-direction: column; align-items: center; justify-content: center;
+			color: #a0aec0; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; 
+			flex: 1; /* <-- Đổi ở đây */
+		}
         .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; stroke: currentColor; fill: none; stroke-width: 2.5; transition: 0.2s;}
         .nav-item.active { color: var(--primary); }
         .nav-item.active svg { transform: translateY(-2px); }
@@ -875,12 +876,41 @@
             </div>
         </div>
     </div> <!-- HẾT TAB THỐNG KÊ (ANALYTICS) -->
+	<!-- ========================================= -->
+    <!-- TAB: ADMIN (QUẢN TRỊ NGƯỜI DÙNG)          -->
+    <!-- ========================================= -->
+    <div id="adminView" class="view-section">
+        <div class="history-filters-card">
+            <h3 style="margin-bottom: 16px; font-size: 16px; font-weight: 800; color: var(--danger);">Danh sách người dùng</h3>
+            
+            <!-- THÊM NÚT NÀY VÀO ĐÂY -->
+            <button class="btn-submit" onclick="openCreateUserModal()" style="margin-bottom: 16px; background: var(--success); box-shadow: 0 4px 12px rgba(46, 204, 113, 0.25);">
+                + Tạo tài khoản mới
+            </button>
 
+            <div id="adminUserList" class="transaction-list" style="gap: 12px;">
+                <div class="loading-text">Đang tải danh sách...</div>
+            </div>
+        </div>
+    </div>
     <!-- ========================================= -->
     <!-- TAB 4: THÊM (CÀI ĐẶT)                     -->
     <!-- ========================================= -->
     <div id="settingsView" class="view-section">
         <div class="settings-header">Cá nhân hóa</div>
+		<!-- KHU VỰC DÀNH RIÊNG CHO ADMIN -->
+		<div id="adminPanelSection" class="hide">
+			<div class="settings-header" style="color: var(--danger);">Quản trị hệ thống</div>
+			<div class="settings-card" style="border: 1px solid rgba(231, 76, 60, 0.2);">
+				<div class="settings-item" id="btnSettingsAdminDashboard">
+					<div class="settings-item-left" style="color: var(--danger);">
+						<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+						Quản lý tất cả người dùng
+					</div>
+					<div class="settings-item-right" style="color: var(--danger);">›</div>
+				</div>
+			</div>
+		</div>
         <div class="settings-card">
             <div class="settings-item" id="btnSettingsCatManager">
                 <div class="settings-item-left">
@@ -953,6 +983,12 @@
     <div class="nav-item" id="tabStats">
         <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
         <span>Thống kê</span>
+    </div>
+    
+    <!-- THÊM TAB QUẢN TRỊ (MẶC ĐỊNH BỊ ẨN) -->
+    <div class="nav-item hide" id="tabAdmin" style="color: var(--danger);">
+        <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <span>Quản trị</span>
     </div>
     <!-- NÚT TAB THÊM MỚI -->
     <div class="nav-item" id="tabSettings">
@@ -1180,6 +1216,233 @@
     
     <button class="sheet-btn btn-sheet-cancel" onclick="closeAvatarActionSheet()">Đóng</button>
 </div>
+<!-- ========================================= -->
+<!-- POPUP ADMIN DASHBOARD (QUẢN LÝ USER)      -->
+<!-- ========================================= -->
+<div class="history-overlay" id="adminDashboardOverlay" style="z-index: 10015;" onclick="closeAdminDashboard()"></div>
+<div class="history-modal" id="adminDashboardModal" style="z-index: 10016; height: 90vh;">
+    <div class="history-modal-header">
+        <h3>Quản lý người dùng</h3>
+        <button class="btn-close-modal" onclick="closeAdminDashboard()">&times;</button>
+    </div>
+    <div class="history-modal-body" style="background: var(--bg-color); padding-top: 16px;">
+        <div id="adminUserList" style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="loading-text">Đang tải danh sách...</div>
+        </div>
+    </div>
+</div>
+<!-- ========================================= -->
+<!-- POPUP TẠO TÀI KHOẢN MỚI TỪ ADMIN          -->
+<!-- ========================================= -->
+<div class="history-overlay" id="createUserOverlay" style="z-index: 10019;" onclick="closeCreateUserModal()"></div>
+<div class="history-modal" id="createUserModal" style="z-index: 10020; height: auto; max-height: 80vh;">
+    <div class="history-modal-header">
+        <h3>Tạo tài khoản mới</h3>
+        <button class="btn-close-modal" onclick="closeCreateUserModal()">&times;</button>
+    </div>
+    <div class="history-modal-body" style="background: #fff; padding-top: 20px;">
+        <div class="form-group">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display: block;">Họ và tên</label>
+            <input type="text" id="newUserName" class="form-control" placeholder="Tên người dùng" required>
+        </div>
+        <div class="form-group">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display: block;">Email đăng nhập</label>
+            <input type="email" id="newUserEmail" class="form-control" placeholder="Email" required>
+        </div>
+        <div class="form-group">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display: block;">Mật khẩu</label>
+            <input type="password" id="newUserPassword" class="form-control" placeholder="Mật khẩu (từ 6 ký tự)" required minlength="6">
+        </div>
+        <button type="button" class="btn-submit" id="btnSubmitCreateUser" style="margin-top: 16px;">
+            Xác nhận tạo
+        </button>
+    </div>
+</div>
+<!-- ========================================= -->
+<!-- POPUP ADMIN XEM GIAO DỊCH CỦA USER (CÓ BỘ LỌC) -->
+<!-- ========================================= -->
+<div class="history-overlay" id="adminUserTxOverlay" style="z-index: 10017;" onclick="closeAdminUserTx()"></div>
+<div class="history-modal" id="adminUserTxModal" style="z-index: 10018; height: 95vh; display: flex; flex-direction: column;">
+    <div class="history-modal-header" style="flex-shrink: 0;">
+        <div>
+            <h3 id="adminUserTxTitle" style="font-size: 16px;">Giao dịch của user</h3>
+            <div id="adminUserTxSubtitle" style="font-size: 12px; color: var(--text-muted); font-weight: normal;">Đang tải...</div>
+        </div>
+        <button class="btn-close-modal" onclick="closeAdminUserTx()">&times;</button>
+    </div>
+    
+    <div class="history-modal-body" style="background: var(--bg-color); padding: 16px; flex: 1; overflow-y: auto;">
+        
+        <!-- BỘ LỌC TÌM KIẾM, DANH MỤC & THỜI GIAN -->
+        <div class="history-filters-card" style="margin-bottom: 16px;">
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="admTxSearchInput" placeholder="Tìm tên, ghi chú, số tiền...">
+            </div>
+
+            <div class="category-scroll" id="admTxCategoryFilter" style="margin-top: 12px; padding-bottom: 0;">
+                <div class="cat-pill active" data-filter="">Tất cả</div>
+            </div>
+
+            <div class="quick-filters-scroll" id="admTxQuickDateFilters" style="margin-top: 12px; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
+                <button class="btn-quick-filter active" data-range="this_month">Tháng này</button>
+                <button class="btn-quick-filter" data-range="last_month">Tháng trước</button>
+                <button class="btn-quick-filter" data-range="this_week">Tuần này</button>
+                <button class="btn-quick-filter" data-range="all">Tất cả</button>
+                <button class="btn-quick-filter" data-range="custom">Tùy chỉnh</button>
+            </div>
+
+            <div class="filter-row hide" id="admTxCustomDateContainer" style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
+                <div class="filter-date-wrapper active" style="flex: 1;">
+                    <span class="date-text" id="admTxStartDateDisplay" style="font-size: 13px;">Từ ngày</span>
+                    <input type="date" id="admTxStartDate">
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted); flex-shrink: 0;"><path d="M5 12h14"></path></svg>
+                <div class="filter-date-wrapper active" style="flex: 1;">
+                    <span class="date-text" id="admTxEndDateDisplay" style="font-size: 13px;">Đến ngày</span>
+                    <input type="date" id="admTxEndDate">
+                </div>
+            </div>
+        </div>
+
+        <!-- Tổng quan Thu/Chi của user (Theo bộ lọc) -->
+        <div class="summary-cards-grid" style="margin-bottom: 16px;">
+            <div class="summary-card box-in">
+                <div class="sc-label">Tổng Thu</div>
+                <div class="sc-val" id="adminTxSumInc">0đ</div>
+            </div>
+            <div class="summary-card box-out">
+                <div class="sc-label">Tổng Chi</div>
+                <div class="sc-val" id="adminTxSumExp">0đ</div>
+            </div>
+        </div>
+        
+        <!-- Danh sách giao dịch -->
+        <div id="adminUserTxList" class="transaction-list">
+            <div class="loading-text">Đang tải dữ liệu...</div>
+        </div>
+    </div>
+</div>
+<!-- ========================================= -->
+<!-- POPUP ADMIN XEM THỐNG KÊ CỦA USER (FULL BẢN SAO) -->
+<!-- ========================================= -->
+<div class="history-overlay" id="adminUserStatsOverlay" style="z-index: 10021;" onclick="closeAdminUserStats()"></div>
+<div class="history-modal" id="adminUserStatsModal" style="z-index: 10022; height: 95vh; display: flex; flex-direction: column;">
+    <div class="history-modal-header" style="flex-shrink: 0;">
+        <div>
+            <h3 id="adminUserStatsTitle" style="font-size: 16px;">Thống kê của user</h3>
+        </div>
+        <button class="btn-close-modal" onclick="closeAdminUserStats()">&times;</button>
+    </div>
+    
+    <div class="history-modal-body" style="background: var(--bg-color); padding: 16px; flex: 1; overflow-y: auto;">
+        
+        <!-- BỘ LỌC THỜI GIAN THỐNG KÊ (ADMIN) -->
+        <div class="chart-card" style="margin-bottom: 8px; padding: 16px;">
+            <div class="type-toggle" style="margin-bottom: 16px;">
+                <button type="button" class="btn-toggle active" id="adm_btnModeRange" style="font-size: 14px; background: var(--primary); color: white;">Tùy chỉnh ngày</button>
+                <button type="button" class="btn-toggle" id="adm_btnModeMonth" style="font-size: 14px;">Theo tháng</button>
+            </div>
+            <input type="hidden" id="adm_statsFilterMode" value="range">
+            
+            <div id="adm_statsRangeContainer" class="filter-row" style="width: 100%;">
+                <div class="filter-date-wrapper active" id="adm_statsStartDateWrapper" style="min-width: 0;">
+                    <span class="date-text" id="adm_statsStartDateDisplay">Từ ngày</span>
+                    <input type="date" id="adm_statsStartDate">
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted); flex-shrink: 0;"><path d="M5 12h14"></path></svg>
+                <div class="filter-date-wrapper active" id="adm_statsEndDateWrapper" style="min-width: 0;">
+                    <span class="date-text" id="adm_statsEndDateDisplay">Đến ngày</span>
+                    <input type="date" id="adm_statsEndDate">
+                </div>
+            </div>
+
+            <div id="adm_statsMonthContainer" class="hide">
+                <div style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--bg-color); border: 1px solid #e2e8f0; border-radius: 12px; padding: 0 12px; height: 44px;">
+                    <input type="month" id="adm_statsMonthPicker" style="border: none; background: transparent; font-size: 15px; font-weight: 700; outline: none; color: var(--text-main);">
+                </div>
+            </div>
+        </div>
+
+        <!-- KHỐI HERO KPI TỔNG QUAN -->
+        <div class="hero-kpi">
+            <div class="kpi-title">Số dư khả dụng</div>
+            <div class="hero-kpi-value" id="adm_kpiNetFlow">0 đ</div>
+            <div class="kpi-desc" id="adm_kpiNetFlowDesc">
+                <span>Thu: <span class="text-success">0đ</span></span>
+                <span style="color: #cbd5e1;">|</span>
+                <span>Chi: <span class="text-danger">0đ</span></span>
+            </div>
+        </div>
+
+        <!-- 2 THẺ KPI NHỎ -->
+        <div class="kpi-container">
+            <div class="kpi-card">
+				<div class="kpi-title">Trung bình chi</div>
+				<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+					<div class="kpi-value text-danger" id="adm_kpiAvgExpense">0 đ</div>
+					<div class="trend-badge hide" id="adm_kpiAvgExpenseTrend"></div>
+				</div>
+				<div class="kpi-desc">/ ngày (so với kỳ trước)</div>
+			</div>
+            <div class="kpi-card">
+                <div class="kpi-title">Chi lớn nhất</div>
+                <div class="kpi-value" id="adm_kpiMaxExpense">0 đ</div>
+                <div class="kpi-desc" id="adm_kpiMaxExpenseName" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Chưa có dữ liệu</div>
+            </div>
+        </div>
+
+        <!-- 1. BIỂU ĐỒ TRÒN VÀ TOP 5 -->
+        <div class="chart-card">
+            <div class="chart-header" style="flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 class="chart-title">Cơ cấu danh mục</h3>
+                    <span class="chart-subtitle" id="adm_pieSubtitle">Đang tải...</span>
+                </div>
+                <div class="type-toggle" style="margin-bottom: 0;">
+                    <button type="button" class="btn-toggle active expense" id="adm_btnPieExp" style="height: 36px; font-size: 14px;">Tiền Chi</button>
+                    <button type="button" class="btn-toggle income" id="adm_btnPieInc" style="height: 36px; font-size: 14px;">Tiền Thu</button>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="adm_pieChart"></canvas>
+            </div>
+            <div id="adm_pieEmptyState" class="empty-chart hide">
+                <p id="adm_pieEmptyText">Chưa có dữ liệu</p>
+            </div>
+
+            <div id="adm_top5Container" style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
+                <div class="chart-header" style="margin-bottom: 12px;">
+                    <h3 class="chart-title" style="font-size: 14px;" id="adm_top5Title">Top 5 khoản chi lớn nhất</h3>
+                </div>
+                <div class="transaction-list" id="adm_topExpenseList" style="gap: 0;"></div>
+            </div>
+        </div>
+
+        <!-- 2. BIỂU ĐỒ CỘT -->
+        <div class="chart-card" style="margin-top: 20px;">
+            <div class="chart-header">
+                <h3 class="chart-title">Thu / Chi</h3>
+                <span class="chart-subtitle" id="adm_barSubtitle">Đang tải...</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="adm_barChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 3. BIỂU ĐỒ ĐƯỜNG -->
+        <div class="chart-card" style="margin-top: 20px; margin-bottom: 40px;">
+            <div class="chart-header">
+                <h3 class="chart-title">Xu hướng số dư</h3>
+                <span class="chart-subtitle" id="adm_lineSubtitle">Đang tải...</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="adm_lineChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
     // ==========================================
     // 1. FIREBASE INIT
@@ -1295,35 +1558,38 @@
     }
 
     // ==========================================
-    // 3. ĐIỀU HƯỚNG TAB (BOTTOM NAVIGATION) & SETTINGS
+    // 3. ĐIỀU HƯỚNG TAB (BOTTOM NAVIGATION)
     // ==========================================
     const tabHome = document.getElementById('tabHome');
     const tabHistory = document.getElementById('tabHistory');
     const tabStats = document.getElementById('tabStats');
+    const tabAdmin = document.getElementById('tabAdmin'); // <-- Thêm biến tabAdmin
     const tabSettings = document.getElementById('tabSettings');
     
     const homeView = document.getElementById('homeView');
     const historyView = document.getElementById('historyView');
     const analyticsView = document.getElementById('analyticsView');
+    const adminView = document.getElementById('adminView'); // <-- Thêm biến adminView
     const settingsView = document.getElementById('settingsView');
 
-    let userFullName = ""; // Biến lưu trữ tên người dùng
+    let userFullName = ""; 
 
     function switchTab(tabName) {
-        [tabHome, tabHistory, tabStats, tabSettings].forEach(t => t.classList.remove('active'));
-        [homeView, historyView, analyticsView, settingsView].forEach(v => v.classList.remove('active'));
+        // Gỡ active tất cả
+        [tabHome, tabHistory, tabStats, tabAdmin, tabSettings].forEach(t => t.classList.remove('active'));
+        [homeView, historyView, analyticsView, adminView, settingsView].forEach(v => v.classList.remove('active'));
         
         const topNavTitle = document.querySelector('.top-nav h1');
         const userMenu = document.getElementById('userMenu');
-        const dropdownMenu = document.getElementById('dropdownMenu'); // Lấy thêm menu dropdown để ẩn đi khi chuyển tab
+        const dropdownMenu = document.getElementById('dropdownMenu'); 
 
         if (tabName === 'home') {
             tabHome.classList.add('active'); homeView.classList.add('active');
             topNavTitle.innerText = 'QUẢN LÝ CHI TIÊU';
-            userMenu.style.display = 'block'; // Hiện avatar ở tab Nhập liệu
+            userMenu.style.display = 'block'; 
         } else {
-            userMenu.style.display = 'none'; // Ẩn avatar ở các tab khác
-            if (dropdownMenu) dropdownMenu.classList.remove('show'); // Đóng menu nếu đang mở
+            userMenu.style.display = 'none'; 
+            if (dropdownMenu) dropdownMenu.classList.remove('show'); 
             
             if (tabName === 'history') {
                 tabHistory.classList.add('active'); historyView.classList.add('active');
@@ -1332,6 +1598,11 @@
                 tabStats.classList.add('active'); analyticsView.classList.add('active');
                 topNavTitle.innerText = 'THỐNG KÊ';
                 renderCharts();
+            } else if (tabName === 'admin') {
+                // LOGIC KHI MỞ TAB ADMIN
+                tabAdmin.classList.add('active'); adminView.classList.add('active');
+                topNavTitle.innerText = 'QUẢN TRỊ HỆ THỐNG';
+                loadAllUsers(); // Tự động load danh sách khi mở tab
             } else if (tabName === 'settings') {
                 tabSettings.classList.add('active'); settingsView.classList.add('active');
                 topNavTitle.innerText = userFullName ? userFullName.toUpperCase() : 'CÀI ĐẶT';
@@ -1343,6 +1614,7 @@
     tabHome.addEventListener('click', () => switchTab('home'));
     tabHistory.addEventListener('click', () => switchTab('history'));
     tabStats.addEventListener('click', () => switchTab('stats'));
+    tabAdmin.addEventListener('click', () => switchTab('admin')); // <-- Sự kiện click tab Admin
     tabSettings.addEventListener('click', () => switchTab('settings'));
 	// Sự kiện chuyển đổi Thu/Chi ở Biểu đồ Tròn
     document.getElementById('btnPieExp').addEventListener('click', function() {
@@ -1506,6 +1778,36 @@
             const username = user.email.split('@')[0];
             document.getElementById('avatarImg').src = `https://ui-avatars.com/api/?name=${username}&background=4361ee&color=fff&bold=true`;
 
+            // -----------------------------------------------------
+            // LOGIC CẢI TIẾN: KHỞI TẠO USER & KIỂM TRA QUYỀN
+            // -----------------------------------------------------
+            const userRef = db.ref(`users/${currentUser.uid}`);
+            
+            userRef.child('role').once('value').then(snap => {
+                let userRole = snap.val();
+                
+                if (!userRole) {
+                    userRole = 'user'; 
+                    userRef.update({
+                        email: currentUser.email,
+                        role: userRole,
+                        createdAt: new Date().toISOString()
+                    }).catch(err => console.error("Lỗi:", err));
+                }
+
+                currentUser.role = userRole;
+
+                if (userRole === 'admin') {
+                    // HIỆN TAB QUẢN TRỊ Ở BOTTOM NAV DÀNH CHO ADMIN
+                    document.getElementById('tabAdmin').classList.remove('hide');
+                } else {
+                    // ẨN TAB NẾU CHỈ LÀ USER BÌNH THƯỜNG
+                    document.getElementById('tabAdmin').classList.add('hide');
+                }
+            });
+            // -----------------------------------------------------
+
+            // Tải danh mục
             catRef = db.ref(`users/${currentUser.uid}/categories`);
             catRef.on('value', (snap) => {
                 if(!snap.exists()) {
@@ -1521,6 +1823,7 @@
                 }
             });
 
+            // Tải giao dịch
             txRef = db.ref(`users/${currentUser.uid}/transactions`);
             txRef.on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -1536,6 +1839,8 @@
                 updateUI();
                 renderCharts(); 
             });
+
+            // Tải cài đặt giao diện
 			const settingsRef = db.ref(`users/${currentUser.uid}/settings`);
             settingsRef.on('value', (snap) => {
                 if (snap.exists()) {
@@ -1547,12 +1852,12 @@
                     applyAppTheme('bg-default', false);
                 }
                 
-                // ĐỢI TẢI XONG MÀU TỪ FIREBASE RỒI MỚI ẨN MÀN HÌNH CHỜ
                 if (isFirstLoad) {
                     document.getElementById('splashScreen').classList.add('hide');
                     isFirstLoad = false;
                 }
             });
+
 			// TẢI THÔNG TIN CÁ NHÂN (PROFILE)
             db.ref(`users/${currentUser.uid}/profile`).on('value', (snap) => {
 				if (snap.exists()) {
@@ -1561,20 +1866,19 @@
 					document.getElementById('profileName').value = userFullName;
 					document.getElementById('profilePhone').value = p.phone || "";
 					
-					// --- CODE CẬP NHẬT MỚI THÊM VÀO ---
-					// Lấy tên hiển thị cho avatar (ưu tiên tên thật, nếu không có thì lấy email)
 					let avatarName = userFullName ? userFullName : currentUser.email.split('@')[0];
-					// Cập nhật lại src của avatar
 					document.getElementById('avatarImg').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=4361ee&color=fff&bold=true`;
 					
-					// CẬP NHẬT TÊN VÀO MENU XỔ XUỐNG Ở AVATAR
-					document.getElementById('dropdownName').innerText = userFullName ? `XIN CHÀO, ${userFullName.toUpperCase()}` : 'XIN CHÀO';
+                    // Ưu tiên hiển thị tên Admin nếu có role là admin, ngược lại hiển thị tên người dùng
+                    if (currentUser.role === 'admin') {
+                        document.getElementById('dropdownName').innerText = `XIN CHÀO, ADMIN`;
+                    } else {
+					    document.getElementById('dropdownName').innerText = userFullName ? `XIN CHÀO, ${userFullName.toUpperCase()}` : 'XIN CHÀO';
+                    }
 					
-					// Nếu user có lưu ảnh tự tải (Sẽ dùng cho Cấp độ 2 bên dưới)
 					if (p.avatarData) {
 						document.getElementById('avatarImg').src = p.avatarData;
 					}
-					// -----------------------------------
 
 					if(p.dob) {
 						document.getElementById('profileDob').value = p.dob;
@@ -1582,7 +1886,9 @@
 					}
 				} else {
 					userFullName = "";
-					document.getElementById('dropdownName').innerText = 'XIN CHÀO';
+                    if (currentUser.role !== 'admin') {
+					    document.getElementById('dropdownName').innerText = 'XIN CHÀO';
+                    }
 				}
 				
 				if (document.getElementById('settingsView').classList.contains('active')) {
@@ -1590,6 +1896,7 @@
 				}
 			});
         } else {
+            // ... (Giữ nguyên phần else xử lý khi chưa đăng nhập)
             currentUser = null;
             document.getElementById('authOverlay').classList.remove('hide'); 
             transactions = []; categories = []; updateUI();
@@ -1597,7 +1904,6 @@
             if(pieChartInstance) pieChartInstance.destroy();
             if(barChartInstance) barChartInstance.destroy();
             
-            // ẨN MÀN HÌNH CHỜ NẾU CHƯA ĐĂNG NHẬP
             if (isFirstLoad) {
                 document.getElementById('splashScreen').classList.add('hide');
                 isFirstLoad = false;
@@ -3323,6 +3629,761 @@
                 });
         });
     }
+	// ==========================================
+// LOGIC DÀNH RIÊNG CHO ADMIN DASHBOARD
+// ==========================================
+
+// Mở popup Admin
+function openAdminDashboard() {
+    document.getElementById('adminDashboardOverlay').classList.add('show');
+    document.getElementById('adminDashboardModal').classList.add('show');
+    loadAllUsers(); // Gọi hàm lấy dữ liệu từ Firebase
+}
+
+// Đóng popup Admin
+function closeAdminDashboard() {
+    document.getElementById('adminDashboardOverlay').classList.remove('show');
+    document.getElementById('adminDashboardModal').classList.remove('show');
+}
+
+// Gắn sự kiện click cho nút "Quản lý tất cả người dùng" ở tab Cài đặt
+document.getElementById('btnSettingsAdminDashboard').addEventListener('click', openAdminDashboard);
+
+// Hàm tải toàn bộ User từ Realtime Database
+function loadAllUsers() {
+    const listEl = document.getElementById('adminUserList');
+    listEl.innerHTML = '<div class="loading-text">Đang tải danh sách...</div>';
+
+    // Đọc vào node gốc 'users' (Chỉ Admin mới pass qua được Database Rules này)
+    db.ref('users').once('value').then(snapshot => {
+        if (!snapshot.exists()) {
+            listEl.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">Không có dữ liệu</div>';
+            return;
+        }
+
+        const users = [];
+        snapshot.forEach(childSnap => {
+            const uid = childSnap.key;
+            const data = childSnap.val();
+            
+            users.push({
+                uid: uid,
+                email: data.email || 'Chưa cập nhật',
+                role: data.role || 'user',
+                name: (data.profile && data.profile.name) ? data.profile.name : 'Ẩn danh',
+                createdAt: data.createdAt || ''
+            });
+        });
+
+        renderAdminUserList(users);
+    }).catch(err => {
+        console.error(err);
+        listEl.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--danger);">Lỗi phân quyền! Đảm bảo Database Rules đã được cấu hình đúng.</div>';
+    });
+}
+
+// Hàm render danh sách ra HTML
+function renderAdminUserList(users) {
+    const listEl = document.getElementById('adminUserList');
+    listEl.innerHTML = '';
+
+    // Sắp xếp: Admin lên đầu tiên
+    users.sort((a, b) => {
+        if (a.role === 'admin' && b.role !== 'admin') return -1;
+        if (a.role !== 'admin' && b.role === 'admin') return 1;
+        return 0;
+    });
+
+    users.forEach(u => {
+        const isMe = u.uid === currentUser.uid;
+        
+        // Tạo badge màu đỏ cho admin, màu xanh cho user
+        const roleBadge = u.role === 'admin' 
+            ? '<span style="background: var(--danger-light); color: var(--danger); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800;">ADMIN</span>'
+            : '<span style="background: #eef2ff; color: var(--primary); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800;">USER</span>';
+
+        // Template HTML cho từng tài khoản
+        const itemHTML = `
+            <div class="cat-item" style="padding: 16px; flex-direction: column; align-items: flex-start; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <div style="font-weight: 700; font-size: 15px; color: var(--text-main);">
+                        ${u.name} ${isMe ? '<span style="color: var(--success); font-size: 12px;">(Bạn)</span>' : ''}
+                    </div>
+                    <div>${roleBadge}</div>
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; width: 100%;">
+                    <span>📧 ${u.email}</span>
+                    <span style="font-size: 11px; font-family: monospace; word-break: break-all;">🔑 UID: ${u.uid}</span>
+                </div>
+                
+                ${!isMe ? `
+                <div style="display: flex; gap: 8px; width: 100%; margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 12px;">
+                    <!-- NÚT 1: XEM LỊCH SỬ GIAO DỊCH -->
+                    <button onclick="viewUserTransactions('${u.uid}', '${u.name}')" style="flex: 1; padding: 8px; border: none; background: #eef2ff; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--primary);">
+                        Lịch sử GD
+                    </button>
+                    <!-- NÚT 2: XEM THỐNG KÊ (MỚI) -->
+                    <button onclick="viewUserStats('${u.uid}', '${u.name}')" style="flex: 1; padding: 8px; border: none; background: #fff5ec; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--warning);">
+                        Xem thống kê
+                    </button>
+                </div>` : ''}
+            </div>
+        `;
+        listEl.innerHTML += itemHTML;
+    });
+}
+
+// Tính năng thưởng: Đổi quyền trực tiếp trên giao diện
+window.toggleUserRole = function(uid, currentRole) {
+    const newRole = currentRole === 'admin' ? 'user' : 'admin';
+    if (confirm(`Bạn có chắc muốn cập nhật quyền thành ${newRole.toUpperCase()} cho user này?`)) {
+        db.ref(`users/${uid}/role`).set(newRole).then(() => {
+            showToast('Đã cập nhật quyền!');
+            loadAllUsers(); // Tải lại danh sách sau khi đổi
+        }).catch(err => {
+            showToast('Lỗi! Hãy kiểm tra lại Database Rules', 'error');
+        });
+    }
+};
+// ==========================================
+// TÍNH NĂNG ADMIN: XEM LỊCH SỬ GIAO DỊCH CỦA USER (CÓ LỌC & PHÂN TRANG)
+// ==========================================
+
+let currentAdminTxs = [];
+let currentAdminCats = [];
+let adminTxDateLimit = 3; // Mặc định hiển thị 3 ngày
+
+// --- 1. KHỞI TẠO CÁC SỰ KIỆN CHO BỘ LỌC (CHẠY 1 LẦN) ---
+window.addEventListener('DOMContentLoaded', () => {
+    // Sự kiện tìm kiếm Text
+    document.getElementById('admTxSearchInput').addEventListener('input', () => {
+        adminTxDateLimit = 3; renderAdminTxList();
+    });
+
+    // Sự kiện nút lọc thời gian nhanh
+    document.querySelectorAll('#admTxQuickDateFilters .btn-quick-filter').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('#admTxQuickDateFilters .btn-quick-filter').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const range = btn.getAttribute('data-range');
+            const customContainer = document.getElementById('admTxCustomDateContainer');
+            
+            let startVal = '', endVal = '';
+            const today = new Date();
+            const y = today.getFullYear();
+            const m = today.getMonth();
+
+            if (range === 'custom') {
+                customContainer.classList.remove('hide');
+                return; 
+            } else {
+                customContainer.classList.add('hide');
+            }
+
+            if (range === 'this_month') {
+                startVal = `${y}-${String(m + 1).padStart(2, '0')}-01`;
+                endVal = `${y}-${String(m + 1).padStart(2, '0')}-${new Date(y, m + 1, 0).getDate()}`;
+            } else if (range === 'last_month') {
+                const prevM = m === 0 ? 11 : m - 1;
+                const prevY = m === 0 ? y - 1 : y;
+                startVal = `${prevY}-${String(prevM + 1).padStart(2, '0')}-01`;
+                endVal = `${prevY}-${String(prevM + 1).padStart(2, '0')}-${new Date(prevY, prevM + 1, 0).getDate()}`;
+            } else if (range === 'this_week') {
+                const curr = new Date();
+                const first = curr.getDate() - curr.getDay() + (curr.getDay() === 0 ? -6 : 1); 
+                startVal = new Date(curr.setDate(first)).toISOString().split('T')[0];
+                endVal = new Date(curr.setDate(first + 6)).toISOString().split('T')[0];
+            }
+
+            document.getElementById('admTxStartDate').value = startVal;
+            document.getElementById('admTxEndDate').value = endVal;
+            document.getElementById('admTxSearchInput').value = ''; 
+            
+            adminTxDateLimit = 3;
+            renderAdminTxList();
+        });
+    });
+
+    // Sự kiện chọn ngày tùy chỉnh
+    const updateCustomDateUI = (inputEl, displayEl) => {
+        const val = inputEl.value;
+        if(val) {
+            const [y, m, d] = val.split('-');
+            displayEl.innerText = `${d}/${m}/${y}`;
+        }
+        adminTxDateLimit = 3;
+        renderAdminTxList();
+    };
+    document.getElementById('admTxStartDate').addEventListener('change', (e) => updateCustomDateUI(e.target, document.getElementById('admTxStartDateDisplay')));
+    document.getElementById('admTxEndDate').addEventListener('change', (e) => updateCustomDateUI(e.target, document.getElementById('admTxEndDateDisplay')));
+});
+
+
+// --- 2. HÀM MỞ POPUP VÀ TẢI DỮ LIỆU TỪ FIREBASE ---
+window.viewUserTransactions = function(uid, userName) {
+    document.getElementById('adminUserTxOverlay').classList.add('show');
+    document.getElementById('adminUserTxModal').classList.add('show');
+    document.getElementById('adminUserTxTitle').innerText = 'Giao dịch: ' + userName;
+    document.getElementById('adminUserTxSubtitle').innerText = 'Đang tải dữ liệu...';
+    
+    // Reset UI
+    document.getElementById('admTxSearchInput').value = '';
+    const listEl = document.getElementById('adminUserTxList');
+    listEl.innerHTML = '<div class="loading-text">Đang tải dữ liệu...</div>';
+    
+    // Tải danh mục để build bộ lọc Category
+    db.ref(`users/${uid}/categories`).once('value').then(catSnap => {
+        if(catSnap.exists()) {
+            currentAdminCats = Object.keys(catSnap.val()).map(k => ({id: k, ...catSnap.val()[k]}));
+        } else {
+            currentAdminCats = Object.keys(DEFAULT_CATEGORIES).map(k => ({id: k, ...DEFAULT_CATEGORIES[k]})); 
+        }
+
+        // Render nút lọc danh mục
+        const histCatScroll = document.getElementById('admTxCategoryFilter');
+        histCatScroll.innerHTML = '<div class="cat-pill active" data-filter="">Tất cả</div>';
+        currentAdminCats.forEach(c => {
+            const theme = THEMES[c.color];
+            histCatScroll.innerHTML += `<div class="cat-pill" data-filter="${c.name}"><div class="pill-icon" style="color: ${theme.color}">${SVG_LIB[c.icon]}</div> ${c.name}</div>`;
+        });
+        histCatScroll.querySelectorAll('.cat-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                histCatScroll.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                adminTxDateLimit = 3; renderAdminTxList();
+            });
+        });
+
+        // Tải toàn bộ giao dịch
+        db.ref(`users/${uid}/transactions`).once('value').then(txSnap => {
+            currentAdminTxs = [];
+            if (txSnap.exists()) {
+                const data = txSnap.val();
+                for (let dateKey in data) {
+                    for (let txId in data[dateKey]) {
+                        currentAdminTxs.push({ id: Number(txId), date: dateKey, ...data[dateKey][txId] });
+                    }
+                }
+            }
+            
+            // Tự động kích hoạt bộ lọc "Tháng này" để gọi hàm render
+            document.querySelector('#admTxQuickDateFilters .btn-quick-filter[data-range="this_month"]').click();
+        });
+    });
+};
+
+window.closeAdminUserTx = function() {
+    document.getElementById('adminUserTxOverlay').classList.remove('show');
+    document.getElementById('adminUserTxModal').classList.remove('show');
+};
+
+// --- 3. HÀM XỬ LÝ LỌC & RENDER GIAO DIỆN (PHÂN TRANG) ---
+function renderAdminTxList() {
+    const listEl = document.getElementById('adminUserTxList');
+    
+    // Lấy giá trị từ các bộ lọc
+    const sText = document.getElementById('admTxSearchInput').value.toLowerCase().trim();
+    const fCat = document.querySelector('#admTxCategoryFilter .cat-pill.active').getAttribute('data-filter');
+    const fStartDate = document.getElementById('admTxStartDate').value;
+    const fEndDate = document.getElementById('admTxEndDate').value;
+    const isQuickAll = document.querySelector('#admTxQuickDateFilters .btn-quick-filter.active').getAttribute('data-range') === 'all';
+
+    // Tiến hành lọc dữ liệu
+    let displayData = currentAdminTxs;
+    const isFiltering = (!isQuickAll && (fStartDate || fEndDate)) || sText || fCat;
+
+    if (isFiltering) {
+        displayData = currentAdminTxs.filter(t => {
+            let matchDate = true;
+            if (fStartDate && fEndDate) matchDate = t.date >= fStartDate && t.date <= fEndDate;
+            else if (fStartDate) matchDate = t.date >= fStartDate;
+            else if (fEndDate) matchDate = t.date <= fEndDate;
+            
+            const matchCat = fCat ? t.categoryName === fCat || t.category === fCat : true;
+            const amtString = t.amount.toString();
+            const matchSearch = sText ? (
+                t.categoryName?.toLowerCase().includes(sText) || 
+                t.category?.toLowerCase().includes(sText) || 
+                (t.note && t.note.toLowerCase().includes(sText)) || amtString.includes(sText)
+            ) : true;
+            
+            return matchDate && matchCat && matchSearch;
+        });
+    }
+
+    document.getElementById('adminUserTxSubtitle').innerText = `Kết quả: ${displayData.length} giao dịch`;
+
+    // Tính tổng Thu/Chi của tập dữ liệu đã lọc
+    const totalInc = displayData.filter(t => t.type === 'income').reduce((a,b)=>a+b.amount,0);
+    const totalExp = displayData.filter(t => t.type === 'expense').reduce((a,b)=>a+b.amount,0);
+    document.getElementById('adminTxSumInc').innerText = '+' + formatter.format(totalInc) + 'đ';
+    document.getElementById('adminTxSumExp').innerText = '-' + formatter.format(totalExp) + 'đ';
+
+    // Gộp theo ngày
+    const grouped = {};
+    displayData.forEach(t => {
+        const dateStr = t.date; 
+        if (!grouped[dateStr]) grouped[dateStr] = { items: [], in: 0, out: 0 };
+        grouped[dateStr].items.push(t);
+        if (t.type === 'income') grouped[dateStr].in += t.amount;
+        if (t.type === 'expense') grouped[dateStr].out += t.amount;
+    });
+
+    const sortedDates = Object.keys(grouped).sort().reverse();
+    listEl.innerHTML = '';
+
+    if(sortedDates.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">Không tìm thấy giao dịch nào phù hợp.</div>';
+        return;
+    }
+
+    // Phân trang
+    const paginatedDates = sortedDates.slice(0, adminTxDateLimit);
+
+    paginatedDates.forEach(rawDate => {
+        const data = grouped[rawDate];
+        const [y, m, d] = rawDate.split('-');
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'date-group';
+
+        groupDiv.innerHTML = `
+            <div class="date-group-header">
+                <div class="date-title">${d}/${m}/${y}</div>
+                <div class="date-summary">
+                    <span class="text-success">+${formatter.format(data.in)}</span> &nbsp;|&nbsp; 
+                    <span class="text-danger">-${formatter.format(data.out)}</span>
+                </div>
+            </div>
+        `;
+
+        const itemsContainer = document.createElement('div');
+        itemsContainer.className = 'date-group-items';
+        data.items.sort((a, b) => b.id - a.id);
+
+        data.items.forEach(t => {
+            const isInc = t.type === 'income';
+            const catObj = currentAdminCats.find(c => c.id === t.categoryId);
+            const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
+            const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+            const timeObj = new Date(t.id);
+            const timeStr = `${String(timeObj.getHours()).padStart(2, '0')}:${String(timeObj.getMinutes()).padStart(2, '0')}`;
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'transaction-item';
+            itemDiv.style.cursor = 'default'; 
+            itemDiv.innerHTML = `
+                <div class="t-left">
+                    <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}">${iconSvg}</div>
+                    <div class="t-info">
+                        <div class="t-title">${t.categoryName || t.category}</div>
+                        <div class="t-note">⏱ ${timeStr} ${t.note ? ' • ' + t.note : ''}</div>
+                    </div>
+                </div>
+                <div class="t-action">
+                    <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                </div>
+            `;
+            itemsContainer.appendChild(itemDiv);
+        });
+        
+        groupDiv.appendChild(itemsContainer);
+        listEl.appendChild(groupDiv);
+    });
+
+    // Nút Load More
+    if (sortedDates.length > adminTxDateLimit) {
+        const loadMoreBtn = document.createElement('button');
+        loadMoreBtn.className = 'btn-load-more';
+        loadMoreBtn.innerText = `Xem thêm các ngày trước`;
+        loadMoreBtn.onclick = () => { adminTxDateLimit += 3; renderAdminTxList(); };
+        listEl.appendChild(loadMoreBtn);
+    }
+}
+// ==========================================
+// TÍNH NĂNG ADMIN: TẠO TÀI KHOẢN MỚI
+// ==========================================
+
+// Khởi tạo một Firebase App phụ để đăng ký user mà không làm Admin bị đăng xuất
+const secondaryApp = firebase.initializeApp(firebaseConfig, "SecondaryApp");
+
+window.openCreateUserModal = function() {
+    document.getElementById('createUserOverlay').classList.add('show');
+    document.getElementById('createUserModal').classList.add('show');
+    // Reset form
+    document.getElementById('newUserName').value = '';
+    document.getElementById('newUserEmail').value = '';
+    document.getElementById('newUserPassword').value = '';
+};
+
+window.closeCreateUserModal = function() {
+    document.getElementById('createUserOverlay').classList.remove('show');
+    document.getElementById('createUserModal').classList.remove('show');
+};
+
+document.getElementById('btnSubmitCreateUser').addEventListener('click', () => {
+    const name = document.getElementById('newUserName').value.trim();
+    let email = document.getElementById('newUserEmail').value.trim();
+    const password = document.getElementById('newUserPassword').value;
+
+    if(!name || !email || !password) {
+        showToast('Vui lòng điền đủ thông tin!', 'error');
+        return;
+    }
+    if(password.length < 6) {
+        showToast('Mật khẩu phải từ 6 ký tự!', 'error');
+        return;
+    }
+
+    // Xử lý nếu người dùng gõ username thay vì email
+    if(!email.includes('@')) {
+        email = `${email}@chitieu.com`;
+    }
+
+    const btn = document.getElementById('btnSubmitCreateUser');
+    btn.innerText = 'Đang tạo...';
+    btn.disabled = true;
+
+    // 1. Tạo user bằng App phụ
+    secondaryApp.auth().createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            const newUid = userCredential.user.uid;
+            
+            // 2. Sử dụng DB của App chính (vì Admin đang đăng nhập App chính mới có quyền ghi DB)
+            const userData = {
+                email: email,
+                role: 'user', // Mặc định tài khoản tạo ra là user
+                createdAt: new Date().toISOString()
+            };
+            
+            // Ghi role và thông tin vào users/{uid}
+            return db.ref(`users/${newUid}`).set(userData).then(() => {
+                // Ghi tiếp thông tin Profile (Họ Tên) vào users/{uid}/profile
+                return db.ref(`users/${newUid}/profile`).set({
+                    name: name
+                });
+            });
+        })
+        .then(() => {
+            // 3. Đăng xuất app phụ để dọn dẹp
+            secondaryApp.auth().signOut();
+            showToast('Tạo tài khoản thành công!');
+            closeCreateUserModal();
+            loadAllUsers(); // Tải lại danh sách
+        })
+        .catch((error) => {
+            let errorMsg = getAuthErrorVN(error.code);
+            if(error.code === 'auth/email-already-in-use') {
+                errorMsg = 'Email (hoặc Tên tài khoản) này đã được sử dụng!';
+            }
+            showToast(errorMsg || 'Lỗi khi tạo tài khoản', 'error');
+        })
+        .finally(() => {
+            btn.innerText = 'Xác nhận tạo';
+            btn.disabled = false;
+        });
+});
+// ==========================================
+// TÍNH NĂNG ADMIN: XEM THỐNG KÊ CỦA USER (FULL BẢN SAO)
+// ==========================================
+let admTxs = [];
+let admCats = [];
+let admPieChartInst = null;
+let admBarChartInst = null;
+let admLineChartInst = null;
+let admCurrentPieType = 'expense';
+
+// Khởi tạo các sự kiện click/đổi ngày cho bộ lọc Admin (chỉ chạy 1 lần)
+window.addEventListener('DOMContentLoaded', () => {
+    // Nút chuyển chế độ
+    document.getElementById('adm_btnModeRange').addEventListener('click', () => {
+        document.getElementById('adm_statsFilterMode').value = 'range';
+        document.getElementById('adm_btnModeRange').className = 'btn-toggle active';
+        document.getElementById('adm_btnModeRange').style.cssText = 'font-size: 14px; background: var(--primary); color: white;';
+        document.getElementById('adm_btnModeMonth').className = 'btn-toggle';
+        document.getElementById('adm_btnModeMonth').style.cssText = 'font-size: 14px; background: var(--bg-color); color: var(--text-muted);';
+        document.getElementById('adm_statsRangeContainer').classList.remove('hide');
+        document.getElementById('adm_statsMonthContainer').classList.add('hide');
+        renderAdmCharts();
+    });
+    
+    document.getElementById('adm_btnModeMonth').addEventListener('click', () => {
+        document.getElementById('adm_statsFilterMode').value = 'month';
+        document.getElementById('adm_btnModeMonth').className = 'btn-toggle active';
+        document.getElementById('adm_btnModeMonth').style.cssText = 'font-size: 14px; background: var(--primary); color: white;';
+        document.getElementById('adm_btnModeRange').className = 'btn-toggle';
+        document.getElementById('adm_btnModeRange').style.cssText = 'font-size: 14px; background: var(--bg-color); color: var(--text-muted);';
+        document.getElementById('adm_statsMonthContainer').classList.remove('hide');
+        document.getElementById('adm_statsRangeContainer').classList.add('hide');
+        renderAdmCharts();
+    });
+
+    // Thay đổi ngày/tháng
+    document.getElementById('adm_statsMonthPicker').addEventListener('change', renderAdmCharts);
+    document.getElementById('adm_statsStartDate').addEventListener('change', () => { updateAdmDateUI(); renderAdmCharts(); });
+    document.getElementById('adm_statsEndDate').addEventListener('change', () => { updateAdmDateUI(); renderAdmCharts(); });
+
+    // Toggle Thu/Chi Pie Chart Admin
+    document.getElementById('adm_btnPieExp').addEventListener('click', function() {
+        this.className = 'btn-toggle active expense';
+        document.getElementById('adm_btnPieInc').className = 'btn-toggle income';
+        admCurrentPieType = 'expense';
+        renderAdmCharts();
+    });
+    document.getElementById('adm_btnPieInc').addEventListener('click', function() {
+        this.className = 'btn-toggle active income';
+        document.getElementById('adm_btnPieExp').className = 'btn-toggle expense';
+        admCurrentPieType = 'income';
+        renderAdmCharts();
+    });
+});
+
+function updateAdmDateUI() {
+    const sVal = document.getElementById('adm_statsStartDate').value;
+    const eVal = document.getElementById('adm_statsEndDate').value;
+    if(sVal) {
+        const [y, m, d] = sVal.split('-');
+        document.getElementById('adm_statsStartDateDisplay').innerText = `${d}/${m}/${y}`;
+    }
+    if(eVal) {
+        const [y, m, d] = eVal.split('-');
+        document.getElementById('adm_statsEndDateDisplay').innerText = `${d}/${m}/${y}`;
+    }
+}
+
+// Mở popup
+window.viewUserStats = function(uid, userName) {
+    document.getElementById('adminUserStatsOverlay').classList.add('show');
+    document.getElementById('adminUserStatsModal').classList.add('show');
+    document.getElementById('adminUserStatsTitle').innerText = 'Thống kê: ' + userName;
+
+    // Gán ngày tháng mặc định nếu chưa chọn
+    if(!document.getElementById('adm_statsMonthPicker').value) {
+        const t = new Date();
+        const y = t.getFullYear();
+        const m = String(t.getMonth() + 1).padStart(2, '0');
+        const d = String(t.getDate()).padStart(2, '0');
+        document.getElementById('adm_statsMonthPicker').value = `${y}-${m}`;
+        document.getElementById('adm_statsStartDate').value = `${y}-${m}-01`;
+        document.getElementById('adm_statsEndDate').value = `${y}-${m}-${d}`;
+        updateAdmDateUI();
+    }
+
+    // Tải dữ liệu của user
+    db.ref(`users/${uid}/categories`).once('value').then(catSnap => {
+        if(catSnap.exists()) {
+            admCats = Object.keys(catSnap.val()).map(k => ({id: k, ...catSnap.val()[k]}));
+        } else {
+            admCats = Object.keys(DEFAULT_CATEGORIES).map(k => ({id: k, ...DEFAULT_CATEGORIES[k]})); 
+        }
+
+        db.ref(`users/${uid}/transactions`).once('value').then(txSnap => {
+            admTxs = [];
+            if (txSnap.exists()) {
+                const data = txSnap.val();
+                for (let dateKey in data) {
+                    for (let txId in data[dateKey]) {
+                        admTxs.push({ id: Number(txId), date: dateKey, ...data[dateKey][txId] });
+                    }
+                }
+            }
+            renderAdmCharts(); // Gọi hàm vẽ biểu đồ
+        });
+    });
+};
+
+window.closeAdminUserStats = function() {
+    document.getElementById('adminUserStatsOverlay').classList.remove('show');
+    document.getElementById('adminUserStatsModal').classList.remove('show');
+};
+
+// Hàm vẽ biểu đồ (Bản sao logic từ tab Thống Kê)
+function renderAdmCharts() {
+    const mode = document.getElementById('adm_statsFilterMode').value;
+    let startDateStr = '', endDateStr = '', displayTitleText = '', daysToAverage = 1;
+
+    // Tính khoảng thời gian
+    if (mode === 'month') {
+        const monthVal = document.getElementById('adm_statsMonthPicker').value;
+        if (!monthVal) return;
+        const [y, m] = monthVal.split('-');
+        startDateStr = `${y}-${m}-01`;
+        const lastDay = new Date(y, parseInt(m), 0).getDate();
+        endDateStr = `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
+        displayTitleText = `Tháng ${parseInt(m)}/${y}`;
+        const now = new Date();
+        daysToAverage = (parseInt(y) === now.getFullYear() && parseInt(m) === (now.getMonth() + 1)) ? now.getDate() : lastDay;
+    } else {
+        startDateStr = document.getElementById('adm_statsStartDate').value;
+        endDateStr = document.getElementById('adm_statsEndDate').value;
+        if (!startDateStr || !endDateStr) return;
+        if (startDateStr > endDateStr) {
+            let temp = startDateStr; startDateStr = endDateStr; endDateStr = temp;
+            document.getElementById('adm_statsStartDate').value = startDateStr;
+            document.getElementById('adm_statsEndDate').value = endDateStr;
+            updateAdmDateUI();
+        }
+        const formatVN = (d) => `${d.split('-')[2]}/${d.split('-')[1]}`;
+        displayTitleText = `${formatVN(startDateStr)} - ${formatVN(endDateStr)}`;
+        const sDate = new Date(startDateStr); const eDate = new Date(endDateStr);
+        daysToAverage = Math.floor((eDate - sDate) / (1000 * 60 * 60 * 24)) + 1;
+        if (daysToAverage < 1) daysToAverage = 1;
+    }
+
+    // Đổ tiêu đề
+    document.getElementById('adm_pieSubtitle').innerText = displayTitleText;
+    document.getElementById('adm_barSubtitle').innerText = displayTitleText;
+    document.getElementById('adm_lineSubtitle').innerText = displayTitleText;
+
+    // Lọc giao dịch
+    const periodTxs = admTxs.filter(t => t.date >= startDateStr && t.date <= endDateStr);
+    let totalInc = 0, totalExp = 0, maxExpTx = null;
+
+    periodTxs.forEach(t => {
+        if (t.type === 'income') totalInc += t.amount;
+        if (t.type === 'expense') {
+            totalExp += t.amount;
+            if (!maxExpTx || t.amount > maxExpTx.amount) maxExpTx = t;
+        }
+    });
+
+    // 0. VẼ THẺ KPI & TREND
+    const netFlow = totalInc - totalExp;
+    const elNetFlow = document.getElementById('adm_kpiNetFlow');
+    elNetFlow.innerText = currencyFormatter.format(netFlow);
+    elNetFlow.className = 'hero-kpi-value ' + (netFlow >= 0 ? 'text-success' : 'text-danger');
+    document.getElementById('adm_kpiNetFlowDesc').innerHTML = `Thu: <span class="text-success">+${formatter.format(totalInc)}</span> | Chi: <span class="text-danger">-${formatter.format(totalExp)}</span>`;
+    
+    document.getElementById('adm_kpiAvgExpense').innerText = currencyFormatter.format(Math.round(totalExp / daysToAverage));
+
+    // Tính Trend so với kỳ trước
+    const pSDate = new Date(startDateStr); pSDate.setMonth(pSDate.getMonth() - 1);
+    const pEDate = new Date(endDateStr); pEDate.setMonth(pEDate.getMonth() - 1);
+    const prevStartStr = `${pSDate.getFullYear()}-${String(pSDate.getMonth() + 1).padStart(2, '0')}-${String(pSDate.getDate()).padStart(2, '0')}`;
+    const prevEndStr = `${pEDate.getFullYear()}-${String(pEDate.getMonth() + 1).padStart(2, '0')}-${String(pEDate.getDate()).padStart(2, '0')}`;
+    let prevDays = daysToAverage;
+    if (mode === 'month') { prevDays = new Date(pSDate.getFullYear(), pSDate.getMonth() + 1, 0).getDate(); }
+    
+    const prevPeriodTxs = admTxs.filter(t => t.date >= prevStartStr && t.date <= prevEndStr);
+    let prevTotalExp = 0;
+    prevPeriodTxs.forEach(t => { if (t.type === 'expense') prevTotalExp += t.amount; });
+    
+    const currentAvgExp = Math.round(totalExp / daysToAverage);
+    const prevAvgExp = Math.round(prevTotalExp / prevDays);
+    
+    const elTrend = document.getElementById('adm_kpiAvgExpenseTrend');
+    elTrend.classList.remove('hide', 'good', 'bad', 'neutral');
+    if (prevAvgExp === 0 && currentAvgExp === 0) {
+        elTrend.classList.add('neutral'); elTrend.innerHTML = '- 0%';
+    } else if (prevAvgExp === 0 && currentAvgExp > 0) {
+        elTrend.classList.add('bad'); elTrend.innerHTML = '↑ 100%';
+    } else {
+        const diffPercent = Math.round(((currentAvgExp - prevAvgExp) / prevAvgExp) * 100);
+        if (diffPercent > 0) { elTrend.classList.add('bad'); elTrend.innerHTML = `↑ ${diffPercent}%`; } 
+        else if (diffPercent < 0) { elTrend.classList.add('good'); elTrend.innerHTML = `↓ ${Math.abs(diffPercent)}%`; } 
+        else { elTrend.classList.add('neutral'); elTrend.innerHTML = '- 0%'; }
+    }
+
+    if (maxExpTx) {
+        document.getElementById('adm_kpiMaxExpense').innerText = currencyFormatter.format(maxExpTx.amount);
+        document.getElementById('adm_kpiMaxExpenseName').innerText = (maxExpTx.categoryName || maxExpTx.category || 'Khác') + ` (${maxExpTx.date.split('-')[2]}/${maxExpTx.date.split('-')[1]})`;
+    } else {
+        document.getElementById('adm_kpiMaxExpense').innerText = '0 đ';
+        document.getElementById('adm_kpiMaxExpenseName').innerText = 'Chưa có dữ liệu';
+    }
+
+    // 1. VẼ PIE CHART VÀ TOP 5
+    const targetTypeTxs = periodTxs.filter(t => t.type === admCurrentPieType);
+    const txByCat = {};
+    targetTypeTxs.forEach(t => {
+        const cName = t.categoryName || t.category;
+        if(!txByCat[cName]) {
+            const catObj = admCats.find(c => c.id === t.categoryId);
+            txByCat[cName] = { amount: 0, colorHex: catObj ? THEMES[catObj.color].hex : '#8395a7' };
+        }
+        txByCat[cName].amount += t.amount;
+    });
+
+    if(admPieChartInst) admPieChartInst.destroy();
+    const pieLabels = Object.keys(txByCat);
+    if (pieLabels.length === 0) {
+        document.getElementById('adm_pieChart').style.display = 'none';
+        document.getElementById('adm_pieEmptyState').classList.remove('hide');
+    } else {
+        document.getElementById('adm_pieChart').style.display = 'block';
+        document.getElementById('adm_pieEmptyState').classList.add('hide');
+        admPieChartInst = new Chart(document.getElementById('adm_pieChart').getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: pieLabels, datasets: [{ data: pieLabels.map(k => txByCat[k].amount), backgroundColor: pieLabels.map(k => txByCat[k].colorHex), borderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, font: {size: 11} } }, tooltip: { callbacks: { label: c => ' ' + currencyFormatter.format(c.parsed) } } } }
+        });
+    }
+
+    document.getElementById('adm_top5Title').innerText = admCurrentPieType === 'expense' ? 'Top 5 khoản chi lớn nhất' : 'Top 5 khoản thu lớn nhất';
+    const top5Txs = targetTypeTxs.sort((a, b) => b.amount - a.amount).slice(0, 5);
+    const topListEl = document.getElementById('adm_topExpenseList');
+    topListEl.innerHTML = '';
+    
+    if (top5Txs.length === 0) {
+        topListEl.innerHTML = `<div style="text-align:center; padding: 20px 0; color: var(--text-muted); font-size: 13px;">Không có dữ liệu</div>`;
+    } else {
+        top5Txs.forEach(t => {
+            const catObj = admCats.find(c => c.id === t.categoryId);
+            const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+            const amtClass = admCurrentPieType === 'expense' ? 'text-danger' : 'text-success';
+            const amtPrefix = admCurrentPieType === 'expense' ? '-' : '+';
+            
+            topListEl.innerHTML += `
+                <div class="transaction-item" style="padding: 12px 0; cursor: default;">
+                    <div class="t-left">
+                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">${catObj ? SVG_LIB[catObj.icon] : SVG_LIB['other']}</div>
+                        <div class="t-info">
+                            <div class="t-title" style="font-size: 15px;">${t.categoryName || t.category}</div>
+                            <div class="t-note" style="font-size: 12px;">${t.date.split('-')[2]}/${t.date.split('-')[1]}/${t.date.split('-')[0].substring(2)}</div>
+                        </div>
+                    </div>
+                    <div class="t-action"><div class="t-amount ${amtClass}" style="font-size: 15px;">${amtPrefix}${formatter.format(t.amount)}</div></div>
+                </div>`;
+        });
+    }
+
+    // 2. VẼ BAR CHART VÀ LINE CHART
+    let dateList = []; let currDate = new Date(startDateStr); let eDate = new Date(endDateStr);
+    while(currDate <= eDate) {
+        let y = currDate.getFullYear(); let m = String(currDate.getMonth() + 1).padStart(2, '0'); let d = String(currDate.getDate()).padStart(2, '0');
+        dateList.push(`${y}-${m}-${d}`);
+        currDate.setDate(currDate.getDate() + 1);
+    }
+
+    const barLabels = [], inData = [], outData = [], lineData = [];
+    let runningBalance = 0;
+    admTxs.forEach(t => { if (t.date < startDateStr) runningBalance += (t.type === 'income' ? t.amount : -t.amount); });
+
+    dateList.forEach(dateStr => {
+        barLabels.push(`${dateStr.split('-')[2]}/${dateStr.split('-')[1]}`);
+        const dayTxs = periodTxs.filter(t => t.date === dateStr);
+        let dIn = dayTxs.filter(t => t.type === 'income').reduce((s, t)=>s+t.amount, 0);
+        let dOut = dayTxs.filter(t => t.type === 'expense').reduce((s, t)=>s+t.amount, 0);
+        inData.push(dIn); outData.push(dOut);
+        runningBalance += (dIn - dOut); lineData.push(runningBalance);
+    });
+
+    if(admBarChartInst) admBarChartInst.destroy();
+    admBarChartInst = new Chart(document.getElementById('adm_barChart').getContext('2d'), {
+        type: 'bar',
+        data: { labels: barLabels, datasets: [{ label: 'Thu', data: inData, backgroundColor: '#2ecc71', borderRadius: 4 }, { label: 'Chi', data: outData, backgroundColor: '#e74c3c', borderRadius: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => (v===0?0:v/1000+'K') } }, x: { grid: { display: false } } } }
+    });
+
+    if(admLineChartInst) admLineChartInst.destroy();
+    const ctxLine = document.getElementById('adm_lineChart').getContext('2d');
+    let gradient = ctxLine.createLinearGradient(0, 0, 0, 400); gradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)'); gradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
+    admLineChartInst = new Chart(ctxLine, {
+        type: 'line',
+        data: { labels: barLabels, datasets: [{ label: 'Số dư', data: lineData, borderColor: '#4361ee', backgroundColor: gradient, borderWidth: 3, pointRadius: 2, fill: true, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => (v/1000+'K') } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
+    });
+}
 </script>
 </body>
 </html>

@@ -583,6 +583,7 @@
                     </div>
                     <input type="hidden" id="amountInputRaw" required>
                     <div class="quick-amounts">
+                        <button type="button" class="btn-quick" data-val="5000">+5K</button>
                         <button type="button" class="btn-quick" data-val="10000">+10K</button>
                         <button type="button" class="btn-quick" data-val="20000">+20K</button>
                         <button type="button" class="btn-quick" data-val="50000">+50K</button>
@@ -627,10 +628,10 @@
 
             <!-- BỘ LỌC THỜI GIAN NHANH (MỚI) -->
             <div class="quick-filters-scroll" id="quickDateFilters" style="margin-top: 12px; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
-                <button class="btn-quick-filter active" data-range="all">Tất cả thời gian</button>
-                <button class="btn-quick-filter" data-range="this_month">Tháng này</button>
+                <button class="btn-quick-filter active" data-range="this_month">Tháng này</button>
                 <button class="btn-quick-filter" data-range="last_month">Tháng trước</button>
                 <button class="btn-quick-filter" data-range="this_week">Tuần này</button>
+                <button class="btn-quick-filter" data-range="all">Tất cả thời gian</button>
                 <button class="btn-quick-filter" data-range="custom">Tùy chỉnh...</button>
             </div>
 
@@ -1816,9 +1817,12 @@
             const addVal = parseInt(btn.getAttribute('data-val'));
             let currentRaw = amountInputRaw.value ? parseInt(amountInputRaw.value) : 0;
             currentRaw += addVal; amountInputRaw.value = currentRaw; amountInputDisplay.value = formatter.format(currentRaw);
+			currentDateLimit = DATES_PER_PAGE;
+            updateUI();
         });
     });
-
+	document.querySelector('.btn-quick-filter[data-range="this_month"]').click();
+	
     function switchType(type) {
         // Chỉ chọn và thay đổi các nút toggle nằm trong transactionForm
         document.querySelectorAll('#transactionForm .btn-toggle').forEach(b => b.classList.remove('active', 'income', 'expense'));

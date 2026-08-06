@@ -417,6 +417,38 @@
         body.dark-theme .settings-card { background-color: var(--card-bg) !important; border: 1px solid #2d3748; }
         body.dark-theme .settings-item { border-bottom-color: #2d3748; background-color: transparent;}
         body.dark-theme .settings-item:active { background-color: #2d3748; }
+		/* =========================================
+           CẢI TIẾN UI TAB LỊCH SỬ
+           ========================================= */
+        .quick-filters-scroll::-webkit-scrollbar { display: none; }
+        .btn-quick-filter { flex-shrink: 0; background: #f1f3f5; border: none; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: 0.2s; border: 1.5px solid transparent; }
+        .btn-quick-filter.active { background: #eef2ff; color: var(--primary); border-color: var(--primary); }
+        
+        .summary-header { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; border-top: 1px dashed #e2e8f0; padding-top: 16px; }
+        .summary-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .summary-card { padding: 12px; border-radius: 12px; display: flex; flex-direction: column; gap: 4px; border: 1px solid transparent; }
+        .summary-card.box-in { background: var(--success-light); border-color: rgba(46, 204, 113, 0.2); }
+        .summary-card.box-out { background: var(--danger-light); border-color: rgba(231, 76, 60, 0.2); }
+        .summary-card.box-bal { background: #f8f9fa; border-color: #e2e8f0; align-items: center; text-align: center;}
+        
+        .sc-label { font-size: 11px; font-weight: 700; opacity: 0.7; text-transform: uppercase; }
+        .sc-val { font-size: 15px; font-weight: 800; }
+        .box-in .sc-val { color: var(--success); }
+        .box-out .sc-val { color: var(--danger); }
+        .box-bal .sc-val { color: var(--text-main); font-size: 18px;}
+
+        /* Sửa lại Sticky Header cho đẹp hơn */
+        .date-group-header { top: 0px; background: rgba(244, 246, 249, 0.98); border-bottom: 1px solid #e2e8f0; padding: 12px 8px 8px 8px; box-shadow: 0 4px 6px -4px rgba(0,0,0,0.05); }
+
+        /* Hỗ trợ Dark mode cho UI mới */
+        body.dark-theme .btn-quick-filter { background: #2d3748; color: var(--text-main); }
+        body.dark-theme .btn-quick-filter.active { background: rgba(67, 97, 238, 0.2); color: #829fff; border-color: #829fff; }
+        body.dark-theme .summary-header { border-top-color: #2d3748; }
+        body.dark-theme .summary-card.box-in { background: rgba(46, 204, 113, 0.1); border-color: rgba(46, 204, 113, 0.2); }
+        body.dark-theme .summary-card.box-out { background: rgba(231, 76, 60, 0.1); border-color: rgba(231, 76, 60, 0.2); }
+        body.dark-theme .summary-card.box-bal { background: #2d3748; border-color: #4a5568; }
+        body.dark-theme .box-bal .sc-val { color: var(--text-main); }
+        body.dark-theme .date-group-header { background: rgba(18, 18, 18, 0.98); border-bottom-color: #2d3748; }
 	</style>
 </head>
 <body>
@@ -577,7 +609,7 @@
         </div>
     </div>
 
-    <!-- ========================================= -->
+   <!-- ========================================= -->
     <!-- TAB 2: LỊCH SỬ (HISTORY) CẢI TIẾN TỐI ƯU  -->
     <!-- ========================================= -->
     <div id="historyView" class="view-section">
@@ -585,17 +617,25 @@
             
             <div class="search-box">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="searchInput" placeholder="Tìm tên, ghi chú...">
+                <input type="text" id="searchInput" placeholder="Tìm tên, ghi chú, số tiền...">
             </div>
 
-            <!-- BỘ LỌC DANH MỤC SCROLL NGANG XỊN XÒ -->
+            <!-- BỘ LỌC DANH MỤC SCROLL NGANG -->
             <div class="category-scroll" id="historyCategoryFilter" style="margin-top: 12px; padding-bottom: 0;">
-                <!-- Dữ liệu được nạp bằng JS -->
                 <div class="cat-pill active" data-filter="">Tất cả</div>
             </div>
 
-            <!-- BỘ LỌC NGÀY TRÊN 1 HÀNG -->
-            <div class="filter-row" style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
+            <!-- BỘ LỌC THỜI GIAN NHANH (MỚI) -->
+            <div class="quick-filters-scroll" id="quickDateFilters" style="margin-top: 12px; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
+                <button class="btn-quick-filter active" data-range="all">Tất cả thời gian</button>
+                <button class="btn-quick-filter" data-range="this_month">Tháng này</button>
+                <button class="btn-quick-filter" data-range="last_month">Tháng trước</button>
+                <button class="btn-quick-filter" data-range="this_week">Tuần này</button>
+                <button class="btn-quick-filter" data-range="custom">Tùy chỉnh...</button>
+            </div>
+
+            <!-- BỘ LỌC NGÀY TÙY CHỈNH (ẨN MẶC ĐỊNH, CHỈ HIỆN KHI CHỌN "TÙY CHỈNH") -->
+            <div class="filter-row hide" id="customDateContainer" style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
                 <div class="filter-date-wrapper" id="filterStartDateWrapper">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                     <span class="date-text" id="filterStartDateDisplay">Từ ngày</span>
@@ -610,17 +650,28 @@
                     <input type="date" id="filterEndDate">
                 </div>
                 
-                <!-- NÚT BỎ LỌC (ICON) -->
                 <button id="clearFilterBtn" class="btn-clear-filter hide" title="Bỏ lọc">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
 
-            <!-- TỔNG KẾT RIÊNG CHO MỤC ĐANG LỌC -->
-            <div id="filteredSummary" class="hide" style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; font-size: 14px; font-weight: 700;">
-                <span class="text-success" id="filterSumInc">+0đ</span>
-                <span class="text-danger" id="filterSumExp">-0đ</span>
-                <span style="color: var(--primary)" id="filterSumBal">Dư: 0đ</span>
+            <!-- TỔNG KẾT BỘ LỌC DẠNG CARD (CẢI TIẾN) -->
+            <div id="filteredSummary" class="hide" style="margin-top: 16px;">
+                <div class="summary-header">Tổng kết khoảng thời gian này <span id="filterTxCount" style="color:var(--primary); font-weight: 800;">(0)</span></div>
+                <div class="summary-cards-grid">
+                    <div class="summary-card box-in">
+                        <div class="sc-label">Tổng Thu</div>
+                        <div class="sc-val" id="filterSumInc">+0đ</div>
+                    </div>
+                    <div class="summary-card box-out">
+                        <div class="sc-label">Tổng Chi</div>
+                        <div class="sc-val" id="filterSumExp">-0đ</div>
+                    </div>
+                    <div class="summary-card box-bal" style="grid-column: span 2;">
+                        <div class="sc-label">Cân bằng (Dư)</div>
+                        <div class="sc-val" id="filterSumBal">0đ</div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -1797,52 +1848,77 @@
     // ==========================================
     // 7. RENDER LỊCH SỬ GIAO DỊCH
     // ==========================================
-    const filterStartDate = document.getElementById('filterStartDate');
-    const filterEndDate = document.getElementById('filterEndDate');
-    const filterStartDateDisplay = document.getElementById('filterStartDateDisplay');
-    const filterEndDateDisplay = document.getElementById('filterEndDateDisplay');
-    const filterStartDateWrapper = document.getElementById('filterStartDateWrapper');
-    const filterEndDateWrapper = document.getElementById('filterEndDateWrapper');
-
-    function handleDateChange(inputEl, displayEl, wrapperEl, defaultText) {
-        inputEl.addEventListener('change', (e) => {
-            const val = e.target.value;
-            if(val) {
-                displayEl.innerText = formatNiceDate(val).replace('Hôm nay, ', '');
-                wrapperEl.classList.add('active');
-            } else {
-                displayEl.innerText = defaultText;
-                wrapperEl.classList.remove('active');
-            }
-            currentDateLimit = DATES_PER_PAGE; 
-            updateUI();
-        });
+    // ==========================================
+    // CẢI TIẾN LOGIC BỘ LỌC LỊCH SỬ (QUICK FILTERS)
+    // ==========================================
+    
+    // Hàm tính toán ngày đầu/cuối của tuần
+    function getWeekRange() {
+        const curr = new Date();
+        const first = curr.getDate() - curr.getDay() + (curr.getDay() === 0 ? -6 : 1); 
+        const last = first + 6;
+        return {
+            start: new Date(curr.setDate(first)).toISOString().split('T')[0],
+            end: new Date(curr.setDate(last)).toISOString().split('T')[0]
+        };
     }
 
-    handleDateChange(filterStartDate, filterStartDateDisplay, filterStartDateWrapper, 'Từ ngày');
-    handleDateChange(filterEndDate, filterEndDateDisplay, filterEndDateWrapper, 'Đến ngày');
+    // Logic nút lọc nhanh
+    document.querySelectorAll('.btn-quick-filter').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Xóa active cũ, thêm active mới
+            document.querySelectorAll('.btn-quick-filter').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
 
-    document.getElementById('searchInput').addEventListener('input', () => { currentDateLimit = DATES_PER_PAGE; updateUI(); });
-    
-    document.getElementById('clearFilterBtn').addEventListener('click', () => {
-        filterStartDate.value = ''; filterStartDateDisplay.innerText = 'Từ ngày'; filterStartDateWrapper.classList.remove('active');
-        filterEndDate.value = ''; filterEndDateDisplay.innerText = 'Đến ngày'; filterEndDateWrapper.classList.remove('active');
-        document.getElementById('searchInput').value = ''; 
-        
-        // Reset Cat Filter
-        const histCatScroll = document.getElementById('historyCategoryFilter');
-        histCatScroll.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-        histCatScroll.querySelector('.cat-pill[data-filter=""]').classList.add('active');
-        histCatScroll.scrollLeft = 0;
-        
-        currentDateLimit = DATES_PER_PAGE; updateUI();
+            const range = btn.getAttribute('data-range');
+            const customContainer = document.getElementById('customDateContainer');
+            
+            let startVal = '', endVal = '';
+            const today = new Date();
+            const y = today.getFullYear();
+            const m = today.getMonth();
+
+            if (range === 'custom') {
+                customContainer.classList.remove('hide');
+                return; // Không update UI vội, đợi người dùng chọn ngày
+            } else {
+                customContainer.classList.add('hide');
+            }
+
+            if (range === 'this_month') {
+                startVal = `${y}-${String(m + 1).padStart(2, '0')}-01`;
+                endVal = `${y}-${String(m + 1).padStart(2, '0')}-${new Date(y, m + 1, 0).getDate()}`;
+            } else if (range === 'last_month') {
+                const prevM = m === 0 ? 11 : m - 1;
+                const prevY = m === 0 ? y - 1 : y;
+                startVal = `${prevY}-${String(prevM + 1).padStart(2, '0')}-01`;
+                endVal = `${prevY}-${String(prevM + 1).padStart(2, '0')}-${new Date(prevY, prevM + 1, 0).getDate()}`;
+            } else if (range === 'this_week') {
+                const week = getWeekRange();
+                startVal = week.start; endVal = week.end;
+            }
+
+            // Gán giá trị vào ô input ẩn đi để hàm updateUI có thể đọc
+            filterStartDate.value = startVal;
+            filterEndDate.value = endVal;
+            
+            // Xóa nội dung tìm kiếm text khi bấm lọc nhanh để tránh nhầm lẫn
+            document.getElementById('searchInput').value = ''; 
+            
+            currentDateLimit = DATES_PER_PAGE;
+            updateUI();
+        });
     });
 
+    // Cập nhật lại logic hàm updateUI() để render Thẻ Dashboard mới
     function updateUI() {
         const fStartDate = filterStartDate.value;
         const fEndDate = filterEndDate.value;
         const sText = document.getElementById('searchInput').value.toLowerCase().trim();
         const fCat = document.querySelector('#historyCategoryFilter .cat-pill.active').getAttribute('data-filter');
+        
+        // Kiểm tra xem người dùng có đang dùng bộ lọc nhanh "All" không
+        const isQuickAll = document.querySelector('.btn-quick-filter.active').getAttribute('data-range') === 'all';
         
         const listEl = document.getElementById('transactionList');
         const filteredSummary = document.getElementById('filteredSummary');
@@ -1853,10 +1929,11 @@
         renderBalances();
 
         let displayData = [...transactions];
-        const isFiltering = fStartDate || fEndDate || sText || fCat;
+        
+        // Xét điều kiện lọc: Nếu chọn custom/tháng/tuần (ko phải All), hoặc có text, hoặc có category
+        const isFiltering = (!isQuickAll && (fStartDate || fEndDate)) || sText || fCat;
 
         if (isFiltering) {
-            document.getElementById('clearFilterBtn').classList.remove('hide');
             displayData = transactions.filter(t => {
                 let matchDate = true;
                 if (fStartDate && fEndDate) matchDate = t.date >= fStartDate && t.date <= fEndDate;
@@ -1864,21 +1941,38 @@
                 else if (fEndDate) matchDate = t.date <= fEndDate;
                 
                 const matchCat = fCat ? t.categoryName === fCat || t.category === fCat : true;
-                const matchSearch = sText ? (t.categoryName?.toLowerCase().includes(sText) || t.category?.toLowerCase().includes(sText) || (t.note && t.note.toLowerCase().includes(sText))) : true;
+                
+                // Cải tiến Search: Tìm cả trong số tiền
+                const amtString = t.amount.toString();
+                const matchSearch = sText ? (
+                    t.categoryName?.toLowerCase().includes(sText) || 
+                    t.category?.toLowerCase().includes(sText) || 
+                    (t.note && t.note.toLowerCase().includes(sText)) ||
+                    amtString.includes(sText)
+                ) : true;
+                
                 return matchDate && matchCat && matchSearch;
             });
 
+            // RENDER DASHBOARD TỔNG KẾT
             filteredSummary.classList.remove('hide');
             const fInc = displayData.filter(t => t.type === 'income').reduce((a,b)=>a+b.amount,0);
             const fExp = displayData.filter(t => t.type === 'expense').reduce((a,b)=>a+b.amount,0);
-            document.getElementById('filterSumInc').innerText = '+' + formatter.format(fInc);
-            document.getElementById('filterSumExp').innerText = '-' + formatter.format(fExp);
-            document.getElementById('filterSumBal').innerText = 'Dư: ' + formatter.format(fInc - fExp);
+            
+            document.getElementById('filterTxCount').innerText = `(${displayData.length})`;
+            document.getElementById('filterSumInc').innerText = '+' + formatter.format(fInc) + 'đ';
+            document.getElementById('filterSumExp').innerText = '-' + formatter.format(fExp) + 'đ';
+            
+            const bal = fInc - fExp;
+            const elBal = document.getElementById('filterSumBal');
+            elBal.innerText = (bal > 0 ? '+' : '') + formatter.format(bal) + 'đ';
+            elBal.style.color = bal >= 0 ? 'var(--success)' : 'var(--danger)';
+            
         } else {
-            document.getElementById('clearFilterBtn').classList.add('hide');
             filteredSummary.classList.add('hide');
         }
 
+        // --- Giữ nguyên phần logic render HTML danh sách giao dịch (grouped by date) ở bên dưới ---
         const grouped = {};
         displayData.forEach(t => {
             const dateStr = t.date; 
@@ -1895,8 +1989,8 @@
             listEl.innerHTML = `
                 <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px; opacity: 0.5;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    <p style="font-size: 15px; font-weight: 500;">Chưa có giao dịch nào</p>
-                    <p style="font-size: 13px; margin-top: 4px;">Hãy thử thay đổi bộ lọc hoặc thêm mới.</p>
+                    <p style="font-size: 15px; font-weight: 500;">Không tìm thấy giao dịch nào</p>
+                    <p style="font-size: 13px; margin-top: 4px;">Hãy thử thay đổi bộ lọc thời gian hoặc từ khóa.</p>
                 </div>
             `;
             return;

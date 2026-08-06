@@ -449,6 +449,66 @@
         body.dark-theme .summary-card.box-bal { background: #2d3748; border-color: #4a5568; }
         body.dark-theme .box-bal .sc-val { color: var(--text-main); }
         body.dark-theme .date-group-header { background: rgba(18, 18, 18, 0.98); border-bottom-color: #2d3748; }
+		/* Thêm dấu chấm Online (Trạng thái hoạt động) */
+		.user-menu {
+			position: relative;
+		}
+		.status-indicator {
+			position: absolute;
+			bottom: 2px;
+			right: 2px;
+			width: 12px;
+			height: 12px;
+			background-color: var(--success);
+			border: 2px solid #fff;
+			border-radius: 50%;
+			z-index: 10;
+			transition: 0.3s;
+		}
+		/* Hỗ trợ Dark Mode cho dấu chấm */
+		body.dark-theme .status-indicator {
+			border-color: var(--card-bg);
+		}
+
+		/* Thêm hiệu ứng ảnh load mượt mà */
+		#avatarImg {
+			transition: opacity 0.3s ease;
+			background: #f1f3f5; /* Màu nền chờ */
+		}
+		/* Khu vực upload avatar trong modal Profile */
+		.avatar-edit-wrapper {
+			position: relative;
+			width: 80px;
+			height: 80px;
+			margin: 0 auto 20px auto;
+		}
+		.avatar-edit-preview {
+			width: 100%;
+			height: 100%;
+			border-radius: 50%;
+			object-fit: cover;
+			border: 3px solid var(--primary);
+			box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
+		}
+		.avatar-edit-btn {
+			position: absolute;
+			bottom: -4px;
+			right: -4px;
+			width: 32px;
+			height: 32px;
+			background: var(--primary);
+			color: white;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			border: 2px solid #fff;
+			transition: 0.2s;
+		}
+		.avatar-edit-btn:active { transform: scale(0.9); }
+		.avatar-edit-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+		body.dark-theme .avatar-edit-btn { border-color: var(--card-bg); }
 	</style>
 </head>
 <body>
@@ -515,10 +575,12 @@
     <div class="top-nav">
         <h1>QUẢN LÝ CHI TIÊU</h1>
         <div class="user-menu" id="userMenu">
-            <div class="avatar-btn" id="btnAvatar" style="cursor: pointer;">
-                <img src="" alt="Avatar" id="avatarImg">
-            </div>
-            <div class="dropdown-menu" id="dropdownMenu">
+			<div class="avatar-btn" id="btnAvatar" style="cursor: pointer;">
+				<img src="" alt="Avatar" id="avatarImg">
+			</div>
+			<div class="status-indicator"></div> <!-- Dấu chấm xanh thêm vào đây -->
+			
+			<div class="dropdown-menu" id="dropdownMenu">
                 <div class="dropdown-header"><span class="dropdown-name" id="dropdownName">XIN CHÀO</span></div>
                 <button class="dropdown-item text-danger" id="btnLogoutAvatar">
                     <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -1032,17 +1094,27 @@
     </div>
 </div>
 <!-- ========================================= -->
-<!-- POPUP THÔNG TIN CÁ NHÂN                   -->
-<!-- ========================================= -->
+<!-- <!-- POPUP THÔNG TIN CÁ NHÂN -->
 <div class="history-overlay" id="profileOverlay" style="z-index: 10009;" onclick="closeProfileModal()"></div>
-<div class="history-modal" id="profileModal" style="z-index: 10010; height: 85vh;">
-    <div class="history-modal-header">
-        <h3>Thông tin cá nhân</h3>
-        <button class="btn-close-modal" onclick="closeProfileModal()">&times;</button>
-    </div>
-    <div class="history-modal-body" style="background: #fff; padding-top: 20px;">
-        <div class="form-group">
-            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display: block;">Họ và tên</label>
+		<div class="history-modal" id="profileModal" style="z-index: 10010; height: 85vh;">
+			<div class="history-modal-header">
+				<h3>Thông tin cá nhân</h3>
+				<button class="btn-close-modal" onclick="closeProfileModal()">&times;</button>
+			</div>
+			<div class="history-modal-body" style="background: #fff; padding-top: 20px;">
+				
+				<!-- KHU VỰC UPLOAD AVATAR MỚI -->
+				<div class="avatar-edit-wrapper">
+					<img id="profileAvatarPreview" class="avatar-edit-preview" src="">
+					<label for="avatarUploadInput" class="avatar-edit-btn">
+						<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+					</label>
+					<input type="file" id="avatarUploadInput" accept="image/*" style="display: none;">
+				</div>
+				<!-- KẾT THÚC KHU VỰC UPLOAD AVATAR -->
+
+				<div class="form-group">
+					<label style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display: block;">Họ và tên</label>
             <input type="text" id="profileName" class="form-control" placeholder="VD: Phạm Quang Trung">
         </div>
         <div class="form-group">
@@ -1454,29 +1526,40 @@
             });
 			// TẢI THÔNG TIN CÁ NHÂN (PROFILE)
             db.ref(`users/${currentUser.uid}/profile`).on('value', (snap) => {
-                if (snap.exists()) {
-                    const p = snap.val();
-                    userFullName = p.name || "";
-                    document.getElementById('profileName').value = userFullName;
-                    document.getElementById('profilePhone').value = p.phone || "";
-                    
-                    // CẬP NHẬT TÊN VÀO MENU XỔ XUỐNG Ở AVATAR
-                    document.getElementById('dropdownName').innerText = userFullName ? `XIN CHÀO, ${userFullName.toUpperCase()}` : 'XIN CHÀO';
+				if (snap.exists()) {
+					const p = snap.val();
+					userFullName = p.name || "";
+					document.getElementById('profileName').value = userFullName;
+					document.getElementById('profilePhone').value = p.phone || "";
+					
+					// --- CODE CẬP NHẬT MỚI THÊM VÀO ---
+					// Lấy tên hiển thị cho avatar (ưu tiên tên thật, nếu không có thì lấy email)
+					let avatarName = userFullName ? userFullName : currentUser.email.split('@')[0];
+					// Cập nhật lại src của avatar
+					document.getElementById('avatarImg').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=4361ee&color=fff&bold=true`;
+					
+					// CẬP NHẬT TÊN VÀO MENU XỔ XUỐNG Ở AVATAR
+					document.getElementById('dropdownName').innerText = userFullName ? `XIN CHÀO, ${userFullName.toUpperCase()}` : 'XIN CHÀO';
+					
+					// Nếu user có lưu ảnh tự tải (Sẽ dùng cho Cấp độ 2 bên dưới)
+					if (p.avatarData) {
+						document.getElementById('avatarImg').src = p.avatarData;
+					}
+					// -----------------------------------
 
-                    if(p.dob) {
-                        document.getElementById('profileDob').value = p.dob;
-                        document.getElementById('profileDobDisplay').innerText = formatNiceDate(p.dob).replace('Hôm nay, ', '');
-                    }
-                } else {
-                    userFullName = "";
-                    document.getElementById('dropdownName').innerText = 'XIN CHÀO';
-                }
-                
-                // Cập nhật lại tiêu đề Header nếu đang đứng ở tab Cài đặt
-                if (document.getElementById('settingsView').classList.contains('active')) {
-                    document.querySelector('.top-nav h1').innerText = userFullName ? userFullName.toUpperCase() : 'CÀI ĐẶT';
-                }
-            });
+					if(p.dob) {
+						document.getElementById('profileDob').value = p.dob;
+						document.getElementById('profileDobDisplay').innerText = formatNiceDate(p.dob).replace('Hôm nay, ', '');
+					}
+				} else {
+					userFullName = "";
+					document.getElementById('dropdownName').innerText = 'XIN CHÀO';
+				}
+				
+				if (document.getElementById('settingsView').classList.contains('active')) {
+					document.querySelector('.top-nav h1').innerText = userFullName ? userFullName.toUpperCase() : 'CÀI ĐẶT';
+				}
+			});
         } else {
             currentUser = null;
             document.getElementById('authOverlay').classList.remove('hide'); 
@@ -2988,11 +3071,15 @@
 
     initAppThemes();
 	// ==========================================
-    // LOGIC THÔNG TIN CÁ NHÂN (PROFILE) & FIREBASE
+    // LOGIC THÔNG TIN CÁ NHÂN (PROFILE) & FIREBASE (CÓ UPLOAD AVATAR)
     // ==========================================
+    let currentBase64Avatar = null;
+
     function openProfileModal() {
         document.getElementById('profileOverlay').classList.add('show');
         document.getElementById('profileModal').classList.add('show');
+        // Đồng bộ ảnh preview giống với avatar hiện tại ở Header
+        document.getElementById('profileAvatarPreview').src = document.getElementById('avatarImg').src;
     }
     
     function closeProfileModal() {
@@ -3000,8 +3087,53 @@
         document.getElementById('profileModal').classList.remove('show');
     }
 
-    // Lắng nghe sự kiện
+    // Lắng nghe sự kiện mở modal
     document.getElementById('btnSettingsProfile').addEventListener('click', openProfileModal);
+
+    // Xử lý khi người dùng chọn file ảnh
+    document.getElementById('avatarUploadInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Giới hạn kích thước file ban đầu (VD: 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Ảnh quá lớn. Vui lòng chọn ảnh dưới 5MB!', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                // Nén ảnh bằng Canvas để tránh lưu Base64 quá nặng vào Realtime DB
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 256; // Kích thước avatar không cần lớn
+                const MAX_HEIGHT = 256;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                } else {
+                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Xuất ra Base64 chất lượng 0.8
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // Cập nhật giao diện Preview
+                document.getElementById('profileAvatarPreview').src = dataUrl;
+                currentBase64Avatar = dataUrl; // Lưu vào biến tạm để chờ bấm "Lưu thông tin"
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
 
     document.getElementById('profileDob').addEventListener('change', (e) => {
         if(e.target.value) {
@@ -3011,18 +3143,27 @@
         }
     });
 
-    // Sự kiện lưu thông tin
+    // Cập nhật lại nút "Lưu thông tin" để đẩy cả avatar lên Firebase
     document.getElementById('btnSaveProfile').addEventListener('click', () => {
         if(!currentUser) return;
         
         const name = document.getElementById('profileName').value.trim();
         const dob = document.getElementById('profileDob').value;
         const phone = document.getElementById('profilePhone').value.trim();
+        
+        // Tạo object dữ liệu
+        const profileData = { name, dob, phone };
+        // Nếu có ảnh mới được nén, thêm vào object
+        if (currentBase64Avatar) {
+            profileData.avatarData = currentBase64Avatar;
+        }
 
-        db.ref(`users/${currentUser.uid}/profile`).set({ name, dob, phone })
+        // Dùng update() thay vì set() để không xóa mất ảnh nếu user không tải ảnh mới ở lần chỉnh sửa sau
+        db.ref(`users/${currentUser.uid}/profile`).update(profileData)
         .then(() => {
             showToast('Đã lưu thông tin cá nhân!');
             closeProfileModal();
+            currentBase64Avatar = null; // Reset biến tạm
         }).catch(err => {
             showToast('Lỗi khi lưu!', 'error');
         });

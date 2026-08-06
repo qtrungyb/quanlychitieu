@@ -557,6 +557,12 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <input type="password" id="newPasswordInput" class="auth-form-control" placeholder="Mật khẩu mới (từ 6 ký tự)" required minlength="6">
             </div>
+            <!-- THÊM Ô NHẬP LẠI MẬT KHẨU Ở ĐÂY -->
+            <div class="auth-input-group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <input type="password" id="confirmNewPasswordInput" class="auth-form-control" placeholder="Nhập lại mật khẩu mới" required minlength="6">
+            </div>
+            
             <div style="display: flex; gap: 12px; margin-top: 8px;">
                 <button type="button" id="btnCancelChangePwd" class="btn-auth btn-cancel" style="flex: 1;">Hủy</button>
                 <button type="button" id="btnSubmitChangePwd" class="btn-auth btn-login" style="flex: 1.5; margin: 0;">Lưu Mật Khẩu</button>
@@ -1155,8 +1161,8 @@
     <button class="sheet-btn btn-sheet-cancel" id="btnSheetCancel">Đóng</button>
 </div>
 <!-- ACTION SHEET CHO AVATAR -->
-<div class="sheet-overlay" id="avatarSheetOverlay" onclick="closeAvatarActionSheet()"></div>
-<div class="bottom-sheet" id="avatarActionSheet">
+<div class="sheet-overlay" id="avatarSheetOverlay" onclick="closeAvatarActionSheet()" style="z-index: 10011;"></div>
+<div class="bottom-sheet" id="avatarActionSheet" style="z-index: 10012;">
     <div class="sheet-indicator"></div>
     <div class="sheet-header" style="margin-bottom: 16px;">Ảnh đại diện</div>
     
@@ -1623,20 +1629,41 @@
     });
 
     const changePwdOverlay = document.getElementById('changePwdOverlay');
-    document.getElementById('btnCancelChangePwd').addEventListener('click', () => { changePwdOverlay.classList.add('hide'); document.getElementById('oldPasswordInput').value = ''; document.getElementById('newPasswordInput').value = ''; });
+    
+    // Nút hủy: Ẩn form và xóa dữ liệu của cả 3 ô nhập
+    document.getElementById('btnCancelChangePwd').addEventListener('click', () => { 
+        changePwdOverlay.classList.add('hide'); 
+        document.getElementById('oldPasswordInput').value = ''; 
+        document.getElementById('newPasswordInput').value = ''; 
+        document.getElementById('confirmNewPasswordInput').value = '';
+    });
 
+    // Nút Lưu mật khẩu
     document.getElementById('btnSubmitChangePwd').addEventListener('click', () => {
         const oldPwd = document.getElementById('oldPasswordInput').value;
         const newPwd = document.getElementById('newPasswordInput').value;
+        const confirmNewPwd = document.getElementById('confirmNewPasswordInput').value; // Lấy giá trị ô nhập lại
+
         if(!oldPwd) { showToast('Vui lòng nhập mật khẩu hiện tại!', 'error'); return; }
         if(newPwd.length < 6) { showToast('Mật khẩu mới phải từ 6 ký tự!', 'error'); return; }
+        
+        // KIỂM TRA MẬT KHẨU MỚI VÀ NHẬP LẠI CÓ KHỚP KHÔNG
+        if(newPwd !== confirmNewPwd) { 
+            showToast('Mật khẩu nhập lại không khớp!', 'error'); 
+            return; 
+        }
 
         const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, oldPwd);
         currentUser.reauthenticateWithCredential(credential).then(() => {
             currentUser.updatePassword(newPwd).then(() => {
                 showToast('Đổi mật khẩu thành công!');
                 changePwdOverlay.classList.add('hide');
-                document.getElementById('oldPasswordInput').value = ''; document.getElementById('newPasswordInput').value = '';
+                
+                // Xóa dữ liệu các ô sau khi đổi thành công
+                document.getElementById('oldPasswordInput').value = ''; 
+                document.getElementById('newPasswordInput').value = '';
+                document.getElementById('confirmNewPasswordInput').value = '';
+                
                 if(localStorage.getItem('savedUsername')) localStorage.setItem('savedPassword', newPwd);
             }).catch((error) => { showToast(getAuthErrorVN(error.code), 'error'); });
         }).catch((error) => {

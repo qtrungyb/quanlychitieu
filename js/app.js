@@ -1,5 +1,14 @@
 // js/app.js
 
+// HÀM TỐI ƯU HIỆU NĂNG: DEBOUNCE (Trì hoãn thực thi khi gõ phím)
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
 // ==========================================
 // 1. CẤU HÌNH GIAO DIỆN & CHART.JS
 // ==========================================
@@ -49,9 +58,7 @@ const THEMES = {
     'theme-teal': { color: '#006266', bg: '#e6efef', hex: '#006266' }
 };
 
-// Khai báo WALLET_THEMES và APP_THEMES ở TRÊN CÙNG để tránh lỗi "Cannot access before initialization"
 const WALLET_THEMES = [
-    // --- 0. CÁC MÀU GỐC ---
     { id: 'wt-blue', background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' }, 
     { id: 'wt-green', background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' }, 
     { id: 'wt-purple', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }, 
@@ -59,8 +66,6 @@ const WALLET_THEMES = [
     { id: 'wt-dark', background: 'linear-gradient(135deg, #232526 0%, #414345 100%)' }, 
     { id: 'wt-pink', background: 'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)' }, 
     { id: 'wt-cyan', background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)' }, 
-
-    // --- 1. SẮC NÓNG & RỰC RỠ (Vibrant & Warm) ---
     { id: 'wt-red', background: 'linear-gradient(135deg, #ed213a 0%, #93291e 100%)' }, 
     { id: 'wt-sunset', background: 'linear-gradient(135deg, #ff4e50 0%, #f9d423 100%)' }, 
     { id: 'wt-cherry', background: 'linear-gradient(135deg, #eb3349 0%, #f45c43 100%)' }, 
@@ -71,8 +76,6 @@ const WALLET_THEMES = [
     { id: 'wt-peach', background: 'linear-gradient(135deg, #ed4264 0%, #ffedbc 100%)' },
     { id: 'wt-blood-orange', background: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)' },
     { id: 'wt-sun-veg', background: 'linear-gradient(135deg, #f09819 0%, #edde5d 100%)' },
-
-    // --- 2. SẮC LẠNH & BIỂN CẢ (Cool & Ocean) ---
     { id: 'wt-ocean', background: 'linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)' }, 
     { id: 'wt-frost', background: 'linear-gradient(135deg, #000428 0%, #004e92 100%)' }, 
     { id: 'wt-sea-blizz', background: 'linear-gradient(135deg, #1cd8d2 0%, #93edc7 100%)' }, 
@@ -82,8 +85,6 @@ const WALLET_THEMES = [
     { id: 'wt-water', background: 'linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%)' },
     { id: 'wt-blue-raspberry', background: 'linear-gradient(135deg, #00b4db 0%, #0083b0 100%)' },
     { id: 'wt-clear-water', background: 'linear-gradient(135deg, #396afc 0%, #2948ff 100%)' },
-
-    // --- 3. SẮC TỐI & SANG TRỌNG (Dark & Elegant) ---
     { id: 'wt-midnight', background: 'linear-gradient(135deg, #141e30 0%, #243b55 100%)' }, 
     { id: 'wt-deep-purple', background: 'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)' }, 
     { id: 'wt-mauve', background: 'linear-gradient(135deg, #42275a 0%, #734b6d 100%)' }, 
@@ -93,8 +94,6 @@ const WALLET_THEMES = [
     { id: 'wt-coal', background: 'linear-gradient(135deg, #eb5757 0%, #000000 100%)' },
     { id: 'wt-space', background: 'linear-gradient(135deg, #434343 0%, #000000 100%)' },
     { id: 'wt-royal', background: 'linear-gradient(135deg, #141517 0%, #2e2f33 100%)' },
-
-    // --- 4. SẮC NGỌT NGÀO & PASTEL (Sweet & Pastel) ---
     { id: 'wt-rose', background: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)' }, 
     { id: 'wt-piglet', background: 'linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%)' }, 
     { id: 'wt-bloody-mary', background: 'linear-gradient(135deg, #ff512f 0%, #dd2476 100%)' },
@@ -102,23 +101,17 @@ const WALLET_THEMES = [
     { id: 'wt-lavender', background: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)' },
     { id: 'wt-pink-water', background: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)' },
     { id: 'wt-milky', background: 'linear-gradient(135deg, #e6e9f0 0%, #eef1f5 100%)' },
-
-    // --- 5. SẮC XANH THIÊN NHIÊN (Nature Green) ---
     { id: 'wt-teal', background: 'linear-gradient(135deg, #00b09b 0%, #96c93d 100%)' }, 
     { id: 'wt-emerald', background: 'linear-gradient(135deg, #348F50 0%, #56B4D3 100%)' }, 
     { id: 'wt-forest', background: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)' }, 
     { id: 'wt-lush', background: 'linear-gradient(135deg, #56ab2f 0%, #a8e063 100%)' }, 
     { id: 'wt-green-beach', background: 'linear-gradient(135deg, #02aab0 0%, #00cdac 100%)' },
     { id: 'wt-bamboo', background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' },
-
-    // --- 6. NEON & CYBERPUNK (Cực chất) ---
     { id: 'wt-cyberpunk', background: 'linear-gradient(135deg, #ff00cc 0%, #333399 100%)' },
     { id: 'wt-synthwave', background: 'linear-gradient(135deg, #b92b27 0%, #1565c0 100%)' },
     { id: 'wt-neon-blue', background: 'linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%)' },
     { id: 'wt-matrix', background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' },
     { id: 'wt-disco', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
-
-    // --- 7. MÀU ĐƠN SẮC PHẨNG (Flat UI Minimalist) ---
     { id: 'wt-flat-blue', background: '#3498db' },
     { id: 'wt-flat-green', background: '#2ecc71' },
     { id: 'wt-flat-purple', background: '#9b59b6' },
@@ -126,8 +119,6 @@ const WALLET_THEMES = [
     { id: 'wt-flat-orange', background: '#e67e22' },
     { id: 'wt-flat-red', background: '#e74c3c' },
     { id: 'wt-flat-teal', background: '#1abc9c' },
-
-    // --- 8. MẪU SVG PATTERN CHO THẺ CARD ---
     { id: 'wt-svg-carbon', background: 'url("data:image/svg+xml,%3Csvg width=\'16\' height=\'16\' viewBox=\'0 0 16 16\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0h16v16H0V0zm8 8h8v8H8V8zM0 8h8v8H0V8z\' fill=\'%23ffffff\' fill-opacity=\'0.05\' fill-rule=\'evenodd\'/%3E%3C/svg%3E"), linear-gradient(135deg, #2b2d42 0%, #1a1a24 100%)' },
     { id: 'wt-svg-stripes', background: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 40L40 0H20L0 20M40 40V20L20 40\' fill=\'%23ffffff\' fill-opacity=\'0.05\' fill-rule=\'evenodd\'/%3E%3C/svg%3E"), linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' },
     { id: 'wt-svg-circuit', background: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0v20h20V0H0zm10 17a7 7 0 1 1 0-14 7 7 0 0 1 0 14zm0-2a5 5 0 1 0 0-10 5 5 0 0 0 0 10z\' fill=\'%23ffffff\' fill-opacity=\'0.05\' fill-rule=\'evenodd\'/%3E%3C/svg%3E"), linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
@@ -144,8 +135,6 @@ const WALLET_THEMES = [
 
 const APP_THEMES = [
     { id: 'bg-default', background: '' },
-
-    // --- 1. MÀU TRƠN (Solid Colors) ---
     { id: 'bg-solid-slate', background: '#f8fafc' },
     { id: 'bg-solid-cream', background: '#fdfbf7' },
     { id: 'bg-solid-mint', background: '#f0fdf4' },
@@ -154,8 +143,6 @@ const APP_THEMES = [
     { id: 'bg-solid-charcoal', background: '#36454f' },
     { id: 'bg-solid-night', background: '#0f172a' },
     { id: 'bg-solid-navy', background: '#1e1b4b' },
-
-    // --- 2. NỀN SÁNG & PASTEL (Light & Sweet) ---
     { id: 'bg-sky', background: 'linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%)' },
     { id: 'bg-peach', background: 'linear-gradient(120deg, #f6d365 0%, #fda085 100%)' },
     { id: 'bg-mint-grad', background: 'linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)' },
@@ -167,8 +154,6 @@ const APP_THEMES = [
     { id: 'bg-lemon', background: 'linear-gradient(120deg, #f6d365 0%, #ffb142 100%)' },
     { id: 'bg-cloud', background: 'linear-gradient(to top, #accbee 0%, #e7f0fd 100%)' },
     { id: 'bg-rose-water', background: 'linear-gradient(to right, #ffecd2 0%, #fcb69f 100%)' },
-
-    // --- 3. NỀN ĐẬM & SANG TRỌNG (Dark & Elegant) ---
     { id: 'bg-night-grad', background: 'linear-gradient(to right, #434343 0%, black 100%)' },
     { id: 'bg-deepsea', background: 'linear-gradient(to right, #0f2027, #203a43, #2c5364)' },
     { id: 'bg-purple-dark', background: 'linear-gradient(to top, #30cfd0 0%, #330867 100%)' },
@@ -180,8 +165,6 @@ const APP_THEMES = [
     { id: 'bg-berry-dark', background: 'linear-gradient(to right, #240b36, #c31432)' },
     { id: 'bg-dark-ocean', background: 'linear-gradient(to top, #09203f 0%, #537895 100%)' },
     { id: 'bg-void', background: 'linear-gradient(to right, #000000 0%, #1a1a1a 100%)' },
-
-    // --- 4. NỀN RỰC RỠ & NÓNG (Vibrant & Warm) ---
     { id: 'bg-sunset', background: 'linear-gradient(to right, #ff4e50, #f9d423)' },
     { id: 'bg-cherry', background: 'linear-gradient(to right, #eb3349, #f45c43)' },
     { id: 'bg-mango', background: 'linear-gradient(to right, #ffe259, #ffa751)' },
@@ -189,8 +172,6 @@ const APP_THEMES = [
     { id: 'bg-blood', background: 'linear-gradient(to right, #ed213a, #93291e)' },
     { id: 'bg-flame', background: 'linear-gradient(to top, #ff0844 0%, #ffb199 100%)' },
     { id: 'bg-orange-juice', background: 'linear-gradient(120deg, #f6d365 0%, #fda085 100%)' },
-
-    // --- 5. NỀN THIÊN NHIÊN (Nature & Earth) ---
     { id: 'bg-ocean', background: 'linear-gradient(to right, #2193b0, #6dd5ed)' },
     { id: 'bg-leaf', background: 'linear-gradient(to right, #11998e, #38ef7d)' },
     { id: 'bg-sand', background: 'linear-gradient(to right, #c9d6ff, #e2e2e2)' },
@@ -199,8 +180,6 @@ const APP_THEMES = [
     { id: 'bg-moss', background: 'linear-gradient(to top, #13547a 0%, #80d0c7 100%)' },
     { id: 'bg-earth', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' },
     { id: 'bg-stone', background: 'linear-gradient(to right, #8e9eab 0%, #eef2f3 100%)' },
-
-    // --- 6. MÀU GIAO THOA HIỆN ĐẠI (Modern Mesh & Aurora) ---
     { id: 'bg-aurora', background: 'linear-gradient(45deg, #00d2ff 0%, #3a7bd5 100%)' },
     { id: 'bg-cyber', background: 'linear-gradient(45deg, #ff00cc 0%, #333399 100%)' },
     { id: 'bg-holographic', background: 'linear-gradient(45deg, #8a2387 0%, #e94057 50%, #f27121 100%)' },
@@ -212,26 +191,10 @@ const APP_THEMES = [
     { id: 'bg-neon-blue', background: 'linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%)' },
     { id: 'bg-miami', background: 'linear-gradient(to right, #fc4a1a, #f7b733)' },
     { id: 'bg-retro', background: 'linear-gradient(to right, #3f2b96, #a8c0ff)' },
-
-    // --- 7. MẪU SVG PATTERN (Hình nền họa tiết) ---
     { id: 'bg-svg-dots', background: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'2\' cy=\'2\' r=\'2\' fill=\'%23cbd5e1\' fill-opacity=\'0.3\'/%3E%3C/svg%3E") #f8fafc' },
     { id: 'bg-svg-grid', background: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0h40v40H0V0zm20 20h20v20H20V20zM0 20h20v20H0V20z\' fill=\'%2394a3b8\' fill-opacity=\'0.05\' fill-rule=\'evenodd\'/%3E%3C/svg%3E") #f1f5f9' },
     { id: 'bg-svg-waves', background: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'20\' viewBox=\'0 0 100 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M21.184 20c.302-4.074 2.149-7.44 5.542-10.101C30.114 7.238 34.62 5.9 40 5.9c5.22 0 9.53 1.258 12.935 3.774 3.405 2.515 5.338 5.968 5.8 10.326L60 20h40V0H0v20h21.184z\' fill=\'%2394a3b8\' fill-opacity=\'0.1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E") #f8fafc' },
-    { id: 'bg-svg-topography', background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%2394a3b8\' fill-opacity=\'0.08\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") #ffffff' },
-
-    // --- 8. MẪU SVG PATTERN CHO THẺ CARD LÀM NỀN ---
-    { id: 'wt-svg-carbon', background: 'url("data:image/svg+xml,%3Csvg width=\'16\' height=\'16\' viewBox=\'0 0 16 16\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0h16v16H0V0zm8 8h8v8H8V8zM0 8h8v8H0V8z\' fill=\'%23ffffff\' fill-opacity=\'0.05\' fill-rule=\'evenodd\'/%3E%3C/svg%3E"), linear-gradient(135deg, #2b2d42 0%, #1a1a24 100%)' },
-    { id: 'wt-svg-stripes', background: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 40L40 0H20L0 20M40 40V20L20 40\' fill=\'%23ffffff\' fill-opacity=\'0.05\' fill-rule=\'evenodd\'/%3E%3C/svg%3E"), linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' },
-    { id: 'wt-svg-circuit', background: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0v20h20V0H0zm10 17a7 7 0 1 1 0-14 7 7 0 0 1 0 14zm0-2a5 5 0 1 0 0-10 5 5 0 0 0 0 10z\' fill=\'%23ffffff\' fill-opacity=\'0.05\' fill-rule=\'evenodd\'/%3E%3C/svg%3E"), linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-    { id: 'wt-svg-gold-mesh', background: 'url("data:image/svg+xml,%3Csvg width=\'12\' height=\'12\' viewBox=\'0 0 12 12\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M5 0h2v12H5V0zm-5 5h12v2H0V5z\' fill=\'%23ffffff\' fill-opacity=\'0.1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E"), linear-gradient(135deg, #f09819 0%, #edde5d 100%)' },
-    { id: 'wt-svg-honeycomb', background: 'url("data:image/svg+xml,%3Csvg width=\'28\' height=\'49\' viewBox=\'0 0 28 49\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.08\'%3E%3Cpath d=\'M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z\'/%3E%3C/g%3E%3C/svg%3E"), linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' },
-    { id: 'wt-svg-brushed', background: 'url("data:image/svg+xml,%3Csvg width=\'6\' height=\'6\' viewBox=\'0 0 6 6\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.08\' fill-rule=\'evenodd\'%3E%3Cpath d=\'M5 0h1L0 6V5zM6 5v1H5z\'/%3E%3C/g%3E%3C/svg%3E"), linear-gradient(135deg, #2c3e50 0%, #000000 100%)' },
-    { id: 'wt-svg-radar', background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'1\' stroke-opacity=\'0.1\'%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'10\'/%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'20\'/%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'30\'/%3E%3C/g%3E%3C/svg%3E"), linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)' },
-    { id: 'wt-svg-crosshatch', background: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M-2 22 L22 -2 M-2 -2 L22 22\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'1\' stroke-opacity=\'0.08\'/%3E%3C/svg%3E"), linear-gradient(135deg, #ff0844 0%, #ffb199 100%)' },
-    { id: 'wt-svg-waves', background: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 10 Q 5 5, 10 10 T 20 10\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'1\' stroke-opacity=\'0.15\'/%3E%3C/svg%3E"), linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' },
-    { id: 'wt-svg-dots', background: 'url("data:image/svg+xml,%3Csvg width=\'16\' height=\'16\' viewBox=\'0 0 16 16\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'2\' cy=\'2\' r=\'1\' fill=\'%23ffffff\' fill-opacity=\'0.15\'/%3E%3C/svg%3E"), linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-    { id: 'wt-svg-chevron', background: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 10l10-10 10 10M0 20l10-10 10 10\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'1\' stroke-opacity=\'0.1\'/%3E%3C/svg%3E"), linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%)' },
-    { id: 'wt-svg-polygon', background: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M10 0l10 10-10 10L0 10z\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'1\' stroke-opacity=\'0.08\'/%3E%3C/svg%3E"), linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' }
+    { id: 'bg-svg-topography', background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%2394a3b8\' fill-opacity=\'0.08\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") #ffffff' }
 ];
 
 const DEFAULT_CATEGORIES = {
@@ -315,7 +278,8 @@ function switchTab(tabName) {
         } else if (tabName === 'stats') {
             tabStats?.classList.add('active'); analyticsView?.classList.add('active');
             if (topNavTitle) topNavTitle.innerText = 'THỐNG KÊ';
-            renderCharts();
+            // TỐI ƯU HÓA: Chờ hiệu ứng chuyển tab hoàn tất rồi mới vẽ biểu đồ (Tránh giật lag)
+            setTimeout(() => { requestAnimationFrame(() => renderCharts()); }, 50);
         } else if (tabName === 'admin') {
             tabAdmin?.classList.add('active'); adminView?.classList.add('active');
             if (topNavTitle) topNavTitle.innerText = 'QUẢN TRỊ HỆ THỐNG';
@@ -880,10 +844,13 @@ function openCatManager() {
     document.getElementById('catManagerOverlay')?.classList.add('show');
     document.getElementById('catManagerModal')?.classList.add('show');
 }
+window.openCatManager = openCatManager;
+
 function closeCatManager() {
     document.getElementById('catManagerOverlay')?.classList.remove('show');
     document.getElementById('catManagerModal')?.classList.remove('show');
 }
+window.closeCatManager = closeCatManager;
 
 function setCatFormType(type) {
     document.getElementById('btnCatTypeInc')?.classList.toggle('active', type === 'income');
@@ -1046,7 +1013,7 @@ document.querySelectorAll('#transactionForm .btn-toggle').forEach(btn => {
 });
 
 // ==========================================
-// 6. RENDER LỊCH SỬ GIAO DỊCH
+// 6. RENDER LỊCH SỬ GIAO DỊCH (TỐI ƯU DOM)
 // ==========================================
 function getWeekRange() {
     const curr = new Date();
@@ -1102,10 +1069,11 @@ document.querySelectorAll('.btn-quick-filter').forEach(btn => {
     });
 });
 
-document.getElementById('searchInput')?.addEventListener('input', () => {
+// TỐI ƯU HÓA: Tìm kiếm có Debounce
+document.getElementById('searchInput')?.addEventListener('input', debounce(() => {
     currentDateLimit = DATES_PER_PAGE; 
     updateUI();
-});
+}, 300));
 
 function updateUI() {
     const fStart = document.getElementById('filterStartDate');
@@ -1182,7 +1150,9 @@ function updateUI() {
 
     const sortedDates = Object.keys(grouped).sort().reverse();
     
-    listEl.innerHTML = '';
+    // TỐI ƯU HÓA DOM: Dùng biến String gom toàn bộ HTML rồi in ra 1 lần
+    let listHTML = '';
+
     if(sortedDates.length === 0) {
         listEl.innerHTML = `
             <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
@@ -1196,68 +1166,61 @@ function updateUI() {
 
     const paginatedDates = sortedDates.slice(0, currentDateLimit);
 
+    // Xây dựng chuỗi HTML khổng lồ
     for (const rawDate of paginatedDates) {
         const data = grouped[rawDate];
         const displayDateText = formatNiceDate(rawDate).replace('Hôm nay, ', '');
 
-        const groupDiv = document.createElement('div');
-        groupDiv.className = 'date-group';
-
-        const head = document.createElement('div');
-        head.className = 'date-group-header';
-        head.innerHTML = `
-            <div class="date-title">${displayDateText}</div>
-            <div class="date-summary">
-                <span class="text-success">+${formatter.format(data.in)}</span> &nbsp;|&nbsp; 
-                <span class="text-danger">-${formatter.format(data.out)}</span>
+        listHTML += `
+        <div class="date-group">
+            <div class="date-group-header">
+                <div class="date-title">${displayDateText}</div>
+                <div class="date-summary">
+                    <span class="text-success">+${formatter.format(data.in)}</span> &nbsp;|&nbsp; 
+                    <span class="text-danger">-${formatter.format(data.out)}</span>
+                </div>
             </div>
+            <div class="date-group-items">
         `;
-        groupDiv.appendChild(head);
-
-        const itemsContainer = document.createElement('div');
-        itemsContainer.className = 'date-group-items';
 
         data.items.sort((a, b) => b.id - a.id);
 
         data.items.forEach(t => {
             const isInc = t.type === 'income';
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'transaction-item';
-            
             const cName = t.categoryName || t.category;
-            itemDiv.onclick = () => openActionSheet(t.id, cName, t.amount);
-            
             const catObj = categories.find(c => c.id === t.categoryId);
             const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
             const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
 
-            itemDiv.innerHTML = `
-                <div class="t-left">
-                    <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}">${iconSvg}</div>
-                    <div class="t-info">
-                        <div class="t-title">${cName}</div>
-                        <div class="t-note">${t.note || '...'}</div>
+            // Thoát ký tự nháy đơn cho tên danh mục để tránh lỗi trong thuộc tính onclick
+            const safeName = cName.replace(/'/g, "\\'");
+
+            listHTML += `
+                <div class="transaction-item" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})">
+                    <div class="t-left">
+                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}">${iconSvg}</div>
+                        <div class="t-info">
+                            <div class="t-title">${cName}</div>
+                            <div class="t-note">${t.note || '...'}</div>
+                        </div>
+                    </div>
+                    <div class="t-action">
+                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                        <div class="t-chevron">›</div>
                     </div>
                 </div>
-                <div class="t-action">
-                    <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
-                    <div class="t-chevron">›</div>
-                </div>
             `;
-            itemsContainer.appendChild(itemDiv);
         });
         
-        groupDiv.appendChild(itemsContainer);
-        listEl.appendChild(groupDiv);
+        listHTML += `</div></div>`; // Đóng date-group-items và date-group
     }
 
     if (sortedDates.length > currentDateLimit) {
-        const loadMoreBtn = document.createElement('button');
-        loadMoreBtn.className = 'btn-load-more';
-        loadMoreBtn.innerText = `Xem thêm các ngày trước`;
-        loadMoreBtn.onclick = () => { currentDateLimit += DATES_PER_PAGE; updateUI(); };
-        listEl.appendChild(loadMoreBtn);
+        listHTML += `<button class="btn-load-more" onclick="currentDateLimit += ${DATES_PER_PAGE}; updateUI();">Xem thêm các ngày trước</button>`;
     }
+
+    // Gán vào DOM 1 lần duy nhất
+    listEl.innerHTML = listHTML;
 }
 
 // ==========================================
@@ -1398,17 +1361,12 @@ function renderCharts() {
             .sort((a, b) => b.amount - a.amount)
             .slice(0, 5);
             
-        topExpenseList.innerHTML = '';
-        
+        // TỐI ƯU DOM CHO KHỐI TOP 5
         if (top5Txs.length === 0) {
             topExpenseList.innerHTML = `<div style="text-align:center; padding: 20px 0; color: var(--text-muted); font-size: 13px;">Không có dữ liệu</div>`;
         } else {
+            let top5HTML = '';
             top5Txs.forEach(t => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'transaction-item';
-                itemDiv.style.padding = '12px 0'; 
-                itemDiv.style.cursor = 'default';
-                
                 const catObj = categories.find(c => c.id === t.categoryId);
                 const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
                 const shortDate = `${t.date.split('-')[2]}/${t.date.split('-')[1]}/${t.date.split('-')[0].substring(2)}`;
@@ -1416,18 +1374,20 @@ function renderCharts() {
                 const amountClass = currentPieType === 'expense' ? 'text-danger' : 'text-success';
                 const amountPrefix = currentPieType === 'expense' ? '-' : '+';
 
-                itemDiv.innerHTML = `
-                    <div class="t-left">
-                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">${catObj ? SVG_LIB[catObj.icon] : SVG_LIB['other']}</div>
-                        <div class="t-info">
-                            <div class="t-title" style="font-size: 15px;">${t.categoryName || t.category}</div>
-                            <div class="t-note" style="font-size: 12px;">${shortDate} ${t.note ? ' • ' + t.note : ''}</div>
+                top5HTML += `
+                    <div class="transaction-item" style="padding: 12px 0; cursor: default;">
+                        <div class="t-left">
+                            <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">${catObj ? SVG_LIB[catObj.icon] : SVG_LIB['other']}</div>
+                            <div class="t-info">
+                                <div class="t-title" style="font-size: 15px;">${t.categoryName || t.category}</div>
+                                <div class="t-note" style="font-size: 12px;">${shortDate} ${t.note ? ' • ' + t.note : ''}</div>
+                            </div>
                         </div>
+                        <div class="t-action"><div class="t-amount ${amountClass}" style="font-size: 15px;">${amountPrefix}${formatter.format(t.amount)}</div></div>
                     </div>
-                    <div class="t-action"><div class="t-amount ${amountClass}" style="font-size: 15px;">${amountPrefix}${formatter.format(t.amount)}</div></div>
                 `;
-                topExpenseList.appendChild(itemDiv);
             });
+            topExpenseList.innerHTML = top5HTML;
         }
     }
 
@@ -1569,6 +1529,7 @@ function openActionSheet(id, category, amount) {
     sheetOverlay?.classList.add('show'); 
     actionSheet?.classList.add('show');
 }
+window.openActionSheet = openActionSheet;
 
 function closeActionSheet() {
     sheetOverlay?.classList.remove('show'); 
@@ -2030,7 +1991,7 @@ document.getElementById('btnSaveProfile')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// ADMIN DASHBOARD FUNCTIONS (ĐÃ NÂNG CẤP GIAO DIỆN)
+// 11. ADMIN DASHBOARD FUNCTIONS 
 // ==========================================
 let allSystemUsers = [];
 
@@ -2049,7 +2010,6 @@ window.closeAdminDashboard = closeAdminDashboard;
 
 document.getElementById('btnSettingsAdminDashboard')?.addEventListener('click', openAdminDashboard);
 
-// Hàm tải dữ liệu và thống kê User
 function loadAllUsers() {
     const listEl = document.getElementById('adminUserList');
     if (!listEl) return;
@@ -2082,7 +2042,6 @@ function loadAllUsers() {
             });
         });
 
-        // Cập nhật các thẻ Thống kê (Dashboard)
         const totalEl = document.getElementById('adminTotalUsers');
         const admEl = document.getElementById('adminTotalAdmins');
         const regEl = document.getElementById('adminTotalRegulars');
@@ -2097,8 +2056,8 @@ function loadAllUsers() {
     });
 }
 
-// Bắt sự kiện tìm kiếm User
-document.getElementById('adminSearchUser')?.addEventListener('input', (e) => {
+// TỐI ƯU HÓA: Tìm kiếm có Debounce cho danh sách người dùng
+document.getElementById('adminSearchUser')?.addEventListener('input', debounce((e) => {
     const keyword = e.target.value.toLowerCase().trim();
     if (!keyword) {
         renderAdminUserList(allSystemUsers);
@@ -2110,15 +2069,15 @@ document.getElementById('adminSearchUser')?.addEventListener('input', (e) => {
         u.uid.toLowerCase().includes(keyword)
     );
     renderAdminUserList(filtered);
-});
+}, 300));
 
-// Hàm hiển thị danh sách User (Giao diện Profile Card đẹp mắt)
 function renderAdminUserList(users) {
     const listEl = document.getElementById('adminUserList');
     if (!listEl) return;
-    listEl.innerHTML = '';
+    
+    // TỐI ƯU HÓA DOM: Gom chuỗi HTML trước khi in
+    let listHTML = '';
 
-    // Giao diện khi không tìm thấy kết quả
     if (users.length === 0) {
         listEl.innerHTML = `
             <div style="text-align:center; padding: 30px 20px; color: var(--text-muted); background: var(--bg-color); border-radius: 16px;">
@@ -2128,7 +2087,6 @@ function renderAdminUserList(users) {
         return;
     }
 
-    // Sắp xếp: Admin lên đầu, sau đó sắp xếp theo tên
     users.sort((a, b) => {
         if (a.role === 'admin' && b.role !== 'admin') return -1;
         if (a.role !== 'admin' && b.role === 'admin') return 1;
@@ -2137,20 +2095,16 @@ function renderAdminUserList(users) {
 
     users.forEach(u => {
         const isMe = currentUser && u.uid === currentUser.uid;
-        
-        // Huy hiệu phân quyền tĩnh
         const roleBadge = u.role === 'admin' 
             ? `<span style="background: var(--danger-light); color: var(--danger); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800;">ADMIN</span>`
             : `<span style="background: #eef2ff; color: var(--primary); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800;">USER</span>`;
 
-        // Sinh Avatar tự động cho từng User bằng chữ cái đầu
         const displayAvatarName = u.name !== 'Ẩn danh' ? u.name : u.email.split('@')[0];
         const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayAvatarName)}&background=random&color=fff&bold=true`;
 
-        const itemHTML = `
+        // Đã xóa chữ "(Bạn)"
+        listHTML += `
             <div class="cat-item" style="padding: 16px; flex-direction: column; align-items: flex-start; gap: 14px; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); cursor: default;">
-                
-                <!-- Header Card: Avatar + Tên + Badge -->
                 <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
                         <img src="${avatarUrl}" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.1); flex-shrink: 0;">
@@ -2164,14 +2118,12 @@ function renderAdminUserList(users) {
                     <div style="flex-shrink: 0;">${isMe ? '<span style="background: var(--danger-light); color: var(--danger); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800;">ADMIN</span>' : roleBadge}</div>
                 </div>
 
-                <!-- Box thông tin phụ (UID) -->
                 <div style="background: #f8f9fa; padding: 8px 12px; border-radius: 8px; width: 100%; display: flex; align-items: center; gap: 8px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="flex-shrink: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                     <span style="font-size: 11px; font-family: monospace; color: var(--text-muted); word-break: break-all;">UID: ${u.uid}</span>
                 </div>
                 
                 ${!isMe ? `
-                <!-- Action Buttons -->
                 <div style="display: flex; gap: 8px; width: 100%; margin-top: 2px;">
                     <button onclick="viewUserTransactions('${u.uid}', '${u.name}')" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border: none; background: #eef2ff; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--primary); transition: 0.2s;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
@@ -2184,10 +2136,10 @@ function renderAdminUserList(users) {
                 </div>` : ''}
             </div>
         `;
-        listEl.innerHTML += itemHTML;
     });
-    
-    // Áp dụng chuẩn Dark Mode cho danh sách admin (nếu app đang bật darkmode)
+
+    listEl.innerHTML = listHTML; // Gán HTML 1 lần duy nhất để tránh giật lag
+
     if(document.body.classList.contains('dark-theme')) {
         listEl.querySelectorAll('.cat-item').forEach(el => {
             el.style.backgroundColor = 'var(--card-bg)';
@@ -2200,17 +2152,20 @@ function renderAdminUserList(users) {
         listEl.querySelectorAll('button[style*="background: #fff5ec"]').forEach(b => { b.style.backgroundColor = 'rgba(243, 156, 18, 0.15)'; });
     }
 }
+
 // ==========================================
-// 11. TÍNH NĂNG ADMIN: XEM LỊCH SỬ GIAO DỊCH CỦA USER
+// 12. ADMIN XEM LỊCH SỬ GIAO DỊCH CỦA USER
 // ==========================================
 let currentAdminTxs = [];
 let currentAdminCats = [];
 let adminTxDateLimit = 3; 
 
 window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('admTxSearchInput')?.addEventListener('input', () => {
+    
+    // TỐI ƯU HÓA: Tìm kiếm có Debounce 
+    document.getElementById('admTxSearchInput')?.addEventListener('input', debounce(() => {
         adminTxDateLimit = 3; renderAdminTxList();
-    });
+    }, 300));
 
     document.querySelectorAll('#admTxQuickDateFilters .btn-quick-filter').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -2388,7 +2343,9 @@ function renderAdminTxList() {
     });
 
     const sortedDates = Object.keys(grouped).sort().reverse();
-    listEl.innerHTML = '';
+
+    // TỐI ƯU HÓA DOM: Gom chuỗi HTML
+    let listHTML = '';
 
     if(sortedDates.length === 0) {
         listEl.innerHTML = '<div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">Không tìm thấy giao dịch nào phù hợp.</div>';
@@ -2400,10 +2357,9 @@ function renderAdminTxList() {
     paginatedDates.forEach(rawDate => {
         const data = grouped[rawDate];
         const [y, m, d] = rawDate.split('-');
-        const groupDiv = document.createElement('div');
-        groupDiv.className = 'date-group';
 
-        groupDiv.innerHTML = `
+        listHTML += `
+        <div class="date-group">
             <div class="date-group-header">
                 <div class="date-title">${d}/${m}/${y}</div>
                 <div class="date-summary">
@@ -2411,10 +2367,9 @@ function renderAdminTxList() {
                     <span class="text-danger">-${formatter.format(data.out)}</span>
                 </div>
             </div>
+            <div class="date-group-items">
         `;
 
-        const itemsContainer = document.createElement('div');
-        itemsContainer.className = 'date-group-items';
         data.items.sort((a, b) => b.id - a.id);
 
         data.items.forEach(t => {
@@ -2425,39 +2380,34 @@ function renderAdminTxList() {
             const timeObj = new Date(t.id);
             const timeStr = `${String(timeObj.getHours()).padStart(2, '0')}:${String(timeObj.getMinutes()).padStart(2, '0')}`;
 
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'transaction-item';
-            itemDiv.style.cursor = 'default'; 
-            itemDiv.innerHTML = `
-                <div class="t-left">
-                    <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}">${iconSvg}</div>
-                    <div class="t-info">
-                        <div class="t-title">${t.categoryName || t.category}</div>
-                        <div class="t-note">⏱ ${timeStr} ${t.note ? ' • ' + t.note : ''}</div>
+            listHTML += `
+                <div class="transaction-item" style="cursor: default;">
+                    <div class="t-left">
+                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}">${iconSvg}</div>
+                        <div class="t-info">
+                            <div class="t-title">${t.categoryName || t.category}</div>
+                            <div class="t-note">⏱ ${timeStr} ${t.note ? ' • ' + t.note : ''}</div>
+                        </div>
+                    </div>
+                    <div class="t-action">
+                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
                     </div>
                 </div>
-                <div class="t-action">
-                    <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
-                </div>
             `;
-            itemsContainer.appendChild(itemDiv);
         });
         
-        groupDiv.appendChild(itemsContainer);
-        listEl.appendChild(groupDiv);
+        listHTML += `</div></div>`; // Đóng date-group
     });
 
     if (sortedDates.length > adminTxDateLimit) {
-        const loadMoreBtn = document.createElement('button');
-        loadMoreBtn.className = 'btn-load-more';
-        loadMoreBtn.innerText = `Xem thêm các ngày trước`;
-        loadMoreBtn.onclick = () => { adminTxDateLimit += 3; renderAdminTxList(); };
-        listEl.appendChild(loadMoreBtn);
+        listHTML += `<button class="btn-load-more" onclick="adminTxDateLimit += 3; renderAdminTxList();">Xem thêm các ngày trước</button>`;
     }
+    
+    listEl.innerHTML = listHTML; // Gán 1 lần
 }
 
 // ==========================================
-// 12. TÍNH NĂNG ADMIN: XEM THỐNG KÊ CỦA USER
+// 13. ADMIN XEM THỐNG KÊ CỦA USER
 // ==========================================
 let admTxs = [];
 let admCats = [];
@@ -2569,7 +2519,8 @@ window.viewUserStats = function(uid, userName) {
                     }
                 }
             }
-            renderAdmCharts(); 
+            // TỐI ƯU HÓA: Chờ giao diện hiện lên hoàn tất rồi mới vẽ biểu đồ Admin
+            setTimeout(() => { requestAnimationFrame(() => renderAdmCharts()); }, 50);
         });
     });
 };
@@ -2722,7 +2673,7 @@ function renderAdmCharts() {
     const top5Txs = targetTypeTxs.sort((a, b) => b.amount - a.amount).slice(0, 5);
     const topListEl = document.getElementById('adm_topExpenseList');
     if (topListEl) {
-        topListEl.innerHTML = '';
+        let top5HTML = ''; // TỐI ƯU DOM
         
         if (top5Txs.length === 0) {
             topListEl.innerHTML = `<div style="text-align:center; padding: 20px 0; color: var(--text-muted); font-size: 13px;">Không có dữ liệu</div>`;
@@ -2733,7 +2684,7 @@ function renderAdmCharts() {
                 const amtClass = admCurrentPieType === 'expense' ? 'text-danger' : 'text-success';
                 const amtPrefix = admCurrentPieType === 'expense' ? '-' : '+';
                 
-                topListEl.innerHTML += `
+                top5HTML += `
                     <div class="transaction-item" style="padding: 12px 0; cursor: default;">
                         <div class="t-left">
                             <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">${catObj ? SVG_LIB[catObj.icon] : SVG_LIB['other']}</div>
@@ -2745,6 +2696,7 @@ function renderAdmCharts() {
                         <div class="t-action"><div class="t-amount ${amtClass}" style="font-size: 15px;">${amtPrefix}${formatter.format(t.amount)}</div></div>
                     </div>`;
             });
+            topListEl.innerHTML = top5HTML;
         }
     }
 
@@ -2792,18 +2744,16 @@ function renderAdmCharts() {
         });
     }
 }
-// ==========================================
-// 13. TÍNH NĂNG ADMIN: TẠO TÀI KHOẢN MỚI
-// ==========================================
 
-// Khởi tạo một Firebase App phụ để đăng ký user mà không làm Admin bị đăng xuất
+// ==========================================
+// 14. TÍNH NĂNG ADMIN: TẠO TÀI KHOẢN MỚI
+// ==========================================
 const secondaryApp = firebase.initializeApp(firebaseConfig, "SecondaryApp");
 
 window.openCreateUserModal = function() {
     document.getElementById('createUserOverlay')?.classList.add('show');
     document.getElementById('createUserModal')?.classList.add('show');
     
-    // Reset lại form trống mỗi khi mở
     const newName = document.getElementById('newUserName');
     const newEmail = document.getElementById('newUserEmail');
     const newPwd = document.getElementById('newUserPassword');
@@ -2818,7 +2768,6 @@ window.closeCreateUserModal = function() {
     document.getElementById('createUserModal')?.classList.remove('show');
 };
 
-// Xử lý sự kiện khi bấm nút "Xác nhận tạo"
 document.getElementById('btnSubmitCreateUser')?.addEventListener('click', () => {
     const nameEl = document.getElementById('newUserName');
     const emailEl = document.getElementById('newUserEmail');
@@ -2837,7 +2786,6 @@ document.getElementById('btnSubmitCreateUser')?.addEventListener('click', () => 
         return;
     }
 
-    // Nếu người dùng chỉ gõ Username, tự động thêm đuôi email mặc định
     if(!email.includes('@')) {
         email = `${email}@chitieu.com`;
     }
@@ -2848,15 +2796,12 @@ document.getElementById('btnSubmitCreateUser')?.addEventListener('click', () => 
         btn.disabled = true;
     }
 
-    // 1. Tạo user bằng App phụ
     secondaryApp.auth().createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
             const newUid = userCredential.user.uid;
-            
-            // 2. Ghi dữ liệu quyền (role) và thông tin cơ bản vào Database bằng App chính
             const userData = {
                 email: email,
-                role: 'user', // Mặc định tài khoản tạo ra là user thường
+                role: 'user', 
                 createdAt: new Date().toISOString()
             };
             
@@ -2867,12 +2812,9 @@ document.getElementById('btnSubmitCreateUser')?.addEventListener('click', () => 
             });
         })
         .then(() => {
-            // 3. Đăng xuất app phụ để dọn dẹp bộ nhớ
             secondaryApp.auth().signOut();
             showToast('Tạo tài khoản thành công!');
             closeCreateUserModal();
-            
-            // Tải lại danh sách người dùng để thấy ngay tài khoản mới
             if(typeof loadAllUsers === 'function') loadAllUsers(); 
         })
         .catch((error) => {
@@ -2883,15 +2825,15 @@ document.getElementById('btnSubmitCreateUser')?.addEventListener('click', () => 
             showToast(errorMsg || 'Lỗi khi tạo tài khoản', 'error');
         })
         .finally(() => {
-            // Phục hồi lại trạng thái của nút bấm
             if(btn) {
                 btn.innerText = 'Xác nhận tạo';
                 btn.disabled = false;
             }
         });
 });
+
 // ==========================================
-// 14. ĐĂNG KÝ SERVICE WORKER (PWA)
+// 15. ĐĂNG KÝ SERVICE WORKER (PWA)
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

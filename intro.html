@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Giới thiệu - Quản lý chi tiêu</title>
+    <meta name="theme-color" content="#4361ee">
+    
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3f37c9;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #2b2d42;
+            --text-muted: #8d99ae;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        body { 
+            background-color: #e2e8f0; 
+            display: flex; 
+            justify-content: center; 
+            color: var(--text-main);
+        }
+
+        .mobile-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            height: 100dvh; 
+            background-color: var(--bg-color);
+            position: relative;
+            box-shadow: 0 0 24px rgba(0,0,0,0.1);
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slider-wrapper {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            will-change: transform;
+        }
+
+        .slide {
+            min-width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 30px 100px 30px;
+            text-align: center;
+        }
+
+        /* --- HIỆU ỨNG TRỒI LÊN CHO TỪNG PHẦN TỬ TRONG SLIDE --- */
+        .slide > * {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .slide.active > * {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .slide > *:nth-child(1) { transition-delay: 0.1s; }
+        .slide > *:nth-child(2) { transition-delay: 0.2s; }
+        .slide > *:nth-child(3) { transition-delay: 0.3s; }
+        .slide > *:nth-child(4) { transition-delay: 0.4s; }
+        .slide > *:nth-child(5) { transition-delay: 0.5s; }
+
+        .slide-icon {
+            width: 100px; height: 100px; 
+            border-radius: 28px; 
+            display: flex; align-items: center; justify-content: center; 
+            margin-bottom: 32px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+        }
+        .slide-icon svg { width: 48px; height: 48px; stroke-width: 1.5; }
+        
+        .c-primary { background: linear-gradient(135deg, var(--primary) 0%, #2a5298 100%); color: white; }
+        .c-red { background: #fceceb; color: var(--danger); }
+        .c-blue { background: #eef2ff; color: var(--primary); }
+        .c-green { background: #e8f8f0; color: var(--success); }
+
+        .slide h2 { font-size: 26px; font-weight: 800; margin-bottom: 16px; color: var(--text-main); line-height: 1.3;}
+        .slide p { font-size: 15px; color: var(--text-muted); line-height: 1.6; font-weight: 500;}
+
+        .float-up { animation: floatUp 3s ease-in-out infinite; }
+        .float-down { animation: floatDown 4s ease-in-out infinite; }
+        @keyframes floatUp { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes floatDown { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+        
+        .expense-item-demo {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #fff; padding: 12px 16px; border-radius: 14px;
+            margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid #f1f3f5;
+        }
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            padding: 20px 24px 40px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(to top, var(--bg-color) 70%, rgba(244, 246, 249, 0));
+            transition: opacity 0.3s;
+        }
+
+        .nav-btn {
+            width: 48px; height: 48px;
+            border: none; border-radius: 50%;
+            background: #eef2ff; color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s;
+        }
+        .nav-btn:active { transform: scale(0.9); }
+        .nav-btn.hidden { opacity: 0; pointer-events: none; }
+        .nav-btn.primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3); }
+
+        .btn-start {
+            position: absolute;
+            bottom: 30px; left: 24px; right: 24px;
+            height: 56px; border: none; border-radius: 16px;
+            background: var(--primary); color: white;
+            font-size: 16px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer; transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            text-decoration: none;
+            box-shadow: 0 8px 24px rgba(67, 97, 238, 0.35);
+            opacity: 0; pointer-events: none; transform: translateY(30px);
+        }
+        .btn-start.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .btn-start:active { transform: scale(0.96); box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2); }
+
+        .dots { display: flex; gap: 8px; }
+        .dot { width: 8px; height: 8px; border-radius: 4px; background: #cbd5e1; transition: 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+        .dot.active { width: 24px; background: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="mobile-container">
+    
+    <div class="slider-wrapper" id="slider">
+        
+        <!-- TRANG 1 -->
+        <div class="slide active">
+            <div class="slide-icon c-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <h2>Bạn là ai?</h2>
+            
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 24px;">
+                <span style="background: #fff5ec; color: #ff9f43; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 800; box-shadow: 0 4px 10px rgba(255, 159, 67, 0.1);">Giới tài phiệt</span>
+                <span style="background: #eef2ff; color: var(--primary); padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 800; box-shadow: 0 4px 10px rgba(67, 97, 238, 0.1);">Giới siêu giàu</span>
+                <span style="background: #e8f8f0; color: var(--success); padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 800; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.1);">Nhà buôn bán</span>
+                <span style="background: #fceceb; color: var(--danger); padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 800; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.1);">Chúa tể mua sắm</span>
+            </div>
+            
+            <p style="font-size: 16px;">Hay chỉ đơn giản là một <b style="color: var(--text-main); font-weight: 800;">Người dùng tinh tế?</b></p>
+            <p style="margin-top: 12px; font-size: 14px; opacity: 0.8;">Bất kể bạn là ai, ứng dụng này sinh ra để giúp bạn làm chủ từng đồng tiền của mình!</p>
+        </div>
+
+        <!-- TRANG 2 -->
+        <div class="slide">
+            <div class="slide-icon c-red" style="position: relative; margin-bottom: 40px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                
+                <div class="float-up" style="position: absolute; top: -15px; right: -35px; font-size: 13px; font-weight: 800; color: var(--danger); background: #fff; padding: 6px 10px; border-radius: 12px; box-shadow: 0 4px 15px rgba(231,76,60,0.15);">☕ -45k</div>
+                <div class="float-down" style="position: absolute; bottom: -15px; left: -35px; font-size: 13px; font-weight: 800; color: var(--danger); background: #fff; padding: 6px 10px; border-radius: 12px; box-shadow: 0 4px 15px rgba(231,76,60,0.15);">🍔 -65k</div>
+            </div>
+            
+            <h2>"Lương vừa nhận<br>đã bốc hơi?"</h2>
+            <p style="margin-bottom: 24px;">Thủ phạm bào mòn ví tiền không phải là những món đồ xa xỉ, mà chính là <b style="color: var(--danger); font-weight: 800;">những khoản chi chìm</b> bị lãng quên.</p>
+            
+            <div style="width: 100%; text-align: left; background: #f8f9fa; padding: 16px; border-radius: 20px; border: 1px dashed #cbd5e1;">
+                <div class="expense-item-demo">
+                    <div style="display: flex; gap: 12px; align-items: center; font-weight: 700; font-size: 14px; color: var(--text-main);"><span style="font-size: 18px;">🧋</span> Trà sữa chiều</div>
+                    <span style="color: var(--danger); font-weight: 800; font-size: 14px;">-55.000đ</span>
+                </div>
+                <div class="expense-item-demo">
+                    <div style="display: flex; gap: 12px; align-items: center; font-weight: 700; font-size: 14px; color: var(--text-main);"><span style="font-size: 18px;">🍻</span> Gặp gỡ quán bia</div>
+                    <span style="color: var(--danger); font-weight: 800; font-size: 14px;">-250.000đ</span>
+                </div>
+                <div class="expense-item-demo" style="margin-bottom: 0;">
+                    <div style="display: flex; gap: 12px; align-items: center; font-weight: 700; font-size: 14px; color: var(--text-main);"><span style="font-size: 18px;">🛒</span> Đặt hàng online</div>
+                    <span style="color: var(--danger); font-weight: 800; font-size: 14px;">-125.000đ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANG 3 -->
+        <div class="slide">
+            <div class="slide-icon c-blue" style="margin-bottom: 24px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </div>
+            <h2>Sức mạnh của<br><span style="color: var(--primary);">60 giây</span> mỗi ngày</h2>
+            <p style="margin-bottom: 24px;">Ghi chép không phải để thắt lưng buộc bụng, mà để bạn biết mình đang làm chủ đồng tiền.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; text-align: left;">
+                <div style="display: flex; align-items: center; gap: 16px; background: #fff; padding: 16px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f1f3f5;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #e8f8f0; color: var(--success); display: flex; justify-content: center; align-items: center; flex-shrink: 0;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
+                    <div>
+                        <div style="font-weight: 800; font-size: 15px; color: var(--text-main); margin-bottom: 4px;">Ngừng chi tiêu mù quáng</div>
+                        <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Kích hoạt ý thức trước mỗi lần rút ví.</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px; background: #fff; padding: 16px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f1f3f5;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #fff5ec; color: #ff9f43; display: flex; justify-content: center; align-items: center; flex-shrink: 0;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
+                    <div>
+                        <div style="font-weight: 800; font-size: 15px; color: var(--text-main); margin-bottom: 4px;">Phát hiện "lỗ hổng"</div>
+                        <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Nhìn thấu những khoản chi vô ích.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANG 4 -->
+        <div class="slide">
+            <div class="slide-icon c-green" style="margin-bottom: 24px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <h2>Công cụ hoàn hảo<br>dành cho bạn</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-top: 16px; text-align: left;">
+                <div style="background: #eef2ff; padding: 16px; border-radius: 16px; border: 1px solid rgba(67, 97, 238, 0.1);">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" style="margin-bottom: 12px;"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <div style="font-weight: 800; font-size: 15px; color: var(--primary); margin-bottom: 4px;">Báo cáo chuẩn</div>
+                    <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Thống kê trực quan dòng tiền.</div>
+                </div>
+                <div style="background: #e8f8f0; padding: 16px; border-radius: 16px; border: 1px solid rgba(46, 204, 113, 0.1);">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" style="margin-bottom: 12px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    <div style="font-weight: 800; font-size: 15px; color: var(--success); margin-bottom: 4px;">Siêu tốc</div>
+                    <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Chạm & nhập chỉ trong 3 giây.</div>
+                </div>
+                <div style="background: #fff5ec; padding: 16px; border-radius: 16px; border: 1px solid rgba(255, 159, 67, 0.1); grid-column: span 2; display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 44px; height: 44px; background: rgba(255, 159, 67, 0.2); border-radius: 12px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff9f43" stroke-width="2.5"><path d="M21.5 2v6h-6M2.13 15.57a9 9 0 1 0 12.08 6.01M2.5 22v-6h6M21.87 8.43a9 9 0 1 0-12.08-6.01"></path></svg></div>
+                    <div>
+                        <div style="font-weight: 800; font-size: 15px; color: #ff9f43; margin-bottom: 4px;">Lưu an toàn</div>
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 500; line-height: 1.5;">Dữ liệu đồng bộ tức thì, không lo mất mát.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- THANH ĐIỀU HƯỚNG DƯỚI CÙNG -->
+    <div class="bottom-nav" id="navBar">
+        <button id="btnPrev" class="nav-btn hidden">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+
+        <div class="dots" id="dotsContainer">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+
+        <button id="btnNext" class="nav-btn primary">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+    </div>
+
+    <!-- NÚT BẮT ĐẦU (Gắn link mới) -->
+    <a href="https://byvn.net/thuchi" class="btn-start" id="btnStart">
+		Bắt Đầu Quản Lý Ngay
+		<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+	</a>
+
+</div>
+
+<script>
+    const slider = document.getElementById('slider');
+    const slides = document.querySelectorAll('.slide');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const btnStart = document.getElementById('btnStart');
+    const navBar = document.getElementById('navBar');
+    const dots = document.querySelectorAll('.dot');
+    
+    let currentIndex = 0;
+    const totalSlides = slides.length;
+
+    // SỰ KIỆN NÚT BẮT ĐẦU (CHUYỂN HƯỚNG VÀ LƯU TRẠNG THÁI)
+    btnStart.addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.setItem('hasSeenIntro', 'true');
+        window.location.href = 'https://byvn.net/thuchi'; // Chuyển hướng tới link theo yêu cầu
+    });
+
+    function updateUI() {
+        // Trượt trang
+        slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+        // Kích hoạt hiệu ứng animate-in cho trang hiện tại
+        slides.forEach((slide, index) => {
+            if (index === currentIndex) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+
+        // Xử lý các dấu chấm
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentIndex);
+        });
+
+        // Xử lý hiển thị các nút điều hướng
+        if (currentIndex === 0) {
+            btnPrev.classList.add('hidden');
+        } else {
+            btnPrev.classList.remove('hidden');
+        }
+
+        if (currentIndex === totalSlides - 1) {
+            navBar.style.opacity = '0';
+            navBar.style.pointerEvents = 'none';
+            btnStart.classList.add('show');
+        } else {
+            navBar.style.opacity = '1';
+            navBar.style.pointerEvents = 'auto';
+            btnStart.classList.remove('show');
+        }
+    }
+
+    btnNext.addEventListener('click', () => {
+        if (currentIndex < totalSlides - 1) {
+            currentIndex++;
+            updateUI();
+        }
+    });
+
+    btnPrev.addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateUI();
+        }
+    });
+
+    // VUỐT NGANG (SWIPE)
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    slider.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    slider.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+        const threshold = 50; 
+        if (touchStartX - touchEndX > threshold) {
+            if (currentIndex < totalSlides - 1) {
+                currentIndex++;
+                updateUI();
+            }
+        } else if (touchEndX - touchStartX > threshold) {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateUI();
+            }
+        }
+    }
+</script>
+
+</body>
+</html>

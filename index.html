@@ -2,6 +2,11 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+	<script>
+        if (!localStorage.getItem('hasSeenIntro')) {
+            window.location.replace('intro.html');
+        }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Quản lý chi tiêu</title>
     <!-- SDK FIREBASE -->
@@ -47,6 +52,43 @@
                 Đăng nhập
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </button>
+            
+            <!-- NÚT CHUYỂN SANG MÀN HÌNH ĐĂNG KÝ -->
+            <div style="text-align: center; margin-top: 20px;">
+                <span style="font-size: 13px; color: var(--text-muted);">Chưa có tài khoản? </span>
+                <a href="#" id="btnShowRegister" style="font-size: 13px; font-weight: 700; color: var(--primary); text-decoration: none;">Đăng ký ngay</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MÀN HÌNH ĐĂNG KÝ (PUBLIC) -->
+<div id="registerOverlay" class="auth-overlay hide">
+    <div class="auth-card">
+        <div class="auth-logo" style="background: var(--success);"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg></div>
+        <h2 class="auth-title">ĐĂNG KÝ TÀI KHOẢN</h2>
+        <form id="registerForm">
+            <div class="auth-input-group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <input type="text" id="regNameInput" class="auth-form-control" placeholder="Họ và tên" required>
+            </div>
+            <div class="auth-input-group" style="position: relative;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <input type="text" id="regUsernameInput" class="auth-form-control" placeholder="Tên đăng nhập" style="padding-right: 105px;" required>
+                <span style="position: absolute; right: 16px; top: 12px; font-size: 15px; font-weight: 600; color: #cbd5e1; pointer-events: none;">@chitieu.com</span>
+            </div>
+            <div class="auth-input-group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <input type="password" id="regPasswordInput" class="auth-form-control" placeholder="Mật khẩu (từ 6 ký tự)" required minlength="6">
+            </div>
+            <button type="button" id="btnSubmitRegister" class="btn-auth btn-login" style="margin-top: 16px; background: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">
+                Đăng ký
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+            <div style="text-align: center; margin-top: 20px;">
+                <span style="font-size: 13px; color: var(--text-muted);">Đã có tài khoản? </span>
+                <a href="#" id="btnShowLogin" style="font-size: 13px; font-weight: 700; color: var(--success); text-decoration: none;">Đăng nhập</a>
+            </div>
         </form>
     </div>
 </div>

@@ -448,7 +448,8 @@ window.addEventListener('DOMContentLoaded', () => {
 auth.onAuthStateChanged(user => {
     if (user) {
         currentUser = user;
-        document.getElementById('authOverlay')?.classList.add('hide'); 
+        document.getElementById('authOverlay')?.classList.add('hide');
+		document.getElementById('registerOverlay')?.classList.add('hide');
         
         const username = user.email.split('@')[0];
         const avatarImg = document.getElementById('avatarImg');
@@ -572,6 +573,7 @@ auth.onAuthStateChanged(user => {
     } else {
         currentUser = null;
         document.getElementById('authOverlay')?.classList.remove('hide'); 
+		document.getElementById('registerOverlay')?.classList.add('hide');
         transactions = []; categories = []; updateUI();
         
         if(pieChartInstance) pieChartInstance.destroy();
@@ -606,7 +608,66 @@ document.getElementById('btnLogin')?.addEventListener('click', () => {
         .then(() => { showToast('Đăng nhập thành công!'); })
         .catch(err => showToast(getAuthErrorVN(err.code), 'error'));
 });
+// ==========================================
+// TÍNH NĂNG ĐĂNG KÝ TÀI KHOẢN DÀNH CHO NGƯỜI MỚI (PUBLIC)
+// ==========================================
+// 1. Chuyển đổi qua lại giữa Form Đăng nhập và Đăng ký
+document.getElementById('btnShowRegister')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('authOverlay')?.classList.add('hide');
+    document.getElementById('registerOverlay')?.classList.remove('hide');
+});
 
+document.getElementById('btnShowLogin')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('registerOverlay')?.classList.add('hide');
+    document.getElementById('authOverlay')?.classList.remove('hide');
+});
+
+// 2. Logic xử lý Đăng ký
+document.getElementById('btnSubmitRegister')?.addEventListener('click', () => {
+    const name = document.getElementById('regNameInput')?.value.trim();
+    let username = document.getElementById('regUsernameInput')?.value.trim();
+    const pwd = document.getElementById('regPasswordInput')?.value;
+
+    if(!name || !username || !pwd) { showToast('Vui lòng nhập đủ thông tin', 'error'); return; }
+    if(pwd.length < 6) { showToast('Mật khẩu phải từ 6 ký tự!', 'error'); return; }
+
+    // Tự động ghim đuôi email
+    let email = username.includes('@') ? username : `${username}@chitieu.com`;
+
+    const btn = document.getElementById('btnSubmitRegister');
+    if(btn) { btn.innerText = 'Đang xử lý...'; btn.disabled = true; }
+
+    // Sử dụng app chính của Firebase vì người dùng đăng ký xong sẽ được đăng nhập tự động luôn
+    auth.createUserWithEmailAndPassword(email, pwd)
+        .then((userCredential) => {
+            const newUid = userCredential.user.uid;
+            
+            // Khởi tạo Role "user" mặc định và cấu hình
+            const userData = { email: email, role: 'user', createdAt: new Date().toISOString() };
+            
+            return db.ref(`users/${newUid}`).set(userData).then(() => {
+                return db.ref(`users/${newUid}/profile`).set({ name: name });
+            });
+        })
+        .then(() => {
+            showToast('Đăng ký thành công!');
+            document.getElementById('registerOverlay')?.classList.add('hide');
+            // Ghi chú: Firebase sẽ tự động trigger hàm onAuthStateChanged và đăng nhập, tải dữ liệu luôn.
+        })
+        .catch((error) => {
+            let errorMsg = getAuthErrorVN(error.code);
+            if(error.code === 'auth/email-already-in-use') { errorMsg = 'Tên tài khoản này đã được sử dụng!'; }
+            showToast(errorMsg || 'Lỗi khi đăng ký', 'error');
+        })
+        .finally(() => {
+            if(btn) { 
+                btn.innerHTML = 'Đăng ký <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>'; 
+                btn.disabled = false; 
+            }
+        });
+});
 const changePwdOverlay = document.getElementById('changePwdOverlay');
 
 document.getElementById('btnCancelChangePwd')?.addEventListener('click', () => { 

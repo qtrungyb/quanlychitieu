@@ -918,6 +918,8 @@ function setCatFormType(type) {
     document.getElementById('btnCatTypeExp')?.classList.toggle('active', type === 'expense');
     const cFormType = document.getElementById('catFormTypeInput');
     if (cFormType) cFormType.value = type;
+	const budgetGroup = document.getElementById('budgetLimitGroup');
+    if(budgetGroup) budgetGroup.style.display = type === 'expense' ? 'block' : 'none';
 }
 window.setCatFormType = setCatFormType;
 
@@ -937,26 +939,33 @@ function openCatForm(id = null, defaultType = 'expense') {
     const cColorInput = document.getElementById('catColorInput');
     const btnSaveCat = document.getElementById('btnSaveCat');
 
+    // MỚI THÊM: Lấy element ngân sách
+    const cBudgetRaw = document.getElementById('catBudgetRaw');
+    const cBudgetDisplay = document.getElementById('catBudgetDisplay');
+
     if (id) {
         const c = categories.find(x => x.id === id);
         if (!c) return;
         if (cFormTitle) cFormTitle.innerText = 'Sửa danh mục';
         if (cNameInput) cNameInput.value = c.name;
         setCatFormType(c.type);
-        
         if (cIconInput) cIconInput.value = c.icon;
         if (cColorInput) cColorInput.value = c.color;
         
+        // MỚI THÊM: Đổ dữ liệu ngân sách cũ vào Form
+        if (c.budgetLimit && cBudgetRaw && cBudgetDisplay) {
+            cBudgetRaw.value = c.budgetLimit;
+            cBudgetDisplay.value = formatter.format(c.budgetLimit);
+        } else {
+            if (cBudgetRaw) cBudgetRaw.value = '';
+            if (cBudgetDisplay) cBudgetDisplay.value = '';
+        }
+        
         const iBox = [...document.querySelectorAll('.icon-box')].find(el => el.innerHTML === SVG_LIB[c.icon]);
         if(iBox) iBox.classList.add('active');
-        
         const cBox = [...document.querySelectorAll('.color-circle')].find(el => el.style.backgroundColor === THEMES[c.color]?.color);
         if(cBox) cBox.classList.add('active');
-        
-        if (btnSaveCat) {
-            btnSaveCat.innerText = 'Lưu thay đổi';
-            btnSaveCat.classList.add('edit-mode');
-        }
+        if (btnSaveCat) { btnSaveCat.innerText = 'Lưu thay đổi'; btnSaveCat.classList.add('edit-mode'); }
     } else {
         if (cFormTitle) cFormTitle.innerText = 'Thêm danh mục';
         if (cNameInput) cNameInput.value = '';
@@ -964,8 +973,12 @@ function openCatForm(id = null, defaultType = 'expense') {
         if (cIconInput) cIconInput.value = '';
         if (cColorInput) cColorInput.value = '';
         
+        // MỚI THÊM: Xóa trắng ô ngân sách khi thêm mới
+        if (cBudgetRaw) cBudgetRaw.value = '';
+        if (cBudgetDisplay) cBudgetDisplay.value = '';
+        
         if (btnSaveCat) {
-            btnSaveCat.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Lưu danh mục';
+            btnSaveCat.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Lưu danh mục';
             btnSaveCat.classList.remove('edit-mode');
         }
     }
@@ -984,18 +997,22 @@ document.getElementById('btnSaveCat')?.addEventListener('click', () => {
     const type = document.getElementById('catFormTypeInput')?.value;
     const icon = document.getElementById('catIconInput')?.value;
     const color = document.getElementById('catColorInput')?.value;
+    
+    // MỚI THÊM: Lấy giá trị ngân sách
+    const budgetStr = document.getElementById('catBudgetRaw')?.value;
+    const budgetLimit = budgetStr ? parseInt(budgetStr) : null;
 
     if(!name) { showToast('Vui lòng nhập tên danh mục!', 'error'); return; }
     if(!icon) { showToast('Vui lòng chọn 1 biểu tượng!', 'error'); return; }
     if(!color) { showToast('Vui lòng chọn 1 màu sắc!', 'error'); return; }
 
     if(editingCatId) {
-        db.ref(`users/${currentUser.uid}/categories/${editingCatId}`).update({ name, type, icon, color })
+        db.ref(`users/${currentUser.uid}/categories/${editingCatId}`).update({ name, type, icon, color, budgetLimit: budgetLimit })
           .then(() => { showToast('Đã cập nhật danh mục'); closeCatForm(); });
     } else {
         const newId = 'cat_' + Date.now();
         const newOrder = categories.filter(c => c.type === type).length;
-        db.ref(`users/${currentUser.uid}/categories/${newId}`).set({ name, type, icon, color, order: newOrder })
+        db.ref(`users/${currentUser.uid}/categories/${newId}`).set({ name, type, icon, color, order: newOrder, budgetLimit: budgetLimit })
           .then(() => { showToast('Đã thêm danh mục mới'); closeCatForm(); });
     }
 });
@@ -1030,7 +1047,13 @@ amountInputDisplay?.addEventListener('input', function() {
     if (amountInputRaw) amountInputRaw.value = val; 
     this.value = formatter.format(parseInt(val));
 });
-
+document.getElementById('catBudgetDisplay')?.addEventListener('input', function() {
+    let val = this.value.replace(/\D/g, '');
+    const raw = document.getElementById('catBudgetRaw');
+    if (val === '') { if (raw) raw.value = ''; this.value = ''; return; }
+    if (raw) raw.value = val; 
+    this.value = formatter.format(parseInt(val));
+});
 document.querySelectorAll('.btn-quick').forEach(btn => {
     btn.addEventListener('click', () => {
         const addVal = parseInt(btn.getAttribute('data-val'));
@@ -1282,8 +1305,85 @@ function updateUI() {
 
     // Gán vào DOM 1 lần duy nhất
     listEl.innerHTML = listHTML;
+	if(typeof renderBudgets === 'function') renderBudgets();
 }
+// ==========================================
+// TÍNH NĂNG NGÂN SÁCH (BUDGET PROGRESS)
+// ==========================================
+function renderBudgets() {
+    const listEl = document.getElementById('budgetList');
+    const cardEl = document.getElementById('budgetCard');
+    if (!listEl || !cardEl) return;
 
+    // Lấy chuỗi tháng hiện tại (VD: 2026-08)
+    const today = new Date();
+    const currMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+    // Lọc ra các danh mục Chi tiêu có cài đặt Hạn mức
+    const budgetedCats = categories.filter(c => c.type === 'expense' && c.budgetLimit > 0);
+
+    if (budgetedCats.length === 0) {
+        cardEl.classList.add('hide'); // Ẩn thẻ nếu không có ngân sách nào được thiết lập
+        return;
+    }
+    cardEl.classList.remove('hide');
+
+    // Khởi tạo biến lưu tổng tiền ĐÃ CHI trong tháng này theo từng danh mục
+    const spentByCat = {};
+    budgetedCats.forEach(c => spentByCat[c.id] = 0);
+
+    // Tính toán dựa trên toàn bộ giao dịch
+    transactions.forEach(t => {
+        if (t.type === 'expense' && t.date.startsWith(currMonthStr) && spentByCat[t.categoryId] !== undefined) {
+            spentByCat[t.categoryId] += t.amount;
+        }
+    });
+
+    let html = '';
+    budgetedCats.forEach(c => {
+        const spent = spentByCat[c.id];
+        const limit = c.budgetLimit;
+        
+        // Tính phần trăm (%)
+        let percent = (spent / limit) * 100;
+        if (percent > 100) percent = 100; // Khóa max ở 100% để thanh bar không bị tràn
+
+        // THUẬT TOÁN ĐỔI MÀU GIAO DIỆN
+        let color = 'var(--success)'; // Dưới 50%: An toàn (Xanh)
+        if (percent >= 85) color = 'var(--danger)'; // Trên 85%: Cảnh báo đỏ (Đỏ)
+        else if (percent >= 50) color = '#f39c12'; // 50% - 85%: Cảnh báo vàng (Vàng cam)
+
+        const theme = THEMES[c.color] || THEMES['theme-gray'];
+        
+        // Lấy đoạn svg gốc từ SVG_LIB
+        let iconSvg = SVG_LIB[c.icon] || '';
+        // Bóc tách lấy lõi bên trong thẻ svg để nhúng vào thẻ icon nhỏ
+        const innerSvg = iconSvg.replace(/<svg[^>]*>|<\/svg>/g, ''); 
+
+        html += `
+        <div class="budget-item">
+            <div class="budget-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 24px; height: 24px; border-radius: 8px; background: ${theme.bg}; color: ${theme.color}; display: flex; align-items: center; justify-content: center;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${innerSvg}</svg>
+                    </div>
+                    <span>${c.name}</span>
+                </div>
+                <span style="color: ${color}; font-weight: 800;">${Math.round(percent)}%</span>
+            </div>
+            <div class="budget-bar-bg">
+                <div class="budget-bar-fill" style="width: ${percent}%; background-color: ${color};"></div>
+            </div>
+            <div class="budget-stats">
+                <span>Đã tiêu: ${formatter.format(spent)}đ</span>
+                <span>Ngân sách: ${formatter.format(limit)}đ</span>
+            </div>
+        </div>
+        `;
+    });
+
+    listEl.innerHTML = html;
+}
 // ==========================================
 // 7. RENDER BIỂU ĐỒ (CHART.JS)
 // ==========================================

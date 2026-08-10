@@ -3489,3 +3489,108 @@ window.clearAllPaidDebts = function() {
         });
     }
 };
+// ==========================================
+// TÍNH NĂNG: QUẢN LÝ HẠN MỨC CHI TIÊU NHANH
+// ==========================================
+function openBudgetManager() {
+    document.getElementById('budgetManagerOverlay')?.classList.add('show');
+    document.getElementById('budgetManagerModal')?.classList.add('show');
+    
+    const listEl = document.getElementById('budgetManagerList');
+    if(!listEl) return;
+    
+    // Chỉ lấy các danh mục thuộc loại "Tiền Chi" (expense)
+    const expenseCats = categories.filter(c => c.type === 'expense');
+    listEl.innerHTML = '';
+    
+    if (expenseCats.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size:13px;">Chưa có danh mục chi tiêu nào.</div>';
+        return;
+    }
+
+    // In danh sách các danh mục kèm ô nhập tiền
+    expenseCats.forEach(c => {
+        const theme = THEMES[c.color] || THEMES['theme-gray'];
+        const iconSvg = SVG_LIB[c.icon] || SVG_LIB['other'];
+        const budgetVal = c.budgetLimit ? formatter.format(c.budgetLimit) : '';
+        const rawVal = c.budgetLimit || '';
+        
+        // Bóc tách lõi icon SVG
+        const innerSvg = iconSvg.replace(/<svg[^>]*>|<\/svg>/g, '');
+        
+        listEl.innerHTML += `
+            <div class="transaction-item" style="padding: 16px; cursor: default; flex-direction: column; align-items: stretch; gap: 12px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: ${theme.bg}; color: ${theme.color}; display: flex; align-items: center; justify-content: center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${innerSvg}</svg>
+                    </div>
+                    <div style="font-weight: 800; font-size: 15px; color: var(--text-main); flex: 1;">${c.name}</div>
+                </div>
+                <div class="amount-wrapper" style="height: 44px; background: var(--bg-color); border: 1px solid transparent; transition: 0.3s;">
+                    <input type="text" class="form-control input-amount budget-input-display" data-id="${c.id}" placeholder="Không giới hạn" value="${budgetVal}" style="font-size: 16px; background: transparent; border: none; text-align: right; font-weight: 700;">
+                    <span class="amount-currency">đ</span>
+                    <input type="hidden" class="budget-input-raw" id="raw_budget_${c.id}" value="${rawVal}">
+                </div>
+            </div>
+        `;
+    });
+    
+    // Gắn sự kiện tự động định dạng số tiền (VD: gõ 10000 -> 10.000)
+    document.querySelectorAll('.budget-input-display').forEach(input => {
+        input.addEventListener('input', function() {
+            let val = this.value.replace(/\D/g, '');
+            const catId = this.getAttribute('data-id');
+            const raw = document.getElementById('raw_budget_' + catId);
+            if (val === '') { if (raw) raw.value = ''; this.value = ''; return; }
+            if (raw) raw.value = val; 
+            this.value = formatter.format(parseInt(val));
+        });
+    });
+}
+window.openBudgetManager = openBudgetManager;
+
+function closeBudgetManager() {
+    document.getElementById('budgetManagerOverlay')?.classList.remove('show');
+    document.getElementById('budgetManagerModal')?.classList.remove('show');
+}
+window.closeBudgetManager = closeBudgetManager;
+
+// Nút mở Modal
+document.getElementById('btnSettingsBudget')?.addEventListener('click', openBudgetManager);
+
+// Nút Lưu Tất Cả
+document.getElementById('btnSaveAllBudgets')?.addEventListener('click', () => {
+    if(!currentUser) return;
+    const updates = {};
+    const inputs = document.querySelectorAll('.budget-input-display');
+    let hasChanges = false;
+    
+    // Quét qua tất cả các ô nhập liệu và chuẩn bị dữ liệu gửi lên Firebase
+    inputs.forEach(input => {
+        const catId = input.getAttribute('data-id');
+        const rawStr = document.getElementById('raw_budget_' + catId)?.value;
+        const budgetLimit = rawStr ? parseInt(rawStr) : null;
+        
+        updates[`users/${currentUser.uid}/categories/${catId}/budgetLimit`] = budgetLimit;
+        hasChanges = true;
+    });
+    
+    if (!hasChanges) {
+        closeBudgetManager();
+        return;
+    }
+
+    const btn = document.getElementById('btnSaveAllBudgets');
+    if(btn) { btn.innerText = 'Đang lưu...'; btn.disabled = true; }
+    
+    // Lưu một cục đồng loạt lên Database
+    db.ref().update(updates).then(() => {
+        showToast('Đã lưu mọi hạn mức thành công!');
+        closeBudgetManager();
+        // Hệ thống sẽ tự động bắt sự thay đổi của Database và render lại thanh ngân sách
+    }).catch(() => {
+        showToast('Lỗi khi lưu dữ liệu!', 'error');
+    }).finally(() => {
+        if(btn) { btn.innerText = 'Lưu tất cả hạn mức'; btn.disabled = false; }
+    });
+});

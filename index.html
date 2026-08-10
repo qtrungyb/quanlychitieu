@@ -161,6 +161,8 @@
                 </button>
             </div>
             <div class="card-balance" id="totalBalance">******</div>
+            
+            <!-- HÀNG 1: THU / CHI -->
             <div class="card-stats">
                 <div class="stat-col">
                     <span class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg> Tổng Thu</span>
@@ -169,6 +171,18 @@
                 <div class="stat-col">
                     <span class="stat-label">Tổng Chi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg></span>
                     <span class="stat-val out" id="totalExpense">******</span>
+                </div>
+            </div>
+
+            <!-- HÀNG 2: VAY / NỢ (MỚI THÊM) -->
+            <div class="card-stats" style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.2);">
+                <div class="stat-col">
+                    <span class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Cho vay</span>
+                    <span class="stat-val" id="totalLent" style="color: #fceceb;">******</span>
+                </div>
+                <div class="stat-col">
+                    <span class="stat-label">Đi vay<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></span>
+                    <span class="stat-val" id="totalBorrowed" style="color: #fff5ec;">******</span>
                 </div>
             </div>
         </div>
@@ -363,7 +377,42 @@
             <div class="chart-container"><canvas id="barChart"></canvas></div>
         </div>
     </div>
+	<!-- TAB MỚI: SỔ VAY NỢ (Nằm ngang hàng với các view-section khác) -->
+    <div id="debtView" class="view-section">
+        <div class="history-filters-card" style="padding-top: 16px;">
+            <!-- Toggle Cho Vay / Đi Vay -->
+            <div class="type-toggle" style="margin-bottom: 16px;">
+                <button class="btn-toggle active income" id="btnTabLent" onclick="switchDebtTab('lent')">Cho vay</button>
+                <button class="btn-toggle expense" id="btnTabBorrowed" onclick="switchDebtTab('borrowed')">Đi vay</button>
+            </div>
 
+            <!-- Thẻ Tổng quan -->
+            <div class="summary-cards-grid" style="margin-bottom: 16px;">
+                <div class="summary-card box-bal" style="grid-column: span 2; border-color: rgba(243, 156, 18, 0.2); background: #fffaf0;">
+                    <div class="sc-label" style="color: #f39c12;" id="debtSummaryLabel">Tổng tiền chưa thu</div>
+                    <div class="sc-val" id="debtSummaryAmount" style="color: #f39c12; font-size: 24px;">0đ</div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h4 style="font-size: 14px; color: var(--text-main);">Đang treo <span id="debtListCount" style="color: var(--primary);">(0)</span></h4>
+                <button onclick="openDebtForm()" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Thêm mới
+                </button>
+            </div>
+
+            <!-- Danh sách -->
+            <div id="debtList" class="transaction-list" style="gap: 12px;"></div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 12px;">
+                <h4 style="font-size: 14px; color: var(--text-muted); margin: 0;">Lịch sử đã hoàn tất</h4>
+                <button onclick="clearAllPaidDebts()" style="background: transparent; border: none; color: var(--danger); cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Dọn dẹp
+                </button>
+            </div>
+            <div id="debtPaidList" class="transaction-list" style="gap: 12px;"></div>
+        </div>
+    </div>
     <!-- TAB ADMIN -->
     <div id="adminView" class="view-section">
         <div class="history-filters-card">
@@ -465,6 +514,10 @@
     <div class="nav-item" id="tabStats">
         <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
         <span>Thống kê</span>
+    </div>
+    <div class="nav-item" id="tabDebt">
+        <svg viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        <span>Sổ Nợ</span>
     </div>
     <div class="nav-item hide" id="tabAdmin" style="color: var(--danger);">
         <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
@@ -581,7 +634,76 @@
     <button class="sheet-btn btn-sheet-delete" onclick="setDefaultAvatar()" style="margin-top: 12px;">Xóa ảnh (Mặc định)</button>
     <button class="sheet-btn btn-sheet-cancel" onclick="closeAvatarActionSheet()">Đóng</button>
 </div>
+<!-- POPUP THANH TOÁN MỘT PHẦN -->
+<div class="history-overlay" id="partialPayOverlay" style="z-index: 10040;" onclick="closePartialPay()"></div>
+<div class="history-modal" id="partialPayModal" style="z-index: 10041; height: auto; max-height: 80vh;">
+    <div class="history-modal-header">
+        <h3>Thanh toán khoản nợ</h3>
+        <button class="btn-close-modal" onclick="closePartialPay()">&times;</button>
+    </div>
+    <div class="history-modal-body" style="background: #fff; padding-top: 20px;">
+        <input type="hidden" id="ppDebtId">
+        <div style="text-align: center; margin-bottom: 16px;">
+            <div style="font-size: 13px; color: var(--text-muted);">Số tiền còn nợ</div>
+            <div style="font-size: 24px; font-weight: 800; color: var(--danger);" id="ppRemainingAmt">0đ</div>
+        </div>
+        
+        <div class="form-group">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Nhập số tiền thanh toán đợt này</label>
+            <div class="amount-wrapper" style="height: 48px;">
+                <input type="text" id="ppAmountDisplay" class="form-control input-amount" placeholder="0" inputmode="numeric" required style="font-size: 18px;">
+                <span class="amount-currency">đ</span>
+            </div>
+            <input type="hidden" id="ppAmountRaw">
+        </div>
 
+        <button type="button" class="btn-submit" id="btnSubmitPartialPay" style="margin-top: 16px; background: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">Xác nhận thanh toán một phần</button>
+        <button type="button" onclick="payFullDebt()" class="btn-clear-filter" style="width: 100%; margin-top: 12px; justify-content: center; height: 48px; border: 1px solid var(--text-muted); color: var(--text-main);">Thanh toán toàn bộ (Tất toán)</button>
+    </div>
+</div>
+<!-- FORM THÊM MỚI KHOẢN VAY NỢ -->
+<div class="history-overlay" id="debtFormOverlay" style="z-index: 10035;" onclick="closeDebtForm()"></div>
+<div class="history-modal" id="debtFormModal" style="z-index: 10036; height: auto; max-height: 90vh;">
+    <div class="history-modal-header">
+        <h3 id="debtFormTitle">Thêm khoản vay/nợ</h3>
+        <button class="btn-close-modal" onclick="closeDebtForm()">&times;</button>
+    </div>
+    <div class="history-modal-body" style="background: #fff; padding-top: 20px;">
+        <input type="hidden" id="debtFormType" value="lent">
+        
+        <div class="form-group">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;" id="debtPersonLabel">Tên người vay</label>
+            <input type="text" id="debtPersonInput" class="form-control" placeholder="Tên người đó..." required>
+        </div>
+        
+        <div class="form-group">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Số tiền</label>
+            <div class="amount-wrapper" style="height: 48px;">
+                <input type="text" id="debtAmountDisplay" class="form-control input-amount" placeholder="0" inputmode="numeric" required style="font-size: 18px;">
+                <span class="amount-currency">đ</span>
+            </div>
+            <input type="hidden" id="debtAmountRaw">
+        </div>
+
+        <div class="form-group">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Ngày giao dịch</label>
+            <input type="date" id="debtDateInput" class="form-control" required>
+        </div>
+
+        <!-- Ô NGÀY HẸN TRẢ MỚI ĐƯỢC THÊM VÀO ĐÂY -->
+        <div class="form-group">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Ngày hẹn trả (Tùy chọn)</label>
+            <input type="date" id="debtDueDateInput" class="form-control">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Ghi chú (Tùy chọn)</label>
+            <input type="text" id="debtNoteInput" class="form-control" placeholder="Ví dụ: Hẹn cuối tháng trả">
+        </div>
+        
+        <button type="button" class="btn-submit" id="btnSaveDebt" style="margin-top: 24px; background: #f39c12; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);">Lưu vào sổ</button>
+    </div>
+</div>
 <!-- POPUP ADMIN -->
 <div class="history-overlay" id="adminDashboardOverlay" style="z-index: 10015;" onclick="closeAdminDashboard()"></div>
 <div class="history-modal" id="adminDashboardModal" style="z-index: 10016; height: 90vh;">
@@ -672,7 +794,6 @@
         <div class="chart-card" style="margin-top: 20px; margin-bottom: 40px;"><div class="chart-header"><h3 class="chart-title">Xu hướng số dư</h3></div><div class="chart-container"><canvas id="adm_lineChart"></canvas></div></div>
     </div>
 </div>
-
 <!-- SCRIPTS -->
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>

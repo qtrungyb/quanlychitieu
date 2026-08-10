@@ -3713,3 +3713,88 @@ document.getElementById('btnSaveAllBudgets')?.addEventListener('click', () => {
         if(btn) { btn.innerText = 'Lưu tất cả hạn mức'; btn.disabled = false; }
     });
 });
+// ==========================================
+// TÍNH NĂNG: CHUỖI NGÀY GHI CHÉP (STREAK & BADGES)
+// ==========================================
+function calculateStreak() {
+    if (!transactions || transactions.length === 0) {
+        updateStreakUI(0);
+        return;
+    }
+
+    // 1. Lọc ra danh sách các ngày có phát sinh thu/chi (Loại bỏ các giao dịch lỗi/trống)
+    const validTxs = transactions.filter(t => t.type === 'income' || t.type === 'expense');
+    const uniqueDates = [...new Set(validTxs.map(t => t.date))].sort().reverse();
+    
+    if (uniqueDates.length === 0) {
+        updateStreakUI(0);
+        return;
+    }
+
+    // 2. Thuật toán ngày tháng
+    const today = new Date();
+    // Hàm định dạng ngày chuẩn yyyy-mm-dd
+    const formatDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    
+    const todayStr = formatDate(today);
+    
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = formatDate(yesterday);
+
+    let streak = 0;
+    let checkDate = new Date(today);
+
+    // LUẬT TÍNH CHUỖI:
+    // Nếu hôm nay chưa ghi, nhưng hôm qua CÓ ghi -> Chuỗi vẫn được bảo lưu (đang chờ ghi hôm nay)
+    if (uniqueDates.includes(todayStr)) {
+        checkDate = new Date(today); // Bắt đầu lùi từ hôm nay
+    } else if (uniqueDates.includes(yesterdayStr)) {
+        checkDate = new Date(yesterday); // Bắt đầu lùi từ hôm qua
+    } else {
+        // Quá 2 ngày không ghi chép -> Gãy chuỗi
+        updateStreakUI(0);
+        return;
+    }
+
+    // Vòng lặp đếm ngược từng ngày về quá khứ
+    while (true) {
+        const checkStr = formatDate(checkDate);
+        if (uniqueDates.includes(checkStr)) {
+            streak++; // Cộng thêm 1 ngày vào chuỗi
+            checkDate.setDate(checkDate.getDate() - 1); // Lùi tiếp 1 ngày về trước
+        } else {
+            break; // Ngày này không có giao dịch -> Kết thúc đếm
+        }
+    }
+
+    updateStreakUI(streak);
+}
+
+// Cập nhật giao diện ngọn lửa
+function updateStreakUI(streak) {
+    const badge = document.getElementById('streakBadge');
+    const countSpan = document.getElementById('streakCount');
+    if (!badge || !countSpan) return;
+
+    if (streak > 0) {
+        countSpan.innerText = streak;
+        badge.style.display = 'flex';
+        badge.title = `Bạn đã ghi chép ${streak} ngày liên tiếp!`;
+        
+        // Hiệu ứng ăn mừng nhẹ nếu đạt mốc đẹp (Tùy chọn)
+        if(streak % 7 === 0) {
+            badge.style.transform = 'scale(1.1)';
+            setTimeout(() => badge.style.transform = 'scale(1)', 400);
+        }
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+// 3. Móc nối ngầm vào hệ thống tải dữ liệu hiện tại
+const originalUpdateUIForStreak = updateUI;
+updateUI = function() {
+    originalUpdateUIForStreak(); // Chạy bản gốc để vẽ danh sách
+    calculateStreak();           // Chạy thêm thuật toán tính chuỗi ngọn lửa
+};

@@ -459,6 +459,7 @@ window.addEventListener('DOMContentLoaded', () => {
 auth.onAuthStateChanged(user => {
     if (user) {
         currentUser = user;
+		checkUserLedgerOnLogin(user.uid);
         document.getElementById('authOverlay')?.classList.add('hide');
 		document.getElementById('registerOverlay')?.classList.add('hide');
         
@@ -3798,3 +3799,140 @@ updateUI = function() {
     originalUpdateUIForStreak(); // Chạy bản gốc để vẽ danh sách
     calculateStreak();           // Chạy thêm thuật toán tính chuỗi ngọn lửa
 };
+// ==========================================
+// TÍNH NĂNG: SỔ CHI TIÊU CHUNG (SHARED LEDGERS)
+// ==========================================
+let activeLedgerId = null; 
+
+// 1. Mở Modal Quản lý Sổ chung
+function openSharedLedgerModal() {
+    document.getElementById('sharedLedgerOverlay')?.classList.add('show');
+    document.getElementById('sharedLedgerModal')?.classList.add('show');
+    updateSharedLedgerUIState();
+}
+window.openSharedLedgerModal = openSharedLedgerModal;
+
+function closeSharedLedgerModal() {
+    document.getElementById('sharedLedgerOverlay')?.classList.remove('show');
+    document.getElementById('sharedLedgerModal')?.classList.remove('show');
+}
+window.closeSharedLedgerModal = closeSharedLedgerModal;
+
+document.getElementById('btnSettingsSharedLedger')?.addEventListener('click', openSharedLedgerModal);
+
+// Cập nhật trạng thái hiển thị trong Modal
+function updateSharedLedgerUIState() {
+    const noState = document.getElementById('noLedgerState');
+    const activeState = document.getElementById('activeLedgerState');
+    const codeDisplay = document.getElementById('displayLedgerCode');
+
+    if (activeLedgerId) {
+        noState?.classList.add('hide');
+        activeState?.classList.remove('hide');
+        if (codeDisplay) codeDisplay.innerText = activeLedgerId;
+    } else {
+        noState?.classList.remove('hide');
+        activeState?.classList.add('hide');
+    }
+}
+
+// 2. Tạo Sổ chung mới
+window.createSharedLedger = function() {
+    if(!currentUser) return;
+    const newLedgerId = 'ledger_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    
+    db.ref(`shared_ledgers/${newLedgerId}/info`).set({
+        createdAt: new Date().toISOString(),
+        owner: currentUser.uid
+    }).then(() => {
+        saveActiveLedger(newLedgerId);
+        showToast('Tạo sổ chung thành công!');
+        closeSharedLedgerModal();
+    }).catch(() => {
+        showToast('Lỗi khi tạo sổ', 'error');
+    });
+};
+
+// 3. Tham gia Sổ chung bằng Mã
+window.joinSharedLedger = function() {
+    if(!currentUser) return;
+    const codeInput = document.getElementById('joinLedgerCodeInput');
+    const code = codeInput ? codeInput.value.trim() : '';
+
+    if (!code) {
+        showToast('Vui lòng nhập mã sổ!', 'error');
+        return;
+    }
+
+    db.ref(`shared_ledgers/${code}/info`).once('value').then(snap => {
+        if (!snap.exists()) {
+            showToast('Mã sổ không tồn tại!', 'error');
+            return;
+        }
+        saveActiveLedger(code);
+        showToast('Đã tham gia sổ chung thành công!');
+        closeSharedLedgerModal();
+        if(codeInput) codeInput.value = '';
+    }).catch(() => {
+        showToast('Lỗi kết nối!', 'error');
+    });
+};
+
+// 4. Rời khỏi sổ chung (Quay lại sổ cá nhân)
+window.leaveSharedLedger = function() {
+    if(confirm('Bạn có chắc muốn rời khỏi sổ chung này để trở về sổ cá nhân?')) {
+        saveActiveLedger(null);
+        showToast('Đã rời sổ chung');
+        closeSharedLedgerModal();
+    }
+};
+
+// Lưu trạng thái Sổ đang hoạt động vào Profile của User trên Firebase
+function saveActiveLedger(ledgerId) {
+    activeLedgerId = ledgerId;
+    if (currentUser) {
+        db.ref(`users/${currentUser.uid}/activeLedgerId`).set(ledgerId);
+    }
+    initTransactionListener();
+}
+
+// 5. ĐIỀU PHƯỚC LUỒNG LẮNG NGHE DỮ LIỆU GIAO DỊCH (REALTIME SYNC)
+let currentTxRef = null;
+
+function initTransactionListener() {
+    if (!currentUser) return;
+
+    if (currentTxRef) {
+        currentTxRef.off();
+    }
+
+    const targetPath = activeLedgerId 
+        ? `shared_ledgers/${activeLedgerId}/transactions` 
+        : `users/${currentUser.uid}/transactions`;
+
+    currentTxRef = db.ref(targetPath);
+    txRef = currentTxRef; // Đồng bộ với biến toàn cục
+
+    currentTxRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        let loadedTransactions = [];
+        if (data) {
+            for (let dateKey in data) {
+                for (let txId in data[dateKey]) {
+                    loadedTransactions.push({ id: Number(txId), date: dateKey, ...data[dateKey][txId] });
+                }
+            }
+        }
+        transactions = loadedTransactions;
+        updateUI();
+        renderCharts(); 
+    });
+}
+
+// 6. KHÔI PHỤC TRẠNG THÁI SỔ KHI ĐĂNG NHẬP
+function checkUserLedgerOnLogin(uid) {
+    db.ref(`users/${uid}/activeLedgerId`).once('value').then(snap => {
+        activeLedgerId = snap.val() || null;
+        initTransactionListener();
+    });
+}

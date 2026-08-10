@@ -2994,16 +2994,33 @@ document.getElementById('btnSubmitCreateUser')?.addEventListener('click', () => 
 });
 
 // ==========================================
-// 15. ĐĂNG KÝ SERVICE WORKER (PWA)
+// ĐĂNG KÝ SERVICE WORKER & TỰ ĐỘNG CẬP NHẬT PWA
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
             .then((registration) => {
-                console.log('ServiceWorker đăng ký thành công: ', registration.scope);
+                // Kiểm tra nếu có bản cập nhật Service Worker mới đang được tải về
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        // Nếu bản mới đã cài đặt xong và đã có SW cũ đang chạy
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('Có phiên bản mới, đang tự động tải lại...');
+                        }
+                    });
+                });
             })
-            .catch((error) => {
-                console.error('ServiceWorker đăng ký thất bại: ', error);
-            });
+            .catch(error => console.error('Lỗi đăng ký ServiceWorker: ', error));
+    });
+
+    // Lắng nghe sự kiện khi Service Worker mới đã chiếm quyền (claim)
+    // -> Tự động F5 (Reload) trang web để nạp code mới nhất
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+        }
     });
 }

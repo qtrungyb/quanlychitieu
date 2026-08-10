@@ -562,6 +562,11 @@
                 <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg> Đổi mật khẩu</div>
                 <div class="settings-item-right">›</div>
             </div>
+			<!-- NÚT MỞ SỔ CHUNG -->
+            <div class="settings-item" id="btnSettingsSharedLedger" style="margin-top: 10px;">
+                <div class="settings-item-left" style="color: var(--primary);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Sổ chi tiêu chung (Gia đình / Nhóm)</div>
+                <div class="settings-item-right">›</div>
+            </div>
             <div class="settings-item text-danger" id="btnSettingsLogout">
                 <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Đăng xuất</div>
                 <div class="settings-item-right"></div>
@@ -876,6 +881,48 @@
         <div id="budgetManagerList" style="display: flex; flex-direction: column; gap: 12px;"></div>
         
         <button class="btn-submit" id="btnSaveAllBudgets" style="margin-top: 24px; margin-bottom: 24px; background: #f39c12; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);">Lưu tất cả hạn mức</button>
+    </div>
+</div>
+<!-- MODAL SỔ CHI TIÊU CHUNG -->
+<div class="history-overlay" id="sharedLedgerOverlay" style="z-index: 10060;" onclick="closeSharedLedgerModal()"></div>
+<div class="history-modal" id="sharedLedgerModal" style="z-index: 10061; height: auto; max-height: 80vh;">
+    <div class="history-modal-header">
+        <h3>Sổ Chi Tiêu Chung</h3>
+        <button class="btn-close-modal" onclick="closeSharedLedgerModal()">&times;</button>
+    </div>
+    <div class="history-modal-body" style="background: #fff; padding-top: 20px;">
+        
+        <!-- TRẠNG THÁI: CHƯA THAM GIA SỔ CHUNG -->
+        <div id="noLedgerState">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">
+                Bạn đang sử dụng sổ cá nhân. Bạn có thể tự tạo một sổ chung mới để gửi mã cho người thân, hoặc nhập mã sổ của người khác để cùng quản lý thời gian thực.
+            </p>
+            <button type="button" class="btn-submit" onclick="createSharedLedger()" style="margin-bottom: 16px; background: var(--primary); box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);">Tạo sổ chung mới</button>
+            
+            <div style="position: relative; text-align: center; margin: 16px 0;">
+                <span style="background: #fff; padding: 0 10px; font-size: 12px; color: var(--text-muted); position: relative; z-index: 1;">HOẶC THAM GIA SỔ CÓ SẴN</span>
+                <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; z-index: 0;"></div>
+            </div>
+
+            <div class="form-group" style="margin-top: 16px;">
+                <input type="text" id="joinLedgerCodeInput" class="form-control" placeholder="Nhập mã sổ chung (VD: ledger_171...)" required>
+            </div>
+            <button type="button" onclick="joinSharedLedger()" class="btn-submit" style="background: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">Tham gia ngay</button>
+        </div>
+
+        <!-- TRẠNG THÁI: ĐÃ VÀO SỔ CHUNG -->
+        <div id="activeLedgerState" class="hide" style="text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 50%; background: #eef2ff; color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">MÃ SỔ CHUNG CỦA BẠN</div>
+            <div id="displayLedgerCode" style="font-size: 16px; font-weight: 800; color: var(--primary); font-family: monospace; background: #f8f9fa; padding: 10px 16px; border-radius: 8px; border: 1px dashed #cbd5e1; display: inline-block; margin-bottom: 20px; word-break: break-all;">---</div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.4;">
+                Mọi giao dịch bạn hoặc thành viên khác nhập sẽ tự động đồng bộ tức thì trên tất cả các máy cùng tham gia mã này.
+            </p>
+            <button type="button" onclick="leaveSharedLedger()" class="btn-clear-filter" style="width: 100%; border: 1px solid var(--danger); color: var(--danger); justify-content: center; height: 48px;">Rời khỏi sổ chung (Trở về sổ cá nhân)</button>
+        </div>
+
     </div>
 </div>
 <!-- SCRIPTS -->

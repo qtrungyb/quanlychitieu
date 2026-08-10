@@ -3499,7 +3499,6 @@ function openBudgetManager() {
     const listEl = document.getElementById('budgetManagerList');
     if(!listEl) return;
     
-    // Chỉ lấy các danh mục thuộc loại "Tiền Chi" (expense)
     const expenseCats = categories.filter(c => c.type === 'expense');
     listEl.innerHTML = '';
     
@@ -3508,34 +3507,43 @@ function openBudgetManager() {
         return;
     }
 
-    // In danh sách các danh mục kèm ô nhập tiền
+    // In danh sách các danh mục - CẬP NHẬT: Tất cả nằm trên 1 hàng ngang (Flex-row)
     expenseCats.forEach(c => {
         const theme = THEMES[c.color] || THEMES['theme-gray'];
         const iconSvg = SVG_LIB[c.icon] || SVG_LIB['other'];
         const budgetVal = c.budgetLimit ? formatter.format(c.budgetLimit) : '';
         const rawVal = c.budgetLimit || '';
         
-        // Bóc tách lõi icon SVG
         const innerSvg = iconSvg.replace(/<svg[^>]*>|<\/svg>/g, '');
-        
+        const saveIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>`;
+
         listEl.innerHTML += `
-            <div class="transaction-item" style="padding: 16px; cursor: default; flex-direction: column; align-items: stretch; gap: 12px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: ${theme.bg}; color: ${theme.color}; display: flex; align-items: center; justify-content: center;">
+            <div class="transaction-item" style="padding: 12px; cursor: default; display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
+                
+                <!-- Trái: Icon + Tên Danh mục -->
+                <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: ${theme.bg}; color: ${theme.color}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${innerSvg}</svg>
                     </div>
-                    <div style="font-weight: 800; font-size: 15px; color: var(--text-main); flex: 1;">${c.name}</div>
+                    <div style="font-weight: 700; font-size: 14px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.name}</div>
                 </div>
-                <div class="amount-wrapper" style="height: 44px; background: var(--bg-color); border: 1px solid transparent; transition: 0.3s;">
-                    <input type="text" class="form-control input-amount budget-input-display" data-id="${c.id}" placeholder="Không giới hạn" value="${budgetVal}" style="font-size: 16px; background: transparent; border: none; text-align: right; font-weight: 700;">
-                    <span class="amount-currency">đ</span>
-                    <input type="hidden" class="budget-input-raw" id="raw_budget_${c.id}" value="${rawVal}">
+                
+                <!-- Phải: Ô nhập tiền & Nút lưu (Thu nhỏ lại) -->
+                <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0; width: 170px;">
+                    <div class="amount-wrapper" style="height: 36px; flex: 1; background: #f8f9fa; border: 1px solid transparent; transition: 0.3s; border-radius: 8px; margin-bottom: 0;">
+                        <input type="text" class="form-control input-amount budget-input-display" data-id="${c.id}" placeholder="Vô hạn" value="${budgetVal}" style="font-size: 14px; background: transparent; border: none; text-align: right; font-weight: 700; width: 100%; height: 100%; padding: 0 24px 0 8px;">
+                        <span class="amount-currency" style="right: 8px; top: 9px; font-size: 12px;">đ</span>
+                        <input type="hidden" class="budget-input-raw" id="raw_budget_${c.id}" value="${rawVal}">
+                    </div>
+                    <button id="btn_save_bud_${c.id}" onclick="saveSingleBudget('${c.id}')" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #eef2ff; color: var(--primary); border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; flex-shrink: 0;" title="Lưu hạn mức">
+                        ${saveIcon}
+                    </button>
                 </div>
+                
             </div>
         `;
     });
     
-    // Gắn sự kiện tự động định dạng số tiền (VD: gõ 10000 -> 10.000)
     document.querySelectorAll('.budget-input-display').forEach(input => {
         input.addEventListener('input', function() {
             let val = this.value.replace(/\D/g, '');
@@ -3555,17 +3563,48 @@ function closeBudgetManager() {
 }
 window.closeBudgetManager = closeBudgetManager;
 
-// Nút mở Modal
+// LƯU TỪNG HẠN MỨC ĐƠN LẺ VỚI HIỆU ỨNG ICON (Thu nhỏ kích thước Icon cho khớp)
+window.saveSingleBudget = function(catId) {
+    if(!currentUser) return;
+    const rawStr = document.getElementById('raw_budget_' + catId)?.value;
+    const budgetLimit = rawStr ? parseInt(rawStr) : null;
+    const btn = document.getElementById('btn_save_bud_' + catId);
+
+    const saveIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>`;
+    const successIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+    if(btn) { btn.innerHTML = '...'; btn.disabled = true; }
+
+    db.ref(`users/${currentUser.uid}/categories/${catId}/budgetLimit`).set(budgetLimit)
+    .then(() => {
+        if(btn) {
+            btn.innerHTML = successIcon;
+            btn.style.background = '#e8f8f0';
+            btn.style.color = 'var(--success)';
+            
+            setTimeout(() => {
+                btn.innerHTML = saveIcon;
+                btn.style.background = '#eef2ff';
+                btn.style.color = 'var(--primary)';
+                btn.disabled = false;
+            }, 2000);
+        }
+    })
+    .catch(() => {
+        showToast('Lỗi lưu dữ liệu', 'error');
+        if(btn) { btn.innerHTML = saveIcon; btn.disabled = false; }
+    });
+};
+// Lắng nghe sự kiện click vào nút "Thiết lập Hạn mức chi tiêu" ở tab Cài đặt
 document.getElementById('btnSettingsBudget')?.addEventListener('click', openBudgetManager);
 
-// Nút Lưu Tất Cả
+// Nút "Lưu tất cả hạn mức" ở dưới cùng của khung Popup
 document.getElementById('btnSaveAllBudgets')?.addEventListener('click', () => {
     if(!currentUser) return;
     const updates = {};
     const inputs = document.querySelectorAll('.budget-input-display');
     let hasChanges = false;
     
-    // Quét qua tất cả các ô nhập liệu và chuẩn bị dữ liệu gửi lên Firebase
     inputs.forEach(input => {
         const catId = input.getAttribute('data-id');
         const rawStr = document.getElementById('raw_budget_' + catId)?.value;
@@ -3583,11 +3622,9 @@ document.getElementById('btnSaveAllBudgets')?.addEventListener('click', () => {
     const btn = document.getElementById('btnSaveAllBudgets');
     if(btn) { btn.innerText = 'Đang lưu...'; btn.disabled = true; }
     
-    // Lưu một cục đồng loạt lên Database
     db.ref().update(updates).then(() => {
         showToast('Đã lưu mọi hạn mức thành công!');
         closeBudgetManager();
-        // Hệ thống sẽ tự động bắt sự thay đổi của Database và render lại thanh ngân sách
     }).catch(() => {
         showToast('Lỗi khi lưu dữ liệu!', 'error');
     }).finally(() => {

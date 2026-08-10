@@ -3089,7 +3089,9 @@ function switchDebtTab(type) {
     renderDebtUI();
 }
 window.switchDebtTab = switchDebtTab;
-
+document.getElementById('debtSearchInput')?.addEventListener('input', debounce(() => {
+    renderDebtUI();
+}, 300));
 // HÀM MỚI: Tự động đóng/mở chi tiết khoản nợ của từng người
 window.toggleDebtGroup = function(groupId) {
     const content = document.getElementById('content_' + groupId);
@@ -3108,39 +3110,52 @@ function renderDebtUI() {
     const paidListEl = document.getElementById('debtPaidList');
     if(!listEl || !paidListEl) return;
 
-    const filtered = debtsData.filter(d => d.type === currentDebtTab);
+    // 1. LẤY TỪ KHÓA TÌM KIẾM
+    const searchText = document.getElementById('debtSearchInput')?.value.toLowerCase().trim() || '';
+
+    // 2. LỌC DỮ LIỆU THEO TAB VÀ THEO TỪ KHÓA
+    let filtered = debtsData.filter(d => d.type === currentDebtTab);
+    
+    if (searchText) {
+        filtered = filtered.filter(d => {
+            const matchName = d.person.toLowerCase().includes(searchText);
+            const matchNote = d.note && d.note.toLowerCase().includes(searchText);
+            const matchAmount = d.amount.toString().includes(searchText);
+            return matchName || matchNote || matchAmount;
+        });
+    }
+
     const pending = filtered.filter(d => d.status === 'pending').sort((a,b) => b.date.localeCompare(a.date));
     const paid = filtered.filter(d => d.status === 'paid').sort((a,b) => b.date.localeCompare(a.date));
 
-    // 1. THUẬT TOÁN GOM NHÓM THEO TÊN NGƯỜI
+    // Gom nhóm theo tên người
     const groupedPending = {};
     let totalPending = 0;
 
     pending.forEach(d => {
         const personName = d.person.trim();
-        // Nếu tên này chưa có trong nhóm, tạo mới
         if (!groupedPending[personName]) {
             groupedPending[personName] = { person: personName, totalRemain: 0, items: [] };
         }
-        
         const remain = d.amount - (d.paidAmount || 0);
-        groupedPending[personName].totalRemain += remain; // Cộng dồn tổng nợ của người này
-        groupedPending[personName].items.push(d); // Thêm chi tiết lịch sử
-        totalPending += remain; // Cộng dồn tổng nợ toàn hệ thống
+        groupedPending[personName].totalRemain += remain;
+        groupedPending[personName].items.push(d);
+        totalPending += remain;
     });
 
-    // Chuyển nhóm thành mảng và sắp xếp (Người nợ nhiều tiền nhất lên đầu)
     const groupedArray = Object.values(groupedPending).sort((a, b) => b.totalRemain - a.totalRemain);
 
     const summaryAmt = document.getElementById('debtSummaryAmount');
     const countEl = document.getElementById('debtListCount');
     if(summaryAmt) summaryAmt.innerText = formatter.format(totalPending) + 'đ';
-    if(countEl) countEl.innerText = `(${pending.length} khoản / ${groupedArray.length} người)`;
+    if(countEl) countEl.innerText = searchText ? `(Đã lọc: ${pending.length} khoản)` : `(${pending.length} khoản / ${groupedArray.length} người)`;
 
     // Render danh sách Đang treo
     listEl.innerHTML = '';
     if(groupedArray.length === 0) {
-        listEl.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size:13px;">Tuyệt vời! Không có khoản nợ nào.</div>';
+        listEl.innerHTML = searchText 
+            ? '<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size:13px;">Không tìm thấy kết quả phù hợp.</div>'
+            : '<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size:13px;">Tuyệt vời! Không có khoản nợ nào.</div>';
     } else {
         const todayDate = getFormattedDate();
 
@@ -3150,9 +3165,8 @@ function renderDebtUI() {
             const iconStr = currentDebtTab === 'lent' ? '👤' : '🏦';
             const groupId = `debt_group_${index}`;
 
-            // Tạo HTML cho danh sách chi tiết bị giấu bên trong
             let itemsHtml = '';
-            let hasOverdue = false; // Biến kiểm tra xem người này có khoản nào lố hẹn không
+            let hasOverdue = false; 
 
             group.items.forEach(d => {
                 const remain = d.amount - (d.paidAmount || 0);
@@ -3165,7 +3179,7 @@ function renderDebtUI() {
                         dueHtml = `<div style="font-size: 10px; color: var(--danger); font-weight: 800; margin-top: 4px; background: #fee2e2; padding: 2px 6px; border-radius: 4px; display: inline-block;">⚠️ QUÁ HẠN</div>`;
                         borderStyle = '1px solid var(--danger)';
                         bgStyle = '#fffafa'; 
-                        hasOverdue = true; // Bật cờ cảnh báo cho thẻ tổng
+                        hasOverdue = true; 
                     } else {
                         const [y, m, day] = d.dueDate.split('-');
                         dueHtml = `<div style="font-size: 11px; color: #f39c12; font-weight: 600; margin-top: 4px;">⏳ Hẹn: ${day}/${m}</div>`;
@@ -3177,7 +3191,6 @@ function renderDebtUI() {
                     progressHtml = `<div style="font-size: 11px; color: var(--success); margin-top: 4px;">Đã trả: ${formatter.format(d.paidAmount)}đ</div>`;
                 }
 
-                // Giao diện thẻ chi tiết bên trong
                 itemsHtml += `
                     <div style="padding: 12px; background: ${bgStyle}; border-radius: 8px; border: ${borderStyle}; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
@@ -3201,8 +3214,11 @@ function renderDebtUI() {
                 `;
             });
 
-            // Giao diện thẻ tổng quát (Gom nhóm) bên ngoài
             const groupBorder = hasOverdue ? '1px solid var(--danger)' : '1px solid #e2e8f0';
+
+            // UX Cải tiến: Mở sẵn nhóm nợ nếu người dùng đang dùng tìm kiếm
+            const displayStyle = searchText ? 'block' : 'none';
+            const rotation = searchText ? 'rotate(180deg)' : 'rotate(0deg)';
 
             listEl.innerHTML += `
                 <div class="transaction-item" style="padding: 0; flex-direction: column; align-items: stretch; border: ${groupBorder}; border-radius: 16px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
@@ -3218,12 +3234,11 @@ function renderDebtUI() {
                         </div>
                         <div style="text-align: right; display: flex; align-items: center; gap: 8px;">
                             <div style="font-weight: 800; font-size: 16px; color: ${color};">${sign}${formatter.format(group.totalRemain)}</div>
-                            <svg id="icon_${groupId}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" style="transition: 0.3s; transform: rotate(0deg);"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            <svg id="icon_${groupId}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" style="transition: 0.3s; transform: ${rotation};"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
                     </div>
                     
-                    <!-- Khung chứa chi tiết (Bị ẩn đi theo mặc định) -->
-                    <div id="content_${groupId}" style="display: none; border-top: 1px dashed #e2e8f0; background: #f8f9fa; padding: 12px;">
+                    <div id="content_${groupId}" style="display: ${displayStyle}; border-top: 1px dashed #e2e8f0; background: #f8f9fa; padding: 12px;">
                        ${itemsHtml}
                     </div>
                 </div>
@@ -3234,7 +3249,9 @@ function renderDebtUI() {
     // Render danh sách Đã thanh toán
     paidListEl.innerHTML = '';
     if(paid.length === 0) {
-        paidListEl.innerHTML = '<div style="text-align:center; padding: 10px; color: var(--text-muted); font-size:13px;">Chưa có lịch sử.</div>';
+        paidListEl.innerHTML = searchText 
+            ? '<div style="text-align:center; padding: 10px; color: var(--text-muted); font-size:13px;">Không tìm thấy lịch sử.</div>'
+            : '<div style="text-align:center; padding: 10px; color: var(--text-muted); font-size:13px;">Chưa có lịch sử.</div>';
     } else {
         paid.forEach(d => {
             paidListEl.innerHTML += `
@@ -3259,7 +3276,7 @@ function openDebtForm() {
     document.getElementById('debtFormOverlay')?.classList.add('show');
     document.getElementById('debtFormModal')?.classList.add('show');
     document.getElementById('debtFormType').value = currentDebtTab;
-    document.getElementById('debtPersonLabel').innerText = currentDebtTab === 'lent' ? 'Tên người vay (Họ nợ mình)' : 'Tên chủ nợ (Mình nợ họ)';
+    document.getElementById('debtPersonLabel').innerText = currentDebtTab === 'lent' ? 'Tên người vay' : 'Tên chủ nợ';
     
     document.getElementById('debtPersonInput').value = '';
     document.getElementById('debtAmountDisplay').value = '';

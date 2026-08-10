@@ -1,61 +1,50 @@
-// service-worker.js
+const CACHE_NAME = 'chitieu-v1'; 
 
-const CACHE_NAME = 'quan-ly-chi-tieu-v2';
-
-// Danh sách các file cần lưu offline (Kết hợp cấu trúc mới và file PWA cũ)
-const urlsToCache = [
+const ASSETS_TO_CACHE = [
     './',
     './index.html',
+    './intro.html',
     './css/style.css',
-    './js/config.js',
     './js/app.js',
     './manifest.json',
     './icon-192.png',
     './icon-512.png'
 ];
 
-// Sự kiện Install: Lưu trữ các file cần thiết vào Cache
-self.addEventListener('install', (event) => {
+// Cài đặt Service Worker và lưu Cache
+self.addEventListener('install', event => {
+    // Ép Service Worker mới thay thế cái cũ ngay lập tức (không chờ tab đóng)
+    self.skipWaiting(); 
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                console.log('Đã mở cache');
-                return cache.addAll(urlsToCache);
-            })
+        caches.open(CACHE_NAME).then(cache => {
+            return cache.addAll(ASSETS_TO_CACHE);
+        })
     );
 });
 
-// Sự kiện Activate: Xóa các cache cũ nếu có phiên bản mới
-self.addEventListener('activate', (event) => {
+// Kích hoạt và dọn dẹp Cache của phiên bản cũ
+self.addEventListener('activate', event => {
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
+        caches.keys().then(cacheNames => {
             return Promise.all(
-                cacheNames.map((cacheName) => {
+                cacheNames.map(cacheName => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log('Xóa cache cũ:', cacheName);
+                        console.log('Đã xóa bộ nhớ đệm cũ:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
             );
         })
     );
+    // Chiếm quyền điều khiển trang web ngay lập tức
+    return self.clients.claim(); 
 });
 
-// Sự kiện Fetch: Trả dữ liệu từ Cache nếu có, nếu không thì tải từ Network
-self.addEventListener('fetch', (event) => {
-    // Bỏ qua các request tới Firebase Database hoặc API ngoài để luôn lấy dữ liệu mới nhất
-    if (event.request.url.includes('firebaseio.com') || event.request.url.includes('googleapis.com')) {
-        return;
-    }
-
+// Phục vụ file từ Cache nếu có, nếu không thì tải từ mạng
+self.addEventListener('fetch', event => {
     event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                // Cache hit - trả về response từ cache
-                if (response) {
-                    return response;
-                }
-                return fetch(event.request);
-            })
+        caches.match(event.request).then(response => {
+            return response || fetch(event.request);
+        })
     );
 });

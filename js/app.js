@@ -245,20 +245,22 @@ function getAuthErrorVN(code) {
 const tabHome = document.getElementById('tabHome');
 const tabHistory = document.getElementById('tabHistory');
 const tabStats = document.getElementById('tabStats');
+const tabDebt = document.getElementById('tabDebt');
 const tabAdmin = document.getElementById('tabAdmin');
 const tabSettings = document.getElementById('tabSettings');
 
 const homeView = document.getElementById('homeView');
 const historyView = document.getElementById('historyView');
 const analyticsView = document.getElementById('analyticsView');
+const debtView = document.getElementById('debtView');
 const adminView = document.getElementById('adminView');
 const settingsView = document.getElementById('settingsView');
 
 let userFullName = ""; 
 
 function switchTab(tabName) {
-    [tabHome, tabHistory, tabStats, tabAdmin, tabSettings].forEach(t => t?.classList.remove('active'));
-    [homeView, historyView, analyticsView, adminView, settingsView].forEach(v => v?.classList.remove('active'));
+    [tabHome, tabHistory, tabStats, tabDebt, tabAdmin, tabSettings].forEach(t => t?.classList.remove('active'));
+    [homeView, historyView, analyticsView, debtView, adminView, settingsView].forEach(v => v?.classList.remove('active'));
     
     const topNavTitle = document.querySelector('.top-nav h1');
     const userMenu = document.getElementById('userMenu');
@@ -275,15 +277,23 @@ function switchTab(tabName) {
         if (tabName === 'history') {
             tabHistory?.classList.add('active'); historyView?.classList.add('active');
             if (topNavTitle) topNavTitle.innerText = 'LỊCH SỬ THU/CHI';
+            
         } else if (tabName === 'stats') {
             tabStats?.classList.add('active'); analyticsView?.classList.add('active');
             if (topNavTitle) topNavTitle.innerText = 'THỐNG KÊ';
-            // TỐI ƯU HÓA: Chờ hiệu ứng chuyển tab hoàn tất rồi mới vẽ biểu đồ (Tránh giật lag)
+            // Chờ hiệu ứng chuyển tab hoàn tất rồi mới vẽ biểu đồ (Tránh giật lag)
             setTimeout(() => { requestAnimationFrame(() => renderCharts()); }, 50);
+            
+        } else if (tabName === 'debt') {
+            tabDebt?.classList.add('active'); debtView?.classList.add('active');
+            if (topNavTitle) topNavTitle.innerText = 'SỔ VAY & NỢ';
+            if(typeof renderDebtUI === 'function') renderDebtUI();
+            
         } else if (tabName === 'admin') {
             tabAdmin?.classList.add('active'); adminView?.classList.add('active');
             if (topNavTitle) topNavTitle.innerText = 'QUẢN TRỊ HỆ THỐNG';
             loadAllUsers();
+            
         } else if (tabName === 'settings') {
             tabSettings?.classList.add('active'); settingsView?.classList.add('active');
             if (topNavTitle) topNavTitle.innerText = userFullName ? userFullName.toUpperCase() : 'CÀI ĐẶT';
@@ -295,6 +305,7 @@ function switchTab(tabName) {
 tabHome?.addEventListener('click', () => switchTab('home'));
 tabHistory?.addEventListener('click', () => switchTab('history'));
 tabStats?.addEventListener('click', () => switchTab('stats'));
+tabDebt?.addEventListener('click', () => switchTab('debt'));
 tabAdmin?.addEventListener('click', () => switchTab('admin'));
 tabSettings?.addEventListener('click', () => switchTab('settings'));
 
@@ -510,7 +521,33 @@ auth.onAuthStateChanged(user => {
             updateUI();
             renderCharts(); 
         });
+		// LOAD DỮ LIỆU SỔ VAY NỢ VÀ TÍNH TỔNG LÊN MÀN HÌNH CHÍNH
+        db.ref(`users/${currentUser.uid}/debts`).on('value', (snap) => {
+            debtsData = [];
+            let totalLentPending = 0;
+            let totalBorrowedPending = 0;
 
+            if(snap.exists()) {
+                const data = snap.val();
+                for(let id in data) {
+                    const d = { id, ...data[id] };
+                    debtsData.push(d);
+                    
+                    // CẬP NHẬT: Tính tiền CÒN NỢ thay vì lấy nguyên cục
+                    if (d.status === 'pending') {
+                        const remain = d.amount - (d.paidAmount || 0);
+                        if (d.type === 'lent') totalLentPending += remain;
+                        if (d.type === 'borrowed') totalBorrowedPending += remain;
+                    }
+                }
+            }
+            
+            currentBalances.lent = totalLentPending;
+            currentBalances.borrowed = totalBorrowedPending;
+            renderBalances();
+
+            if(document.getElementById('debtView')?.classList.contains('active')) renderDebtUI();
+        });
         const settingsRef = db.ref(`users/${currentUser.uid}/settings`);
         settingsRef.on('value', (snap) => {
             if (snap.exists()) {
@@ -730,14 +767,23 @@ function renderBalances() {
     const tBal = document.getElementById('totalBalance');
     const tInc = document.getElementById('totalIncome');
     const tExp = document.getElementById('totalExpense');
+    const tLent = document.getElementById('totalLent');
+    const tBor = document.getElementById('totalBorrowed');
+
     if(isBalanceHidden) {
         if (tBal) tBal.innerText = '******';
         if (tInc) tInc.innerText = '******';
         if (tExp) tExp.innerText = '******';
+        if (tLent) tLent.innerText = '******';
+        if (tBor) tBor.innerText = '******';
     } else {
-        if (tBal) tBal.innerText = currencyFormatter.format(currentBalances.total);
-        if (tInc) tInc.innerText = '+' + currencyFormatter.format(currentBalances.income);
-        if (tExp) tExp.innerText = '-' + currencyFormatter.format(currentBalances.expense);
+        // Thay currencyFormatter bằng formatter để không bị double ký tự 'đ'
+        if (tBal) tBal.innerText = formatter.format(currentBalances.total || 0) + 'đ';
+        if (tInc) tInc.innerText = '+' + formatter.format(currentBalances.income || 0) + 'đ';
+        if (tExp) tExp.innerText = '-' + formatter.format(currentBalances.expense || 0) + 'đ';
+        
+        if (tLent) tLent.innerText = (currentBalances.lent > 0 ? '+' : '') + formatter.format(currentBalances.lent || 0) + 'đ';
+        if (tBor) tBor.innerText = (currentBalances.borrowed > 0 ? '-' : '') + formatter.format(currentBalances.borrowed || 0) + 'đ';
     }
 }
 
@@ -1177,7 +1223,9 @@ function updateUI() {
 
     const totalIncomeAll = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
     const totalExpenseAll = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
-    currentBalances = { total: totalIncomeAll - totalExpenseAll, income: totalIncomeAll, expense: totalExpenseAll };
+    currentBalances.total = totalIncomeAll - totalExpenseAll;
+    currentBalances.income = totalIncomeAll;
+    currentBalances.expense = totalExpenseAll;
     renderBalances();
 
     let displayData = [...transactions];
@@ -3024,3 +3072,403 @@ if ('serviceWorker' in navigator) {
         }
     });
 }
+// ==========================================
+// TÍNH NĂNG: SỔ VAY & NỢ (DEBTS & LOANS)
+// ==========================================
+let debtsData = [];
+let currentDebtTab = 'lent'; 
+
+function switchDebtTab(type) {
+    currentDebtTab = type;
+    document.getElementById('btnTabLent')?.classList.toggle('active', type === 'lent');
+    document.getElementById('btnTabBorrowed')?.classList.toggle('active', type === 'borrowed');
+    
+    const summaryLabel = document.getElementById('debtSummaryLabel');
+    if(summaryLabel) summaryLabel.innerText = type === 'lent' ? 'Tổng tiền chưa thu' : 'Tổng tiền chưa trả';
+    
+    renderDebtUI();
+}
+window.switchDebtTab = switchDebtTab;
+
+// HÀM MỚI: Tự động đóng/mở chi tiết khoản nợ của từng người
+window.toggleDebtGroup = function(groupId) {
+    const content = document.getElementById('content_' + groupId);
+    const icon = document.getElementById('icon_' + groupId);
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        content.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+    }
+};
+
+function renderDebtUI() {
+    const listEl = document.getElementById('debtList');
+    const paidListEl = document.getElementById('debtPaidList');
+    if(!listEl || !paidListEl) return;
+
+    const filtered = debtsData.filter(d => d.type === currentDebtTab);
+    const pending = filtered.filter(d => d.status === 'pending').sort((a,b) => b.date.localeCompare(a.date));
+    const paid = filtered.filter(d => d.status === 'paid').sort((a,b) => b.date.localeCompare(a.date));
+
+    // 1. THUẬT TOÁN GOM NHÓM THEO TÊN NGƯỜI
+    const groupedPending = {};
+    let totalPending = 0;
+
+    pending.forEach(d => {
+        const personName = d.person.trim();
+        // Nếu tên này chưa có trong nhóm, tạo mới
+        if (!groupedPending[personName]) {
+            groupedPending[personName] = { person: personName, totalRemain: 0, items: [] };
+        }
+        
+        const remain = d.amount - (d.paidAmount || 0);
+        groupedPending[personName].totalRemain += remain; // Cộng dồn tổng nợ của người này
+        groupedPending[personName].items.push(d); // Thêm chi tiết lịch sử
+        totalPending += remain; // Cộng dồn tổng nợ toàn hệ thống
+    });
+
+    // Chuyển nhóm thành mảng và sắp xếp (Người nợ nhiều tiền nhất lên đầu)
+    const groupedArray = Object.values(groupedPending).sort((a, b) => b.totalRemain - a.totalRemain);
+
+    const summaryAmt = document.getElementById('debtSummaryAmount');
+    const countEl = document.getElementById('debtListCount');
+    if(summaryAmt) summaryAmt.innerText = formatter.format(totalPending) + 'đ';
+    if(countEl) countEl.innerText = `(${pending.length} khoản / ${groupedArray.length} người)`;
+
+    // Render danh sách Đang treo
+    listEl.innerHTML = '';
+    if(groupedArray.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size:13px;">Tuyệt vời! Không có khoản nợ nào.</div>';
+    } else {
+        const todayDate = getFormattedDate();
+
+        groupedArray.forEach((group, index) => {
+            const color = currentDebtTab === 'lent' ? 'var(--success)' : 'var(--danger)';
+            const sign = currentDebtTab === 'lent' ? '+' : '-';
+            const iconStr = currentDebtTab === 'lent' ? '👤' : '🏦';
+            const groupId = `debt_group_${index}`;
+
+            // Tạo HTML cho danh sách chi tiết bị giấu bên trong
+            let itemsHtml = '';
+            let hasOverdue = false; // Biến kiểm tra xem người này có khoản nào lố hẹn không
+
+            group.items.forEach(d => {
+                const remain = d.amount - (d.paidAmount || 0);
+                let dueHtml = '';
+                let borderStyle = '1px solid #e2e8f0';
+                let bgStyle = '#fff';
+
+                if (d.dueDate) {
+                    if (todayDate > d.dueDate) {
+                        dueHtml = `<div style="font-size: 10px; color: var(--danger); font-weight: 800; margin-top: 4px; background: #fee2e2; padding: 2px 6px; border-radius: 4px; display: inline-block;">⚠️ QUÁ HẠN</div>`;
+                        borderStyle = '1px solid var(--danger)';
+                        bgStyle = '#fffafa'; 
+                        hasOverdue = true; // Bật cờ cảnh báo cho thẻ tổng
+                    } else {
+                        const [y, m, day] = d.dueDate.split('-');
+                        dueHtml = `<div style="font-size: 11px; color: #f39c12; font-weight: 600; margin-top: 4px;">⏳ Hẹn: ${day}/${m}</div>`;
+                    }
+                }
+
+                let progressHtml = '';
+                if (d.paidAmount > 0) {
+                    progressHtml = `<div style="font-size: 11px; color: var(--success); margin-top: 4px;">Đã trả: ${formatter.format(d.paidAmount)}đ</div>`;
+                }
+
+                // Giao diện thẻ chi tiết bên trong
+                itemsHtml += `
+                    <div style="padding: 12px; background: ${bgStyle}; border-radius: 8px; border: ${borderStyle}; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <div>
+                                <div style="font-size: 13px; font-weight: 700; color: var(--text-main);">${formatNiceDate(d.date).replace('Hôm nay, ','')}</div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${d.note ? d.note : 'Khoản vay: ' + formatter.format(d.amount) + 'đ'}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 800; font-size: 14px; color: ${color};">${formatter.format(remain)}đ</div>
+                                ${dueHtml}
+                                ${progressHtml}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="openPartialPay('${d.id}')" style="flex:1; padding: 8px; background: #eef2ff; color: var(--primary); border: none; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">Thanh toán</button>
+                            <button onclick="deleteDebt('${d.id}')" style="padding: 8px 12px; background: #fceceb; color: var(--danger); border: none; border-radius: 8px; cursor: pointer;" title="Xóa bỏ">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Giao diện thẻ tổng quát (Gom nhóm) bên ngoài
+            const groupBorder = hasOverdue ? '1px solid var(--danger)' : '1px solid #e2e8f0';
+
+            listEl.innerHTML += `
+                <div class="transaction-item" style="padding: 0; flex-direction: column; align-items: stretch; border: ${groupBorder}; border-radius: 16px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                    <div onclick="toggleDebtGroup('${groupId}')" style="padding: 16px; display: flex; justify-content: space-between; align-items: center; background: #fff; cursor: pointer;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: #f4f6f9; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">${iconStr}</div>
+                            <div>
+                                <div style="font-weight: 800; font-size: 16px; color: var(--text-main);">${group.person}</div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                                    ${group.items.length} khoản ${hasOverdue ? '<span style="color:var(--danger);font-weight:700;">(Quá hạn)</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align: right; display: flex; align-items: center; gap: 8px;">
+                            <div style="font-weight: 800; font-size: 16px; color: ${color};">${sign}${formatter.format(group.totalRemain)}</div>
+                            <svg id="icon_${groupId}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" style="transition: 0.3s; transform: rotate(0deg);"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Khung chứa chi tiết (Bị ẩn đi theo mặc định) -->
+                    <div id="content_${groupId}" style="display: none; border-top: 1px dashed #e2e8f0; background: #f8f9fa; padding: 12px;">
+                       ${itemsHtml}
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // Render danh sách Đã thanh toán
+    paidListEl.innerHTML = '';
+    if(paid.length === 0) {
+        paidListEl.innerHTML = '<div style="text-align:center; padding: 10px; color: var(--text-muted); font-size:13px;">Chưa có lịch sử.</div>';
+    } else {
+        paid.forEach(d => {
+            paidListEl.innerHTML += `
+                <div class="transaction-item" style="padding: 12px; cursor: default; opacity: 0.7;">
+                    <div class="t-info">
+                        <div class="t-title" style="text-decoration: line-through; color: var(--text-muted); font-size: 14px;">${d.person}</div>
+                        <div class="t-note" style="font-size: 11px;">Tất toán: ${formatNiceDate(d.paidDate || d.date).replace('Hôm nay, ','')}</div>
+                    </div>
+                    <div class="t-action" style="display: flex; align-items: center; gap: 12px;">
+                        <div class="t-amount" style="color: var(--text-muted); font-size: 14px;">${formatter.format(d.amount)}đ</div>
+                        <button onclick="deletePaidDebt('${d.id}')" style="background: transparent; border: none; color: var(--danger); cursor: pointer; padding: 4px; display: flex;" title="Xóa lịch sử">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+}
+
+function openDebtForm() {
+    document.getElementById('debtFormOverlay')?.classList.add('show');
+    document.getElementById('debtFormModal')?.classList.add('show');
+    document.getElementById('debtFormType').value = currentDebtTab;
+    document.getElementById('debtPersonLabel').innerText = currentDebtTab === 'lent' ? 'Tên người vay (Họ nợ mình)' : 'Tên chủ nợ (Mình nợ họ)';
+    
+    document.getElementById('debtPersonInput').value = '';
+    document.getElementById('debtAmountDisplay').value = '';
+    document.getElementById('debtAmountRaw').value = '';
+    document.getElementById('debtDateInput').value = todayStr;
+    const dueInput = document.getElementById('debtDueDateInput');
+    if(dueInput) dueInput.value = ''; // Reset an toàn ô hẹn trả
+    document.getElementById('debtNoteInput').value = '';
+}
+window.openDebtForm = openDebtForm;
+
+function closeDebtForm() {
+    document.getElementById('debtFormOverlay')?.classList.remove('show');
+    document.getElementById('debtFormModal')?.classList.remove('show');
+}
+window.closeDebtForm = closeDebtForm;
+
+// ĐỊNH DẠNG SỐ TIỀN VAY NỢ TRỰC TIẾP
+document.getElementById('debtAmountDisplay')?.addEventListener('input', function() {
+    let val = this.value.replace(/\D/g, '');
+    const raw = document.getElementById('debtAmountRaw');
+    if (val === '') { if (raw) raw.value = ''; this.value = ''; return; }
+    if (raw) raw.value = val; 
+    this.value = formatter.format(parseInt(val));
+});
+
+document.getElementById('btnSaveDebt')?.addEventListener('click', () => {
+    if(!currentUser) return;
+    const type = document.getElementById('debtFormType').value;
+    const person = document.getElementById('debtPersonInput').value.trim();
+    const amtStr = document.getElementById('debtAmountRaw').value;
+    const date = document.getElementById('debtDateInput').value;
+    
+    const dueEl = document.getElementById('debtDueDateInput');
+    const dueDate = dueEl ? dueEl.value : ''; 
+    const note = document.getElementById('debtNoteInput').value.trim();
+
+    if(!person || !amtStr) { showToast('Vui lòng nhập tên và số tiền', 'error'); return; }
+    
+    const newId = 'debt_' + Date.now();
+    const txId = Date.now(); 
+
+    const data = { type, person, amount: parseInt(amtStr), paidAmount: 0, date, dueDate, note, status: 'pending', linkedTxId: txId };
+
+    const txType = type === 'lent' ? 'expense' : 'income'; 
+    const txCatId = type === 'lent' ? 'exp_other' : 'inc_other';
+    const txCatName = type === 'lent' ? 'Cho vay' : 'Đi vay';
+    const txNote = (type === 'lent' ? 'Cho vay: ' : 'Đi vay: ') + person + (note ? ' - ' + note : '');
+    
+    const txData = { type: txType, amount: parseInt(amtStr), categoryId: txCatId, categoryName: txCatName, note: txNote };
+
+    const updates = {};
+    updates[`users/${currentUser.uid}/debts/${newId}`] = data;
+    updates[`users/${currentUser.uid}/transactions/${date}/${txId}`] = txData;
+
+    const btn = document.getElementById('btnSaveDebt');
+    if(btn) { btn.innerText = 'Đang xử lý...'; btn.disabled = true; }
+
+    db.ref().update(updates).then(() => {
+        showToast('Đã lưu sổ & Cập nhật số dư!');
+        closeDebtForm();
+    }).catch(() => { 
+        showToast('Lỗi khi lưu dữ liệu!', 'error'); 
+    }).finally(() => {
+        if(btn) { btn.innerText = 'Lưu vào sổ'; btn.disabled = false; }
+    });
+});
+
+// ===============================================
+// LOGIC THANH TOÁN (MỘT PHẦN VÀ TOÀN BỘ)
+// ===============================================
+
+function openPartialPay(id) {
+    const d = debtsData.find(x => x.id === id);
+    if(!d) return;
+    const remain = d.amount - (d.paidAmount || 0);
+    
+    document.getElementById('ppDebtId').value = id;
+    document.getElementById('ppRemainingAmt').innerText = formatter.format(remain) + 'đ';
+    document.getElementById('ppAmountDisplay').value = '';
+    document.getElementById('ppAmountRaw').value = '';
+    
+    document.getElementById('partialPayOverlay')?.classList.add('show');
+    document.getElementById('partialPayModal')?.classList.add('show');
+}
+window.openPartialPay = openPartialPay;
+
+function closePartialPay() {
+    document.getElementById('partialPayOverlay')?.classList.remove('show');
+    document.getElementById('partialPayModal')?.classList.remove('show');
+}
+window.closePartialPay = closePartialPay;
+
+document.getElementById('ppAmountDisplay')?.addEventListener('input', function() {
+    let val = this.value.replace(/\D/g, '');
+    const raw = document.getElementById('ppAmountRaw');
+    if (val === '') { if (raw) raw.value = ''; this.value = ''; return; }
+    if (raw) raw.value = val; 
+    this.value = formatter.format(parseInt(val));
+});
+
+document.getElementById('btnSubmitPartialPay')?.addEventListener('click', () => {
+    processPayment(false);
+});
+
+window.payFullDebt = function() {
+    processPayment(true);
+};
+
+function processPayment(isFull) {
+    if(!currentUser) return;
+    const id = document.getElementById('ppDebtId').value;
+    const d = debtsData.find(x => x.id === id);
+    if(!d) return;
+
+    const remain = d.amount - (d.paidAmount || 0);
+    let payVal = 0;
+
+    if(isFull) {
+        payVal = remain;
+    } else {
+        const amtStr = document.getElementById('ppAmountRaw').value;
+        if(!amtStr) { showToast('Vui lòng nhập số tiền', 'error'); return; }
+        payVal = parseInt(amtStr);
+    }
+
+    if(payVal <= 0 || payVal > remain) {
+        showToast('Số tiền không hợp lệ (Lớn hơn số nợ hoặc = 0)!', 'error');
+        return;
+    }
+
+    const newPaidAmount = (d.paidAmount || 0) + payVal;
+    const isFinished = newPaidAmount >= d.amount;
+    const todayDate = getFormattedDate();
+    const txId = Date.now();
+
+    const txType = d.type === 'lent' ? 'income' : 'expense';
+    const txCatId = d.type === 'lent' ? 'inc_other' : 'exp_other';
+    const txCatName = d.type === 'lent' ? 'Thu nợ' : 'Trả nợ';
+    const txNote = (d.type === 'lent' ? 'Thu nợ từ: ' : 'Trả nợ cho: ') + d.person + (isFinished ? ' (Tất toán)' : ' (Trả một phần)');
+    
+    const txData = { type: txType, amount: payVal, categoryId: txCatId, categoryName: txCatName, note: txNote };
+
+    const updates = {};
+    updates[`users/${currentUser.uid}/debts/${id}/paidAmount`] = newPaidAmount;
+    if(isFinished) {
+        updates[`users/${currentUser.uid}/debts/${id}/status`] = 'paid';
+        updates[`users/${currentUser.uid}/debts/${id}/paidDate`] = todayDate;
+    }
+    updates[`users/${currentUser.uid}/transactions/${todayDate}/${txId}`] = txData;
+
+    db.ref().update(updates).then(() => {
+        showToast('Đã thanh toán & Cập nhật số dư!');
+        closePartialPay();
+    });
+}
+
+// Xóa bỏ khoản nợ và hoàn lại số dư
+function deleteDebt(id) {
+    const d = debtsData.find(x => x.id === id);
+    if (!d) return;
+
+    if (confirm('Bạn có chắc muốn xóa khoản nợ này?\n\nHệ thống sẽ hủy giao dịch gốc và tự động hoàn lại số dư cho thẻ Card. (Lưu ý: Nếu có các khoản đã trả góp trước đó, bạn cần tự xóa bên tab Lịch Sử).')) {
+        
+        const updates = {};
+        
+        // 1. Xóa bản ghi trong Sổ nợ
+        updates[`users/${currentUser.uid}/debts/${id}`] = null;
+        
+        // 2. Tìm và xóa luôn giao dịch Gốc bên tab Lịch sử (Dựa vào ID liên kết)
+        if (d.linkedTxId && d.date) {
+            updates[`users/${currentUser.uid}/transactions/${d.date}/${d.linkedTxId}`] = null;
+        }
+
+        // Cập nhật cả 2 nơi cùng 1 lúc
+        db.ref().update(updates).then(() => {
+            showToast('Đã xóa nợ và hoàn lại số dư!');
+        }).catch(() => {
+            showToast('Có lỗi khi xóa!', 'error');
+        });
+    }
+}
+window.deleteDebt = deleteDebt;
+// Dọn dẹp 1 khoản nợ đã hoàn tất
+window.deletePaidDebt = function(id) {
+    if(confirm('Bạn có chắc muốn xóa lịch sử này?\n\n(Lưu ý: Chỉ xóa khỏi danh sách vay nợ, các giao dịch gốc bên tab Lịch Sử vẫn được giữ nguyên)')) {
+        db.ref(`users/${currentUser.uid}/debts/${id}`).remove().then(() => {
+            showToast('Đã dọn dẹp lịch sử!');
+        });
+    }
+};
+
+// Dọn dẹp TOÀN BỘ lịch sử đã hoàn tất (Theo Tab hiện tại)
+window.clearAllPaidDebts = function() {
+    const paidDebts = debtsData.filter(d => d.type === currentDebtTab && d.status === 'paid');
+    
+    if(paidDebts.length === 0) {
+        showToast('Không có lịch sử để xóa', 'error');
+        return;
+    }
+    
+    if(confirm(`Bạn có chắc muốn xóa toàn bộ ${paidDebts.length} lịch sử đã hoàn tất?\n\n(Chỉ dọn dẹp hiển thị ở đây, các giao dịch thu/chi gốc vẫn an toàn)`)) {
+        const updates = {};
+        paidDebts.forEach(d => {
+            updates[`users/${currentUser.uid}/debts/${d.id}`] = null;
+        });
+        
+        db.ref().update(updates).then(() => {
+            showToast('Đã dọn dẹp sạch sẽ!');
+        });
+    }
+};

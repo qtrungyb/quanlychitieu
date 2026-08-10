@@ -1143,7 +1143,7 @@ document.querySelectorAll('#transactionForm .btn-toggle').forEach(btn => {
 });
 
 // ==========================================
-// 6. RENDER LỊCH SỬ GIAO DỊCH (TỐI ƯU DOM)
+// 6. RENDER LỊCH SỬ GIAO DỊCH & LỊCH LƯỚI
 // ==========================================
 function getWeekRange() {
     const curr = new Date();
@@ -1154,6 +1154,29 @@ function getWeekRange() {
         end: new Date(curr.setDate(last)).toISOString().split('T')[0]
     };
 }
+
+// Khởi tạo Flatpickr cho bộ lọc
+let histFlatpickr = null;
+window.addEventListener('DOMContentLoaded', () => {
+    const fpInput = document.getElementById('flatpickrRange');
+    if(fpInput) {
+        histFlatpickr = flatpickr(fpInput, {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            locale: "vn",
+            onChange: function(selectedDates) {
+                if(selectedDates.length === 2) {
+                    const d1 = new Date(selectedDates[0].getTime() - (selectedDates[0].getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                    const d2 = new Date(selectedDates[1].getTime() - (selectedDates[1].getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                    document.getElementById('filterStartDate').value = d1;
+                    document.getElementById('filterEndDate').value = d2;
+                    currentDateLimit = DATES_PER_PAGE;
+                    updateUI();
+                }
+            }
+        });
+    }
+});
 
 document.querySelectorAll('.btn-quick-filter').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1173,6 +1196,7 @@ document.querySelectorAll('.btn-quick-filter').forEach(btn => {
             return; 
         } else {
             customContainer?.classList.add('hide');
+            if(histFlatpickr) histFlatpickr.clear();
         }
 
         if (range === 'this_month') {
@@ -1199,7 +1223,6 @@ document.querySelectorAll('.btn-quick-filter').forEach(btn => {
     });
 });
 
-// TỐI ƯU HÓA: Tìm kiếm có Debounce
 document.getElementById('searchInput')?.addEventListener('input', debounce(() => {
     currentDateLimit = DATES_PER_PAGE; 
     updateUI();
@@ -1281,8 +1304,6 @@ function updateUI() {
     });
 
     const sortedDates = Object.keys(grouped).sort().reverse();
-    
-    // TỐI ƯU HÓA DOM: Dùng biến String gom toàn bộ HTML rồi in ra 1 lần
     let listHTML = '';
 
     if(sortedDates.length === 0) {
@@ -1293,12 +1314,12 @@ function updateUI() {
                 <p style="font-size: 13px; margin-top: 4px;">Hãy thử thay đổi bộ lọc thời gian hoặc từ khóa.</p>
             </div>
         `;
+        if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
         return;
     }
 
     const paginatedDates = sortedDates.slice(0, currentDateLimit);
 
-    // Xây dựng chuỗi HTML khổng lồ
     for (const rawDate of paginatedDates) {
         const data = grouped[rawDate];
         const displayDateText = formatNiceDate(rawDate).replace('Hôm nay, ', '');
@@ -1323,8 +1344,6 @@ function updateUI() {
             const catObj = categories.find(c => c.id === t.categoryId);
             const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
             const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
-
-            // Thoát ký tự nháy đơn cho tên danh mục để tránh lỗi trong thuộc tính onclick
             const safeName = cName.replace(/'/g, "\\'");
 
             listHTML += `
@@ -1344,93 +1363,156 @@ function updateUI() {
             `;
         });
         
-        listHTML += `</div></div>`; // Đóng date-group-items và date-group
+        listHTML += `</div></div>`; 
     }
 
     if (sortedDates.length > currentDateLimit) {
         listHTML += `<button class="btn-load-more" onclick="currentDateLimit += ${DATES_PER_PAGE}; updateUI();">Xem thêm các ngày trước</button>`;
     }
 
-    // Gán vào DOM 1 lần duy nhất
     listEl.innerHTML = listHTML;
-	if(typeof renderBudgets === 'function') renderBudgets();
+    if(typeof renderBudgets === 'function') renderBudgets();
+    if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
 }
-// ==========================================
-// TÍNH NĂNG NGÂN SÁCH (BUDGET PROGRESS)
-// ==========================================
-function renderBudgets() {
-    const listEl = document.getElementById('budgetList');
-    const cardEl = document.getElementById('budgetCard');
-    if (!listEl || !cardEl) return;
 
-    // Lấy chuỗi tháng hiện tại (VD: 2026-08)
-    const today = new Date();
-    const currMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+// LOGIC CHO CHẾ ĐỘ XEM LỊCH
+let currentCalDate = new Date();
+let selectedCalDateStr = todayStr; 
 
-    // Lọc ra các danh mục Chi tiêu có cài đặt Hạn mức
-    const budgetedCats = categories.filter(c => c.type === 'expense' && c.budgetLimit > 0);
+window.switchHistoryView = function(view) {
+    if(view === 'list') {
+        document.getElementById('btnHistList').classList.add('active', 'income');
+        document.getElementById('btnHistCalendar').classList.remove('active', 'expense');
+        document.getElementById('histListViewFilters').classList.remove('hide');
+        document.getElementById('transactionList').classList.remove('hide');
+        document.getElementById('calendarViewContainer').classList.add('hide');
+        document.getElementById('filteredSummary').style.display = ''; 
+    } else {
+        document.getElementById('btnHistCalendar').classList.add('active', 'expense');
+        document.getElementById('btnHistList').classList.remove('active', 'income');
+        document.getElementById('histListViewFilters').classList.add('hide');
+        document.getElementById('transactionList').classList.add('hide');
+        document.getElementById('filteredSummary').style.display = 'none'; 
+        document.getElementById('calendarViewContainer').classList.remove('hide');
+        renderCalendar();
+    }
+};
 
-    if (budgetedCats.length === 0) {
-        cardEl.classList.add('hide'); // Ẩn thẻ nếu không có ngân sách nào được thiết lập
+window.changeCalendarMonth = function(delta) {
+    currentCalDate.setMonth(currentCalDate.getMonth() + delta);
+    renderCalendar();
+};
+
+function renderCalendar() {
+    const y = currentCalDate.getFullYear();
+    const m = currentCalDate.getMonth();
+    document.getElementById('calendarMonthDisplay').innerText = `Tháng ${m + 1}, ${y}`;
+
+    const grid = document.getElementById('calendarGrid');
+    if(!grid) return;
+    grid.innerHTML = '';
+
+    const firstDay = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    
+    let emptyDays = firstDay - 1;
+    if (emptyDays === -1) emptyDays = 6;
+
+    for (let i = 0; i < emptyDays; i++) {
+        grid.innerHTML += `<div class="cal-day empty"></div>`;
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isToday = dateStr === todayStr;
+        const isSelected = dateStr === selectedCalDateStr;
+
+        const dayTxs = transactions.filter(t => t.date === dateStr);
+        let hasIn = false; let hasOut = false;
+        dayTxs.forEach(t => {
+            if(t.type === 'income') hasIn = true;
+            if(t.type === 'expense') hasOut = true;
+        });
+
+        let dotsHtml = '';
+        if(hasIn || hasOut) {
+            dotsHtml = `<div class="cal-dots">
+                ${hasIn ? '<div class="cal-dot in"></div>' : ''}
+                ${hasOut ? '<div class="cal-dot out"></div>' : ''}
+            </div>`;
+        }
+
+        const classes = `cal-day ${isToday ? 'today' : ''} ${isSelected ? 'active' : ''}`;
+        
+        grid.innerHTML += `
+            <div class="${classes}" onclick="selectCalendarDate('${dateStr}')">
+                ${day}
+                ${dotsHtml}
+            </div>
+        `;
+    }
+
+    renderCalendarDetails(selectedCalDateStr);
+}
+
+window.selectCalendarDate = function(dateStr) {
+    selectedCalDateStr = dateStr;
+    renderCalendar(); 
+};
+
+function renderCalendarDetails(dateStr) {
+    const container = document.getElementById('calendarSelectedDayDetails');
+    if(!container) return;
+    const dayTxs = transactions.filter(t => t.date === dateStr).sort((a, b) => b.id - a.id);
+    
+    const [y, m, d] = dateStr.split('-');
+    let html = `<h4 style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px; margin-top: 8px;">Giao dịch ngày ${d}/${m}/${y}</h4>`;
+
+    if (dayTxs.length === 0) {
+        html += `<div style="text-align:center; padding: 20px; background: #fff; border-radius: 12px; border: 1px dashed #e2e8f0; color: var(--text-muted); font-size: 13px;">Không có giao dịch nào.</div>`;
+        container.innerHTML = html;
         return;
     }
-    cardEl.classList.remove('hide');
 
-    // Khởi tạo biến lưu tổng tiền ĐÃ CHI trong tháng này theo từng danh mục
-    const spentByCat = {};
-    budgetedCats.forEach(c => spentByCat[c.id] = 0);
+    let inSum = 0; let outSum = 0;
+    let itemsHtml = '';
 
-    // Tính toán dựa trên toàn bộ giao dịch
-    transactions.forEach(t => {
-        if (t.type === 'expense' && t.date.startsWith(currMonthStr) && spentByCat[t.categoryId] !== undefined) {
-            spentByCat[t.categoryId] += t.amount;
-        }
-    });
+    dayTxs.forEach(t => {
+        const isInc = t.type === 'income';
+        if (isInc) inSum += t.amount; else outSum += t.amount;
 
-    let html = '';
-    budgetedCats.forEach(c => {
-        const spent = spentByCat[c.id];
-        const limit = c.budgetLimit;
-        
-        // Tính phần trăm (%)
-        let percent = (spent / limit) * 100;
-        if (percent > 100) percent = 100; // Khóa max ở 100% để thanh bar không bị tràn
+        const cName = t.categoryName || t.category;
+        const catObj = categories.find(c => c.id === t.categoryId);
+        const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
+        const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+        const safeName = cName.replace(/'/g, "\\'");
 
-        // THUẬT TOÁN ĐỔI MÀU GIAO DIỆN
-        let color = 'var(--success)'; // Dưới 50%: An toàn (Xanh)
-        if (percent >= 85) color = 'var(--danger)'; // Trên 85%: Cảnh báo đỏ (Đỏ)
-        else if (percent >= 50) color = '#f39c12'; // 50% - 85%: Cảnh báo vàng (Vàng cam)
-
-        const theme = THEMES[c.color] || THEMES['theme-gray'];
-        
-        // Lấy đoạn svg gốc từ SVG_LIB
-        let iconSvg = SVG_LIB[c.icon] || '';
-        // Bóc tách lấy lõi bên trong thẻ svg để nhúng vào thẻ icon nhỏ
-        const innerSvg = iconSvg.replace(/<svg[^>]*>|<\/svg>/g, ''); 
-
-        html += `
-        <div class="budget-item">
-            <div class="budget-header">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 24px; height: 24px; border-radius: 8px; background: ${theme.bg}; color: ${theme.color}; display: flex; align-items: center; justify-content: center;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${innerSvg}</svg>
+        itemsHtml += `
+            <div class="transaction-item" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); margin-bottom: 8px; padding: 12px;">
+                <div class="t-left">
+                    <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 36px; height: 36px;">${iconSvg}</div>
+                    <div class="t-info">
+                        <div class="t-title" style="font-size: 14px;">${cName}</div>
+                        <div class="t-note" style="font-size: 11px;">${t.note || '...'}</div>
                     </div>
-                    <span>${c.name}</span>
                 </div>
-                <span style="color: ${color}; font-weight: 800;">${Math.round(percent)}%</span>
+                <div class="t-action">
+                    <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}" style="font-size: 14px;">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                    <div class="t-chevron">›</div>
+                </div>
             </div>
-            <div class="budget-bar-bg">
-                <div class="budget-bar-fill" style="width: ${percent}%; background-color: ${color};"></div>
-            </div>
-            <div class="budget-stats">
-                <span>Đã tiêu: ${formatter.format(spent)}đ</span>
-                <span>Ngân sách: ${formatter.format(limit)}đ</span>
-            </div>
-        </div>
         `;
     });
 
-    listEl.innerHTML = html;
+    html += `
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <div style="flex: 1; background: var(--success-light); color: var(--success); padding: 10px; border-radius: 8px; text-align: center; font-weight: 800; font-size: 13px;">+${formatter.format(inSum)}</div>
+            <div style="flex: 1; background: var(--danger-light); color: var(--danger); padding: 10px; border-radius: 8px; text-align: center; font-weight: 800; font-size: 13px;">-${formatter.format(outSum)}</div>
+        </div>
+        ${itemsHtml}
+    `;
+
+    container.innerHTML = html;
 }
 // ==========================================
 // 7. RENDER BIỂU ĐỒ (CHART.JS)

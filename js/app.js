@@ -1349,19 +1349,34 @@ function updateUI() {
             const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
             const safeName = cName.replace(/'/g, "\\'");
 
+            // CẤU TRÚC SWIPE-TO-ACTION (KẾT HỢP DÒNG THỜI GIAN)
             listHTML += `
-                <div class="transaction-item timeline-item" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})">
+                <div class="swipe-container">
                     <div class="timeline-dot ${isInc ? 'in' : 'out'}"></div>
-                    <div class="t-left">
-                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">${iconSvg}</div>
-                        <div class="t-info">
-                            <div class="t-title" style="font-size: 15px;">${cName}</div>
-                            <div class="t-note" style="font-size: 12px;">${t.note || '...'}</div>
-                        </div>
+                    
+                    <!-- Lớp dưới: Các nút Hành động -->
+                    <div class="swipe-actions">
+                        <button class="btn-edit" onclick="triggerEdit(${t.id})">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button class="btn-delete" onclick="triggerDelete(${t.id})">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
                     </div>
-                    <div class="t-action" style="display: flex; align-items: center; gap: 8px;">
-                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}" style="font-size: 15px; font-weight: 800;">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
-                        <div class="t-chevron" style="color: #cbd5e1; font-size: 18px; margin-top: -2px;">›</div>
+
+                    <!-- Lớp trên: Giao dịch (Có thể trượt) -->
+                    <div class="transaction-item timeline-item swipe-front" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})">
+                        <div class="t-left">
+                            <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">${iconSvg}</div>
+                            <div class="t-info">
+                                <div class="t-title" style="font-size: 15px;">${cName}</div>
+                                <div class="t-note" style="font-size: 12px;">${t.note || '...'}</div>
+                            </div>
+                        </div>
+                        <div class="t-action" style="display: flex; align-items: center; gap: 8px;">
+                            <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}" style="font-size: 15px; font-weight: 800;">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                            <div class="t-chevron" style="color: #cbd5e1; font-size: 18px; margin-top: -2px;">›</div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -2072,6 +2087,8 @@ function resetFormState() {
         dateInput.value = todayStr; 
         if (formDateDisplay) formDateDisplay.innerText = formatNiceDate(todayStr);
     }
+    
+    // CẢI TIẾN: Giữ nguyên Tab hiện tại (Thu hoặc Chi) thay vì nhảy về Chi
     const currentType = document.getElementById('typeInput')?.value || 'expense';
     switchType(currentType);
 }
@@ -3996,3 +4013,88 @@ function playUISound(type) {
         oscillator.stop(audioCtx.currentTime + 0.15);
     }
 }
+// ==========================================
+// TÍNH NĂNG: CẢM BIẾN VUỐT CHẠM (SWIPE TO ACTION)
+// ==========================================
+let isSwipeInit = false;
+
+function initSwipeActions() {
+    if (isSwipeInit) return;
+    const list = document.getElementById('transactionList');
+    if (!list) return;
+
+    let startX = 0;
+    let currentX = 0;
+    let isSwiping = false;
+    let swipedElement = null;
+    let isClickCanceled = false; // Cờ khóa click nếu đang vuốt
+
+    // 1. Chạm ngón tay vào màn hình
+    list.addEventListener('touchstart', e => {
+        const swipeFront = e.target.closest('.swipe-front');
+        if (!swipeFront) return;
+
+        // Tự động đóng các giao dịch khác đang mở
+        document.querySelectorAll('.swipe-front.swiped').forEach(el => {
+            if (el !== swipeFront) {
+                el.style.transform = 'translateX(0)';
+                el.classList.remove('swiped');
+            }
+        });
+
+        startX = e.touches[0].clientX;
+        isSwiping = true;
+        isClickCanceled = false;
+        swipedElement = swipeFront;
+        swipedElement.style.transition = 'none'; // Tắt hiệu ứng mượt để ngón tay kéo đi ngay lập tức
+    }, {passive: true});
+
+    // 2. Kéo ngón tay
+    list.addEventListener('touchmove', e => {
+        if (!isSwiping || !swipedElement) return;
+        currentX = e.touches[0].clientX;
+        const diffX = currentX - startX;
+
+        // Nếu di chuyển quá 10px thì đánh dấu là vuốt, không phải là click mở xem
+        if (Math.abs(diffX) > 10) isClickCanceled = true; 
+
+        // Chỉ cho phép vuốt qua TRÁI và tối đa 120px (bằng độ rộng 2 nút)
+        if (diffX < 0 && diffX >= -120) { 
+            swipedElement.style.transform = `translateX(${diffX}px)`;
+        }
+    }, {passive: true});
+
+    // 3. Nhấc ngón tay lên
+    list.addEventListener('touchend', e => {
+        if (!isSwiping || !swipedElement) return;
+        isSwiping = false;
+        const diffX = currentX - startX;
+
+        swipedElement.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)';
+        
+        // Vuốt quá một nửa (50px) thì bật bung ra, ngược lại thì thu về
+        if (diffX < -50) { 
+            swipedElement.style.transform = `translateX(-120px)`;
+            swipedElement.classList.add('swiped');
+        } else {
+            swipedElement.style.transform = `translateX(0)`;
+            swipedElement.classList.remove('swiped');
+        }
+        swipedElement = null;
+    });
+
+    // 4. Khóa chức năng "bấm mở xem chi tiết" nếu người dùng đang vuốt
+    list.addEventListener('click', e => {
+        if (isClickCanceled) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true); 
+
+    isSwipeInit = true;
+}
+
+// Khởi chạy cảm biến
+document.addEventListener('DOMContentLoaded', () => {
+    initSwipeActions();
+});

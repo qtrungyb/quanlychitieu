@@ -2097,6 +2097,10 @@ document.getElementById('transactionForm')?.addEventListener('submit', (e) => {
         currentDateLimit = DATES_PER_PAGE; 
         showToast('Thêm thành công!');
         resetFormState();
+        
+        // KÍCH HOẠT ÂM THANH TƯƠNG TÁC TẠI ĐÂY
+        playUISound(type);
+        
     }).catch(() => { showToast('Lỗi khi lưu!', 'error'); });
 });
 
@@ -3949,3 +3953,1936 @@ switchTab = function(tabName) {
 
 // Gọi thử 1 lần lúc mới tải trang để ẩn FAB đi (vì trang mặc định là tab Home)
 setTimeout(() => { switchTab('home'); }, 100);
+Trò chuyện với Gemini
+1. Xóa lệnh khởi động sổ chung khi đăng nhập:
+
+Tìm đến dòng auth.onAuthStateChanged(user => { (khoảng dòng 175). Bạn sẽ thấy dòng lệnh checkUserLedgerOnLogin(user.uid); nằm ngay dưới đó. Hãy xóa dòng đó đi. Đoạn code của bạn sẽ trở lại gọn gàng như sau: xóa dòng naog?
+
+Bạn cần xóa chính xác dòng có chứa đoạn mã này:
+
+JavaScript
+checkUserLedgerOnLogin(user.uid);
+Để tôi minh họa rõ hơn cấu trúc đoạn code đó trong file app.js của bạn nhé:
+
+TRƯỚC KHI XÓA (Hiện tại của bạn):
+
+JavaScript
+auth.onAuthStateChanged(user => {
+    if (user) {
+        currentUser = user;
+        checkUserLedgerOnLogin(user.uid); // <--- BẠN HÃY XÓA DÒNG NÀY ĐI NHÉ[cite: 5]
+        document.getElementById('authOverlay')?.classList.add('hide');
+        document.getElementById('registerOverlay')?.classList.add('hide');
+SAU KHI XÓA (Kết quả mong muốn):
+
+JavaScript
+auth.onAuthStateChanged(user => {
+    if (user) {
+        currentUser = user;
+        document.getElementById('authOverlay')?.classList.add('hide');
+        document.getElementById('registerOverlay')?.classList.add('hide');
+Bạn chỉ cần bôi đen đúng dòng checkUserLedgerOnLogin(user.uid); và nhấn Backspace/Delete là xong! Khối code sẽ tự động gọn gàng trở lại và ngắt kết nối hoàn toàn khỏi hệ thống Sổ chung cũ.
+
+ok, có ý tưởng cải tiến nào cho trang không?
+
+Khi ứng dụng đã quay về đúng bản chất là một công cụ quản lý tài chính cá nhân cốt lõi, bảo mật và siêu nhẹ, chúng ta sẽ tập trung hoàn toàn vào việc tối ưu trải nghiệm cá nhân.
+
+Dưới đây là 5 ý tưởng nâng cấp cực kỳ đáng giá, hoàn toàn sử dụng mã thuần (Vanilla JS), không làm phình to cơ sở dữ liệu và cực kỳ tiện ích cho bạn:
+
+⚡ Nhóm 1: Trải nghiệm Nhập liệu Siêu tốc (Speed UX)
+1. Bàn phím Máy tính Mini ngay trong ô nhập tiền (Smart Calculator)
+
+Vấn đề: Khi bạn đi siêu thị mua 4 món đồ, bạn phải bật app máy tính của điện thoại lên cộng lại, rồi mới mở app chi tiêu để nhập số tổng. Quá mất công!
+
+Cải tiến: Cho phép gõ trực tiếp phép tính vào ô nhập tiền. Ví dụ: Bạn gõ thẳng 50k + 25k + 12k, hệ thống bằng JavaScript sẽ tự động tính ra 87.000đ và định dạng ngay lập tức.
+
+2. Giao dịch Định kỳ Tự động (Recurring Transactions)
+
+Vấn đề: Hàng tháng bạn luôn phải lặp đi lặp lại việc gõ các khoản: Tiền phòng trọ, tiền mạng, Netflix, Spotify...
+
+Cải tiến: Tạo một danh sách các "Định phí" trong tab Cài đặt (VD: Tiền mạng 200k, Ngày mùng 5 hàng tháng). Mỗi lần bạn mở app, JavaScript sẽ tự kiểm tra xem hôm nay có khoản nào tới hạn không và tự động chèn vào lịch sử thu/chi giúp bạn.
+
+💰 Nhóm 2: Phân bổ Dòng tiền Thông minh
+3. Quỹ Heo Đất / Mục tiêu Tiết kiệm (Savings Goals)
+
+Vấn đề: Để chung tiền trong "Tổng số dư" rất dễ khiến bạn chi tiêu quá tay lạm vào tiền tiết kiệm.
+
+Cải tiến: Tạo tính năng "Heo đất". Bạn lập mục tiêu: Mua Laptop (15 triệu), Du lịch Đà Lạt (4 triệu). Bạn có thể "Trích tiền" từ Tổng số dư bỏ vào Heo đất. Các quỹ này sẽ có thanh tiến trình phần trăm (%) trực quan, giúp bạn có động lực gom góp mỗi ngày.
+
+4. Quản lý theo Hashtag (#Tag Tracking)
+
+Vấn đề: Bạn đi du lịch Phú Quốc. Tiền vé máy bay ở mục "Đi lại", tiền ăn ở mục "Ăn uống", tiền quà ở mục "Mua sắm". Rất khó để tính xem tổng chuyến đi hết bao nhiêu.
+
+Cải tiến: Dùng Regex của JavaScript để tự động nhận diện hashtag trong ghi chú. Bạn chỉ cần gõ: Mua vé bay #PhuQuoc2026. Sau đó vào Lịch sử, bấm vào cái thẻ #PhuQuoc2026, app sẽ tự động lọc và cộng dồn mọi chi phí của riêng chuyến đi đó lại cho bạn xem.
+
+🛡️ Nhóm 3: Bảo mật & Dữ liệu
+5. Xuất báo cáo Excel / CSV (1-Click Export)
+
+Vấn đề: Dữ liệu nằm trên Firebase rất an toàn, nhưng đôi khi bạn muốn tự vẽ biểu đồ trên máy tính hoặc in ra.
+
+Cải tiến: Thêm một nút "Tải dữ liệu Excel". Bấm vào, hệ thống dùng JavaScript gom toàn bộ lịch sử giao dịch (Ngày, Số tiền, Danh mục, Ghi chú) tải thẳng về máy tính dưới dạng file .csv siêu nhẹ (chỉ tốn khoảng 20 dòng code, không cần Backend).
+
+Bạn cảm thấy "hợp nhãn" với ý tưởng nào nhất để chúng ta bắt tay vào viết code?
+
+CÒn ý tưởng nào cải tiến giao diện trang không?
+
+Tuyệt vời! Nếu chúng ta đã quyết định dọn dẹp các tính năng rườm rà để tập trung 100% vào việc biến ứng dụng thành một "Cỗ máy quản lý cá nhân siêu mượt", thì đây là lúc "độ" lại giao diện (UI) và trải nghiệm người dùng (UX).
+
+Mục tiêu của 5 ý tưởng dưới đây là dùng CSS thuần và Vanilla JS để mang lại cảm giác xịn xò như đang dùng một ứng dụng Native tải từ App Store:
+
+📱 Nhóm 1: Cảm giác Ứng dụng "Xịn" (Native App Feel)
+1. Hiệu ứng "Khung xương" chờ tải (Skeleton Loading)
+
+Vấn đề: Hiện tại, khi Firebase đang lấy dữ liệu, màn hình hiển thị dòng chữ "Đang tải dữ liệu..." trông khá khô khan và giống web cũ.
+
+Cải tiến: Thay dòng chữ đó bằng các khối xám mờ có hiệu ứng lướt sóng (shimmer) nhấp nháy liên tục. Đây là hiệu ứng mà Facebook, YouTube hay các app ngân hàng đang dùng. Nó đánh lừa thị giác, giúp người dùng có cảm giác app chạy nhanh hơn rất nhiều.
+
+2. Nút Thêm Nhanh Lơ lửng (Floating Action Button - FAB)
+
+Vấn đề: Khi bạn đang mải mê xem biểu đồ ở tab Thống kê mà muốn nhập ngay 1 ly cafe vừa mua, bạn phải bấm về tab "Nhập liệu" rất mất công.
+
+Cải tiến: Thiết kế một nút hình tròn to, màu nổi bật (có bóng đổ Shadow) nằm chễm chệ ngay chính giữa thanh Menu bên dưới (Bottom Nav). Dù bạn đang ở tab nào, chỉ cần chạm nút này, nó sẽ xoay nhẹ 45 độ và form nhập liệu lập tức trượt từ dưới lên.
+
+🎨 Nhóm 2: Trực quan hóa Dữ liệu (Visual Data)
+3. Dòng thời gian Lịch sử (Timeline View)
+
+Vấn đề: Tab Lịch sử hiện tại đang hiển thị các khối giao dịch xếp chồng lên nhau. Khá rõ ràng nhưng chưa có tính liên kết.
+
+Cải tiến: Vẽ một đường chỉ dọc đứt nét chạy xuyên suốt màn hình. Mỗi giao dịch sẽ là một dấu chấm tròn (xanh/đỏ) bám sát trên đường kẻ đó. Giao diện này giống hệt lịch sử biến động số dư của các app ngân hàng hiện đại (như TPBank hay Vietcombank), cực kỳ tinh tế và dễ theo dõi luồng tiền.
+
+4. Cảnh báo Ngân sách Bằng nhịp đập (Pulse Alert)
+
+Vấn đề: Các thanh tiến trình hạn mức ngân sách hiển thị đầy đủ, nhưng khi gần hết tiền thì nó vẫn đang khá "tĩnh".
+
+Cải tiến: Dùng CSS Animation để tạo hiệu ứng "nhịp tim". Khi một danh mục (như Ăn uống) bị xài lố quá 90% hạn mức, thanh chạy (bar) không chỉ chuyển sang màu đỏ gắt mà còn nhấp nháy/phình ra thu vào nhẹ nhàng, đập ngay vào mắt để bạn phải "giật mình" và ngừng chi tiêu.
+
+🧠 Nhóm 3: Tương tác Thông minh (Micro-interactions)
+5. Thẻ Tóm tắt Thông minh (Smart Insights Banner)
+
+Vấn đề: Màn hình chính (Home) hiện tại toàn là các con số khô khan (Tổng số dư, Tổng thu, Tổng chi...).
+
+Cải tiến: Thêm một thẻ chữ nhật nhỏ nằm ngay dưới Tổng số dư. Thẻ này sẽ tự động phân tích dữ liệu bằng JS và thay đổi nội dung linh hoạt theo kiểu "Trò chuyện".
+
+Buổi sáng: 🌅 "Chào buổi sáng! Tuần này bạn đang chi tiêu rất hợp lý."
+
+Khi tiêu nhiều: ⚠️ "Hôm nay bạn đã chốt đơn 3 lần rồi nhé, coi chừng vung tay quá trán!"
+
+Khi có khoản thu: 🎉 "Tuyệt vời, có lương về! Nhớ trích một khoản tiết kiệm nhé."
+
+Những hiệu ứng này chỉ cần thêm vài dòng CSS/JS là ứng dụng sẽ "lột xác" hoàn toàn. Bạn thấy "phê" nhất với ý tưởng nào để chúng ta bắt tay vào viết code biến nó thành sự thật ngay bây giờ?
+
+cải tiên: 2. Nút Thêm Nhanh Lơ lửng (Floating Action Button - FAB)
+
+Một lựa chọn tuyệt vời! Nút Thêm Nhanh Lơ lửng (FAB - Floating Action Button) là tiêu chuẩn thiết kế của các ứng dụng di động hiện đại (Material Design). Nó giúp trải nghiệm sử dụng của bạn trở nên liền mạch, không bao giờ bị gián đoạn dù bạn đang mải mê xem biểu đồ hay tìm kiếm lịch sử.
+
+Thuật toán chúng ta sử dụng sẽ cực kỳ thông minh:
+
+Nút này sẽ chỉ hiện lên khi bạn ở các tab khác (Thống kê, Lịch sử, Sổ nợ).
+
+Khi bạn đang ở tab Nhập liệu (Home), nó sẽ tự động ẩn đi (vì form nhập liệu đã nằm chình ình ra đó rồi).
+
+Khi bấm vào, nút sẽ xoay nhẹ 1 vòng, tự động chuyển bạn về trang chủ và đặt con trỏ chuột sẵn vào ô nhập tiền. Bạn chỉ việc gõ số!
+
+Chỉ cần làm theo 3 bước copy-paste dưới đây:
+
+Bước 1: Thêm CSS cho nút FAB (index.html)
+Bạn mở file index.html, cuộn lên phần <head>, tìm đến khối <style> trên cùng (ngay dưới phần FLATPICKR). Dán đoạn CSS này vào ngay bên dưới /* CSS LỊCH LƯỚI */:  
+HTML
+
+CSS
+        /* CSS NÚT THÊM NHANH (FAB) */
+        .fab-button {
+            position: fixed;
+            bottom: 85px; /* Nằm ngay trên Bottom Nav */
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 999;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .fab-button:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.5);
+        }
+        .fab-button:active {
+            transform: translateY(2px) scale(0.95);
+        }
+        .fab-button.hide {
+            transform: scale(0) rotate(-90deg);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .fab-button svg {
+            width: 26px;
+            height: 26px;
+            transition: transform 0.3s ease;
+        }
+        .fab-button.spin svg {
+            transform: rotate(90deg);
+        }
+Bước 2: Chèn nút FAB vào giao diện (index.html)
+Vẫn trong file index.html, cuộn xuống gần dưới cùng, tìm đến dòng <!-- BOTTOM NAVIGATION --> (khoảng dòng 470).
+Hãy dán đoạn HTML của nút FAB vào NGAY TRƯỚC dòng đó:  
+HTML
+
+HTML
+<!-- NÚT THÊM NHANH (FAB) -->
+<button class="fab-button hide" id="fabAddTransaction" title="Thêm giao dịch mới">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+</button>
+
+<!-- BOTTOM NAVIGATION -->
+<div class="bottom-nav">
+Bước 3: Thêm hiệu ứng và Logic chuyển tab (js/app.js)
+Mở file js/app.js, cuộn xuống TẬN CÙNG của file và dán khối mã này vào:  
+JS
+
+JavaScript
+// ==========================================
+// TÍNH NĂNG: NÚT THÊM NHANH (FAB - FLOATING ACTION BUTTON)
+// ==========================================
+const fabBtn = document.getElementById('fabAddTransaction');
+
+if (fabBtn) {
+    fabBtn.addEventListener('click', () => {
+        // 1. Tạo hiệu ứng xoay icon 90 độ
+        fabBtn.classList.add('spin');
+        setTimeout(() => fabBtn.classList.remove('spin'), 300);
+
+        // 2. Chuyển về màn hình Nhập liệu (Home)
+        if (!document.getElementById('homeView').classList.contains('active')) {
+            switchTab('home');
+        }
+
+        // 3. Reset form trắng trẻo để nhập dữ liệu mới
+        if (typeof resetFormState === 'function') resetFormState();
+
+        // 4. Cuộn mượt mà lên đầu trang và tự động nhấp nháy chuột vào ô Nhập Tiền
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => {
+            const amtInput = document.getElementById('amountInputDisplay');
+            if (amtInput) {
+                amtInput.focus();
+                // Kích hoạt bàn phím số trên điện thoại
+                amtInput.click();
+            }
+        }, 300);
+    });
+}
+
+// 5. THUẬT TOÁN ĐÁNH CHẶN: Chỉ hiện nút FAB khi không ở tab Home
+const originalSwitchTabForFAB = switchTab;
+switchTab = function(tabName) {
+    originalSwitchTabForFAB(tabName); // Chạy logic chuyển tab gốc
+    
+    const fab = document.getElementById('fabAddTransaction');
+    if (fab) {
+        if (tabName === 'home') {
+            fab.classList.add('hide'); // Ẩn khi ở màn hình nhập liệu
+        } else {
+            fab.classList.remove('hide'); // Hiện lơ lửng ở các màn hình khác
+        }
+    }
+};
+
+// Gọi thử 1 lần lúc mới tải trang để ẩn FAB đi (vì trang mặc định là tab Home)
+setTimeout(() => { switchTab('home'); }, 100);
+Bây giờ bạn lưu file và tải lại trang. Hãy thử bấm qua tab Lịch sử hoặc Thống kê, bạn sẽ thấy một nút dấu (+) nổi bật ở góc phải dưới. Bấm vào nó, giao diện sẽ mượt mà trượt về trang nhập liệu như một ứng dụng Native đích thực!
+
+Bạn muốn làm gì tiếp?
+
+Thêm bàn phím máy tính trực tiếp vào ô nhập tiền
+
+Tạo hiệu ứng cảnh báo nhấp nháy cho thanh ngân sách
+
+Thiết kế giao diện dòng thời gian cho tab lịch sử
+cải tiến: 3. Dòng thời gian Lịch sử (Timeline View): Vẽ một đường chỉ dọc đứt nét chạy xuyên suốt màn hình. Mỗi giao dịch sẽ là một dấu chấm tròn (xanh/đỏ) bám sát trên đường kẻ đó. Giao diện này giống hệt lịch sử biến động số dư của các app ngân hàng hiện đại (như TPBank hay Vietcombank), cực kỳ tinh tế và dễ theo dõi luồng tiền.
+
+Giao diện Dòng thời gian (Timeline View) chính là thứ phân biệt một ứng dụng tài chính "cây nhà lá vườn" với một ứng dụng ngân hàng chuyên nghiệp (như TPBank hay Vietcombank). Hiệu ứng đường kẻ liền mạch kết hợp các dấu chấm xanh/đỏ báo hiệu dòng tiền sẽ mang lại cảm giác vuốt cực kỳ "đã tay" và trực quan!
+
+Vì hệ thống của chúng ta sử dụng CSS linh hoạt, việc tạo ra giao diện này không cần thêm bất kỳ thư viện nặng nề nào. Bạn chỉ cần thực hiện 2 thao tác "thay ruột" dưới đây:
+
+Bước 1: Thêm CSS "Vẽ" Dòng Thời Gian (index.html)
+Bạn hãy mở file index.html, cuộn lên phần <head> và tìm đến khu vực thẻ <style> (nơi chứa CSS của nút Thêm nhanh lơ lửng và Lịch lưới).
+
+Hãy dán khối CSS tuyệt đẹp này vào ngay bên dưới chúng:
+
+CSS
+        /* CSS GIAO DIỆN DÒNG THỜI GIAN (TIMELINE VIEW) */
+        .date-group-header {
+            position: relative;
+            padding-left: 32px !important; 
+        }
+        .timeline-group-marker {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            background: #cbd5e1;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 1px #cbd5e1;
+            z-index: 2;
+        }
+        .timeline-container {
+            margin-left: 14px;
+            border-left: 2px dashed #e2e8f0;
+            padding-left: 18px;
+            padding-bottom: 12px;
+            padding-top: 8px;
+        }
+        .timeline-container .timeline-item {
+            position: relative;
+            overflow: visible;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            border: 1px solid #f1f5f9;
+            margin-bottom: 12px;
+            background: #fff;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: -26px; /* Căn giữa hoàn hảo trên đường kẻ dashed */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            z-index: 2;
+            transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .timeline-dot.in { background: var(--success); box-shadow: 0 0 0 1px var(--success); }
+        .timeline-dot.out { background: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+        
+        .timeline-item:active .timeline-dot {
+            transform: translateY(-50%) scale(1.4);
+        }
+        
+        /* Tương thích cực mượt với Dark Mode */
+        body.dark-theme .timeline-container { border-left-color: #334155; }
+        body.dark-theme .timeline-group-marker { background: #475569; border-color: var(--bg-color); box-shadow: 0 0 0 1px #475569; }
+        body.dark-theme .timeline-container .timeline-item { background: var(--card-bg); border-color: #2d3748; }
+        body.dark-theme .timeline-dot { border-color: var(--bg-color); }
+Bước 2: Nâng cấp thuật toán Render Lịch sử (js/app.js)
+Bây giờ, chúng ta sẽ "bơm" các khối HTML Timeline này vào thuật toán vẽ danh sách. Bạn mở file js/app.js, tìm đến hàm function updateUI() (khoảng dòng 398).
+
+Hãy BÔI ĐEN TỪ ĐẦU ĐẾN CUỐI HÀM NÀY (kéo từ chữ function updateUI() { xuống đến dấu } kết thúc của nó) và DÁN ĐÈ bằng phiên bản mới dưới đây (Đã bọc thêm thẻ Timeline và bảo lưu 100% logic Chuỗi ngày lửa cháy):
+
+JavaScript
+function updateUI() {
+    const fStart = document.getElementById('filterStartDate');
+    const fEnd = document.getElementById('filterEndDate');
+    const fStartDate = fStart ? fStart.value : '';
+    const fEndDate = fEnd ? fEnd.value : '';
+    const sText = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
+    const activeCatPill = document.querySelector('#historyCategoryFilter .cat-pill.active');
+    const fCat = activeCatPill ? activeCatPill.getAttribute('data-filter') : '';
+    
+    const activeQuickFilter = document.querySelector('.btn-quick-filter.active');
+    const isQuickAll = activeQuickFilter ? activeQuickFilter.getAttribute('data-range') === 'all' : false;
+    
+    const listEl = document.getElementById('transactionList');
+    const filteredSummary = document.getElementById('filteredSummary');
+    if (!listEl) return;
+
+    const totalIncomeAll = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+    const totalExpenseAll = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+    currentBalances.total = totalIncomeAll - totalExpenseAll;
+    currentBalances.income = totalIncomeAll;
+    currentBalances.expense = totalExpenseAll;
+    renderBalances();
+
+    let displayData = [...transactions];
+    const isFiltering = (!isQuickAll && (fStartDate || fEndDate)) || sText || fCat;
+
+    if (isFiltering) {
+        displayData = transactions.filter(t => {
+            let matchDate = true;
+            if (fStartDate && fEndDate) matchDate = t.date >= fStartDate && t.date <= fEndDate;
+            else if (fStartDate) matchDate = t.date >= fStartDate;
+            else if (fEndDate) matchDate = t.date <= fEndDate;
+            
+            const matchCat = fCat ? t.categoryName === fCat || t.category === fCat : true;
+            const amtString = t.amount.toString();
+            const matchSearch = sText ? (
+                t.categoryName?.toLowerCase().includes(sText) || 
+                t.category?.toLowerCase().includes(sText) || 
+                (t.note && t.note.toLowerCase().includes(sText)) ||
+                amtString.includes(sText)
+            ) : true;
+            
+            return matchDate && matchCat && matchSearch;
+        });
+
+        filteredSummary?.classList.remove('hide');
+        const fInc = displayData.filter(t => t.type === 'income').reduce((a,b)=>a+b.amount,0);
+        const fExp = displayData.filter(t => t.type === 'expense').reduce((a,b)=>a+b.amount,0);
+        
+        const fTxCount = document.getElementById('filterTxCount');
+        const fSumInc = document.getElementById('filterSumInc');
+        const fSumExp = document.getElementById('filterSumExp');
+        if (fTxCount) fTxCount.innerText = `(${displayData.length})`;
+        if (fSumInc) fSumInc.innerText = '+' + formatter.format(fInc) + 'đ';
+        if (fSumExp) fSumExp.innerText = '-' + formatter.format(fExp) + 'đ';
+        
+        const bal = fInc - fExp;
+        const elBal = document.getElementById('filterSumBal');
+        if (elBal) {
+            elBal.innerText = (bal > 0 ? '+' : '') + formatter.format(bal) + 'đ';
+            elBal.style.color = bal >= 0 ? 'var(--success)' : 'var(--danger)';
+        }
+    } else {
+        filteredSummary?.classList.add('hide');
+    }
+
+    const grouped = {};
+    displayData.forEach(t => {
+        const dateStr = t.date; 
+        if (!grouped[dateStr]) grouped[dateStr] = { items: [], in: 0, out: 0 };
+        grouped[dateStr].items.push(t);
+        if (t.type === 'income') grouped[dateStr].in += t.amount;
+        if (t.type === 'expense') grouped[dateStr].out += t.amount;
+    });
+
+    const sortedDates = Object.keys(grouped).sort().reverse();
+    let listHTML = '';
+
+    if(sortedDates.length === 0) {
+        listEl.innerHTML = `
+            <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px; opacity: 0.5;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <p style="font-size: 15px; font-weight: 500;">Không tìm thấy giao dịch nào</p>
+                <p style="font-size: 13px; margin-top: 4px;">Hãy thử thay đổi bộ lọc thời gian hoặc từ khóa.</p>
+            </div>
+        `;
+        if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
+        
+        if (typeof calculateStreak === 'function') calculateStreak(); // Bảo lưu Gamification
+        return;
+    }
+
+    const paginatedDates = sortedDates.slice(0, currentDateLimit);
+
+    for (const rawDate of paginatedDates) {
+        const data = grouped[rawDate];
+        const displayDateText = formatNiceDate(rawDate).replace('Hôm nay, ', '');
+
+        // GIAO DIỆN MỚI: THEO CHUẨN TIMELINE VIEW (CÓ CHẤM ĐẦU DÒNG)
+        listHTML += `
+        <div class="date-group">
+            <div class="date-group-header">
+                <div class="timeline-group-marker"></div>
+                <div class="date-title">${displayDateText}</div>
+                <div class="date-summary">
+                    <span class="text-success">+${formatter.format(data.in)}</span> &nbsp;|&nbsp; 
+                    <span class="text-danger">-${formatter.format(data.out)}</span>
+                </div>
+            </div>
+            <div class="date-group-items timeline-container">
+        `;
+
+        data.items.sort((a, b) => b.id - a.id);
+
+        data.items.forEach(t => {
+            const isInc = t.type === 'income';
+            const cName = t.categoryName || t.category;
+            const catObj = categories.find(c => c.id === t.categoryId);
+            const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
+            const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+            const safeName = cName.replace(/'/g, "\\'");
+
+            // CẮY THÊM CHẤM XANH/ĐỎ VÀO TỪNG GIAO DỊCH
+            listHTML += `
+                <div class="transaction-item timeline-item" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})">
+                    <div class="timeline-dot ${isInc ? 'in' : 'out'}"></div>
+                    <div class="t-left">
+                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}">${iconSvg}</div>
+                        <div class="t-info">
+                            <div class="t-title">${cName}</div>
+                            <div class="t-note">${t.note || '...'}</div>
+                        </div>
+                    </div>
+                    <div class="t-action">
+                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                        <div class="t-chevron">›</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        listHTML += `</div></div>`; 
+    }
+
+    if (sortedDates.length > currentDateLimit) {
+        listHTML += `<button class="btn-load-more" onclick="currentDateLimit += ${DATES_PER_PAGE}; updateUI();">Xem thêm các ngày trước</button>`;
+    }
+
+    listEl.innerHTML = listHTML;
+    if(typeof renderBudgets === 'function') renderBudgets();
+    if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
+
+    // BẢO LƯU: Kích hoạt thuật toán đếm chuỗi ngày (Streak)
+    if (typeof calculateStreak === 'function') calculateStreak();
+}
+Bây giờ bạn hãy lưu file và tải lại ứng dụng. Sang tab Lịch sử, bạn sẽ thấy một đường kẻ dọc thanh mảnh chạy dọc màn hình. Khi bạn bấm vào bất kỳ một khoản giao dịch nào, dấu chấm tròn (xanh/đỏ) sẽ nảy lên (scale 1.4) tạo cảm giác vật lý vô cùng mượt mà. Đẳng cấp hoàn toàn khác biệt!
+
+Bạn muốn làm gì tiếp?
+
+Implement collapsible date groups in the timeline
+
+Add swipe-to-delete gestures to timeline items
+
+Create a visual indicator for high-value transactions
+đường kẻ dọc bị lỗi không hiển thị hết vì bị dính phân cách, tiện cho toàn màn hình mà không có ô phân cách
+
+Bạn nhận xét quá chuẩn xác! Lỗi đứt gãy đường kẻ dọc xảy ra vì ở phiên bản trước, chúng ta đang vẽ đường kẻ đó bên trong từng ô ngày tháng riêng biệt. Đồng thời, các ô phân cách dạng thẻ (Card) bao quanh mỗi giao dịch khiến danh sách trông bị chia vụn, không "thoát" và không ra dáng một luồng tiền (Cash-flow) chảy liên tục.
+
+Để tạo ra cảm giác "tràn viền - liền mạch - không ô phân cách" giống hệt sao kê của Vietcombank hay TPBank, chúng ta sẽ rút đường kẻ đó ra ngoài cùng và xóa bỏ mọi hiệu ứng đổ bóng/bo góc của từng giao dịch.
+
+Bạn hãy làm theo 2 bước "thay máu" siêu nhanh sau:
+
+Bước 1: Xóa CSS cũ và dán CSS Tràn viền (index.html)
+Bạn mở file index.html, cuộn lên phần <head> và tìm đến khối CSS Dòng thời gian cũ (bắt đầu từ /* CSS GIAO DIỆN DÒNG THỜI GIAN (TIMELINE VIEW) */).
+
+Hãy BÔI ĐEN VÀ XÓA TOÀN BỘ ĐOẠN ĐÓ, sau đó DÁN ĐÈ bằng khối CSS mới này:
+
+CSS
+        /* CSS DÒNG THỜI GIAN TRÀN VIỀN (SEAMLESS TIMELINE) */
+        .timeline-wrapper-seamless {
+            position: relative;
+            padding-bottom: 20px;
+        }
+        /* Đường kẻ dọc đứt nét vẽ 1 lần chạy XUYÊN SUỐT từ trên xuống dưới */
+        .timeline-wrapper-seamless::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            top: 24px;
+            bottom: 0;
+            border-left: 2px dashed #cbd5e1;
+            z-index: 0;
+        }
+        body.dark-theme .timeline-wrapper-seamless::before { border-left-color: #334155; }
+        
+        .timeline-wrapper-seamless .date-group { margin-bottom: 0 !important; }
+        
+        .timeline-wrapper-seamless .date-group-header {
+            position: relative;
+            padding-left: 40px !important;
+            padding-top: 16px;
+            padding-bottom: 12px;
+            z-index: 2;
+        }
+        
+        /* Chấm mốc của Ngày tháng */
+        .timeline-wrapper-seamless .timeline-group-marker {
+            position: absolute;
+            left: 11px;
+            top: 22px;
+            width: 12px;
+            height: 12px;
+            background: var(--bg-color);
+            border: 3px solid #94a3b8;
+            border-radius: 50%;
+            z-index: 2;
+        }
+        body.dark-theme .timeline-wrapper-seamless .timeline-group-marker { border-color: #475569; }
+        
+        .timeline-wrapper-seamless .date-group-items {
+            padding-left: 40px;
+            padding-right: 0;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* XÓA BỎ BOX/SHADOW, chỉ giữ lại vạch kẻ ngang mờ */
+        .timeline-wrapper-seamless .timeline-item {
+            position: relative;
+            margin-bottom: 0;
+            padding: 16px 0;
+            box-shadow: none;
+            border: none;
+            border-bottom: 1px dashed #e2e8f0;
+            background: transparent;
+            border-radius: 0;
+            overflow: visible;
+        }
+        .timeline-wrapper-seamless .timeline-item:last-child { border-bottom: none; }
+        body.dark-theme .timeline-wrapper-seamless .timeline-item { border-bottom-color: #2d3748; background: transparent; }
+        
+        /* Chấm Xanh/Đỏ của Giao dịch đè lên đường kẻ */
+        .timeline-wrapper-seamless .timeline-dot {
+            position: absolute;
+            left: -30px; /* Căn chính giữa hoàn hảo vào đường chỉ */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-color);
+            z-index: 3;
+            transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .timeline-wrapper-seamless .timeline-dot.in { background: var(--success); box-shadow: 0 0 0 1px var(--success); }
+        .timeline-wrapper-seamless .timeline-dot.out { background: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+        
+        .timeline-wrapper-seamless .timeline-item:active .timeline-dot { transform: translateY(-50%) scale(1.4); }
+Bước 2: Bọc lại khung HTML (js/app.js)
+Bây giờ chúng ta cần gói toàn bộ danh sách giao dịch vào chung một ngôi nhà timeline-wrapper-seamless để đường chỉ có thể chạy xuyên qua.
+
+Bạn mở file js/app.js, tìm đến hàm function updateUI() (khoảng dòng 398).
+Tiếp tục BÔI ĐEN VÀ XÓA TỪ ĐẦU ĐẾN CUỐI HÀM NÀY và DÁN ĐÈ bằng bản rút gọn siêu sạch dưới đây:
+
+JavaScript
+function updateUI() {
+    const fStart = document.getElementById('filterStartDate');
+    const fEnd = document.getElementById('filterEndDate');
+    const fStartDate = fStart ? fStart.value : '';
+    const fEndDate = fEnd ? fEnd.value : '';
+    const sText = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
+    const activeCatPill = document.querySelector('#historyCategoryFilter .cat-pill.active');
+    const fCat = activeCatPill ? activeCatPill.getAttribute('data-filter') : '';
+    
+    const activeQuickFilter = document.querySelector('.btn-quick-filter.active');
+    const isQuickAll = activeQuickFilter ? activeQuickFilter.getAttribute('data-range') === 'all' : false;
+    
+    const listEl = document.getElementById('transactionList');
+    const filteredSummary = document.getElementById('filteredSummary');
+    if (!listEl) return;
+
+    const totalIncomeAll = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+    const totalExpenseAll = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+    currentBalances.total = totalIncomeAll - totalExpenseAll;
+    currentBalances.income = totalIncomeAll;
+    currentBalances.expense = totalExpenseAll;
+    renderBalances();
+
+    let displayData = [...transactions];
+    const isFiltering = (!isQuickAll && (fStartDate || fEndDate)) || sText || fCat;
+
+    if (isFiltering) {
+        displayData = transactions.filter(t => {
+            let matchDate = true;
+            if (fStartDate && fEndDate) matchDate = t.date >= fStartDate && t.date <= fEndDate;
+            else if (fStartDate) matchDate = t.date >= fStartDate;
+            else if (fEndDate) matchDate = t.date <= fEndDate;
+            
+            const matchCat = fCat ? t.categoryName === fCat || t.category === fCat : true;
+            const amtString = t.amount.toString();
+            const matchSearch = sText ? (
+                t.categoryName?.toLowerCase().includes(sText) || 
+                t.category?.toLowerCase().includes(sText) || 
+                (t.note && t.note.toLowerCase().includes(sText)) ||
+                amtString.includes(sText)
+            ) : true;
+            
+            return matchDate && matchCat && matchSearch;
+        });
+
+        filteredSummary?.classList.remove('hide');
+        const fInc = displayData.filter(t => t.type === 'income').reduce((a,b)=>a+b.amount,0);
+        const fExp = displayData.filter(t => t.type === 'expense').reduce((a,b)=>a+b.amount,0);
+        
+        const fTxCount = document.getElementById('filterTxCount');
+        const fSumInc = document.getElementById('filterSumInc');
+        const fSumExp = document.getElementById('filterSumExp');
+        if (fTxCount) fTxCount.innerText = `(${displayData.length})`;
+        if (fSumInc) fSumInc.innerText = '+' + formatter.format(fInc) + 'đ';
+        if (fSumExp) fSumExp.innerText = '-' + formatter.format(fExp) + 'đ';
+        
+        const bal = fInc - fExp;
+        const elBal = document.getElementById('filterSumBal');
+        if (elBal) {
+            elBal.innerText = (bal > 0 ? '+' : '') + formatter.format(bal) + 'đ';
+            elBal.style.color = bal >= 0 ? 'var(--success)' : 'var(--danger)';
+        }
+    } else {
+        filteredSummary?.classList.add('hide');
+    }
+
+    const grouped = {};
+    displayData.forEach(t => {
+        const dateStr = t.date; 
+        if (!grouped[dateStr]) grouped[dateStr] = { items: [], in: 0, out: 0 };
+        grouped[dateStr].items.push(t);
+        if (t.type === 'income') grouped[dateStr].in += t.amount;
+        if (t.type === 'expense') grouped[dateStr].out += t.amount;
+    });
+
+    const sortedDates = Object.keys(grouped).sort().reverse();
+    
+    // MỞ GÓI TIMELINE CHẠY XUYÊN SUỐT
+    let listHTML = '<div class="timeline-wrapper-seamless">';
+
+    if(sortedDates.length === 0) {
+        listEl.innerHTML = `
+            <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px; opacity: 0.5;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <p style="font-size: 15px; font-weight: 500;">Không tìm thấy giao dịch nào</p>
+            </div>
+        `;
+        if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
+        if (typeof calculateStreak === 'function') calculateStreak(); 
+        return;
+    }
+
+    const paginatedDates = sortedDates.slice(0, currentDateLimit);
+
+    for (const rawDate of paginatedDates) {
+        const data = grouped[rawDate];
+        const displayDateText = formatNiceDate(rawDate).replace('Hôm nay, ', '');
+
+        listHTML += `
+        <div class="date-group">
+            <div class="date-group-header">
+                <div class="timeline-group-marker"></div>
+                <div class="date-title" style="font-size: 15px;">${displayDateText}</div>
+                <div class="date-summary">
+                    <span class="text-success">+${formatter.format(data.in)}</span> &nbsp;|&nbsp; 
+                    <span class="text-danger">-${formatter.format(data.out)}</span>
+                </div>
+            </div>
+            <div class="date-group-items">
+        `;
+
+        data.items.sort((a, b) => b.id - a.id);
+
+        data.items.forEach(t => {
+            const isInc = t.type === 'income';
+            const cName = t.categoryName || t.category;
+            const catObj = categories.find(c => c.id === t.categoryId);
+            const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
+            const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+            const safeName = cName.replace(/'/g, "\\'");
+
+            // ĐÃ XÓA CHEVRON (Mũi tên) ĐỂ GIAO DIỆN PHẲNG VÀ SẠCH NHẤT CÓ THỂ
+            listHTML += `
+                <div class="transaction-item timeline-item" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})">
+                    <div class="timeline-dot ${isInc ? 'in' : 'out'}"></div>
+                    <div class="t-left">
+                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">${iconSvg}</div>
+                        <div class="t-info">
+                            <div class="t-title" style="font-size: 15px;">${cName}</div>
+                            <div class="t-note" style="font-size: 12px;">${t.note || '...'}</div>
+                        </div>
+                    </div>
+                    <div class="t-action">
+                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}" style="font-size: 15px; font-weight: 800;">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        listHTML += `</div></div>`; 
+    }
+
+    listHTML += `</div>`; // ĐÓNG GÓI TIMELINE
+
+    if (sortedDates.length > currentDateLimit) {
+        listHTML += `<button class="btn-load-more" onclick="currentDateLimit += ${DATES_PER_PAGE}; updateUI();">Xem thêm các ngày trước</button>`;
+    }
+
+    listEl.innerHTML = listHTML;
+    if(typeof renderBudgets === 'function') renderBudgets();
+    if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
+
+    if (typeof calculateStreak === 'function') calculateStreak();
+}
+Bây giờ bạn hãy Lưu lại và Tải lại trang, đảm bảo vuốt trên màn hình điện thoại ở tab Lịch sử sẽ cho bạn cảm giác "mướt mắt" đến từng centimet. Đường chỉ sẽ kẻ sát từ trên xuống dưới mà không bị đứt đoạn ở bất cứ vị trí nào!
+
+Bạn muốn làm gì tiếp?
+
+Thêm cử chỉ vuốt để xóa giao dịch
+
+Tạo hiệu ứng tải dữ liệu kéo để làm mới (Pull-to-refresh)
+
+Khám phá cách làm hiệu ứng hiện dần (Fade-in) khi cuộn
+không phải bị đứt gãy mà bị như này.
+
+Hình ảnh cho thấy có 3 vấn đề đang xảy ra:
+
+Chấm tròn 🔴 🟢 bị cắt nửa bên trái: Do đường kẻ và chấm tròn đặt tọa độ âm (left) sát mép ngoài, bị khung chứa cắt mất (overflow: hidden).
+
+Vẫn còn ô khung thẻ màu trắng (Card): Do CSS cũ trong file style.css vẫn ghi đè làm mỗi giao dịch thành một ô vuông bo góc riêng biệt.
+
+Vẫn còn dấu mũi tên > ở góc phải: Chưa loại bỏ hết các chi tiết dư thừa.
+
+Dưới đây là đoạn CSS sửa triệt để 100% tất cả các lỗi trên, đưa chấm tròn vào trong vùng hiển thị an toàn và tẩy sạch hoàn toàn ô khung màu trắng.
+
+Bước thực hiện (index.html)
+Mở file index.html, tìm đến phần <style> trong thẻ <head>.
+
+Hãy XÓA TOÀN BỘ đoạn CSS dòng thời gian cũ và DÁN ĐÈ đoạn CSS đã khắc phục này vào:
+
+CSS
+        /* CSS FIX HOÀN CHỈNH CHO TIMELINE TRÀN VIỀN */
+        #transactionList {
+            overflow: visible !important;
+            padding-left: 2px;
+        }
+
+        .timeline-wrapper-seamless {
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        /* 1. Đường kẻ dọc đứt nét chạy thẳng xuyên suốt (Đẩy vào trong 22px để không bị xén) */
+        .timeline-wrapper-seamless::before {
+            content: '';
+            position: absolute;
+            left: 22px;
+            top: 20px;
+            bottom: 0;
+            border-left: 2px dashed #cbd5e1;
+            z-index: 1;
+        }
+        body.dark-theme .timeline-wrapper-seamless::before { 
+            border-left-color: #334155; 
+        }
+
+        /* 2. Tiêu đề ngày tháng */
+        .timeline-wrapper-seamless .date-group-header {
+            position: relative;
+            padding-left: 46px !important; /* Dành khoảng trống cho đường kẻ */
+            padding-top: 16px;
+            padding-bottom: 8px;
+            background: transparent !important;
+            z-index: 2;
+        }
+
+        /* Chấm tròn tiêu đề ngày */
+        .timeline-wrapper-seamless .timeline-group-marker {
+            position: absolute;
+            left: 17px; /* Căn đúng tâm đường kẻ */
+            top: 24px;
+            width: 12px;
+            height: 12px;
+            background: var(--bg-color);
+            border: 3px solid #94a3b8;
+            border-radius: 50%;
+            z-index: 3;
+        }
+        body.dark-theme .timeline-wrapper-seamless .timeline-group-marker { 
+            border-color: #475569; 
+        }
+
+        /* 3. Danh sách giao dịch */
+        .timeline-wrapper-seamless .date-group-items {
+            padding-left: 0 !important;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* XÓA SẠCH NỀN TRẮNG / SHADOW / BO GÓC / KHUNG VIỀN CỦA THẺ CARD */
+        .timeline-wrapper-seamless .transaction-item {
+            position: relative;
+            padding: 14px 12px 14px 46px !important; /* Đẩy nội dung sang phải nhường chỗ cho timeline */
+            margin-bottom: 0 !important;
+            background: transparent !important; /* Xóa nền trắng hoàn toàn */
+            box-shadow: none !important; /* Xóa bóng đổ */
+            border: none !important; /* Xóa khung viền */
+            border-bottom: 1px dashed #e2e8f0 !important; /* Chỉ giữ vạch gạch ngang mờ phân cách */
+            border-radius: 0 !important; /* Xóa bo góc */
+        }
+        .timeline-wrapper-seamless .transaction-item:last-child {
+            border-bottom: none !important;
+        }
+        body.dark-theme .timeline-wrapper-seamless .transaction-item {
+            border-bottom-color: #2d3748 !important;
+        }
+
+        /* Chấm Xanh/Đỏ nằm chính giữa đường kẻ đứt nét */
+        .timeline-wrapper-seamless .timeline-dot {
+            position: absolute;
+            left: 16px !important; /* Tọa độ dương, hiển thị trọn vẹn không bị mất góc */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-color);
+            z-index: 3;
+            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .timeline-wrapper-seamless .timeline-dot.in {
+            background: var(--success);
+            box-shadow: 0 0 0 1px var(--success);
+        }
+        .timeline-wrapper-seamless .timeline-dot.out {
+            background: var(--danger);
+            box-shadow: 0 0 0 1px var(--danger);
+        }
+
+        /* Ẩn dấu mũi tên Chevron '>' dư thừa */
+        .timeline-wrapper-seamless .t-chevron {
+            display: none !important;
+        }
+Sau khi lưu file và F5 lại trang, chấm tròn 🔴 🟢 sẽ hiện đầy đủ nguyên vẹn 100%, các ô khung trắng sẽ biến mất và chuyển thành dạng phẳng sao kê ngân hàng hoàn chỉnh.
+
+Cải tiến: ở tab lịch sử: vẽ biểu đồ đường theo ngày về thu và chi trong cùng 1 biểu đồ
+
+Ý tưởng tuyệt vời! Việc đưa một biểu đồ luồng tiền (Line Chart) vào thẳng tab Lịch sử sẽ giúp bạn ngay lập tức thấy được "nhịp tim" tài chính của mình (ngày nào xài nhiều, ngày nào có tiền vô) khớp trực tiếp với bộ lọc bên trên.
+
+Thư viện Chart.js đã có sẵn trong ứng dụng của bạn, chúng ta chỉ cần vẽ thêm một cái Canvas và nhúng thuật toán tính toán vào hàm hiển thị Lịch sử.
+
+Bạn hãy làm theo 2 bước sau:
+
+Bước 1: Thêm khung chứa Biểu đồ (index.html)
+Mở file index.html, cuộn xuống khu vực <!-- TAB 2: LỊCH SỬ -->, tìm đến dòng chữ <!-- DANH SÁCH GIAO DỊCH --> (khoảng dòng 270).
+
+Hãy dán đoạn HTML vẽ biểu đồ này vào NGAY PHÍA TRÊN thẻ </div> đang nằm ngay trước dòng <!-- DANH SÁCH GIAO DỊCH --> đó:
+
+HTML
+            <!-- MỚI THÊM: BIỂU ĐỒ ĐƯỜNG THU/CHI THEO NGÀY -->
+            <div id="historyChartWrapper" class="hide" style="margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h4 style="font-size: 13px; color: var(--text-muted); font-weight: 700; margin: 0;">Biểu đồ luồng tiền</h4>
+                    <div style="display: flex; gap: 8px; font-size: 11px; font-weight: 700;">
+                        <span style="color: var(--success);"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--success); margin-right:4px;"></span>Thu</span>
+                        <span style="color: var(--danger);"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--danger); margin-right:4px;"></span>Chi</span>
+                    </div>
+                </div>
+                <div style="height: 180px; width: 100%;">
+                    <canvas id="historyLineChart"></canvas>
+                </div>
+            </div>
+Bước 2: Nạp thuật toán vẽ biểu đồ kép (js/app.js)
+Bây giờ chúng ta sẽ cập nhật lại hàm updateUI() (để nó tự động gom nhóm ngày và vẽ biểu đồ) cùng với hàm switchHistoryView() (để nó biết lúc nào thì ẩn/hiện biểu đồ).
+
+Bạn mở file js/app.js, tìm đến hàm function updateUI() (khoảng dòng 398).
+Hãy BÔI ĐEN TỪ ĐÓ, KÉO XUỐNG HẾT CẢ HÀM BÊN DƯỚI LÀ window.switchHistoryView = function(view) { ... } và DÁN ĐÈ bằng khối mã sau:
+
+JavaScript
+function updateUI() {
+    const fStart = document.getElementById('filterStartDate');
+    const fEnd = document.getElementById('filterEndDate');
+    const fStartDate = fStart ? fStart.value : '';
+    const fEndDate = fEnd ? fEnd.value : '';
+    const sText = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
+    const activeCatPill = document.querySelector('#historyCategoryFilter .cat-pill.active');
+    const fCat = activeCatPill ? activeCatPill.getAttribute('data-filter') : '';
+    
+    const activeQuickFilter = document.querySelector('.btn-quick-filter.active');
+    const isQuickAll = activeQuickFilter ? activeQuickFilter.getAttribute('data-range') === 'all' : false;
+    
+    const listEl = document.getElementById('transactionList');
+    const filteredSummary = document.getElementById('filteredSummary');
+    if (!listEl) return;
+
+    const totalIncomeAll = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+    const totalExpenseAll = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+    currentBalances.total = totalIncomeAll - totalExpenseAll;
+    currentBalances.income = totalIncomeAll;
+    currentBalances.expense = totalExpenseAll;
+    renderBalances();
+
+    let displayData = [...transactions];
+    const isFiltering = (!isQuickAll && (fStartDate || fEndDate)) || sText || fCat;
+
+    if (isFiltering) {
+        displayData = transactions.filter(t => {
+            let matchDate = true;
+            if (fStartDate && fEndDate) matchDate = t.date >= fStartDate && t.date <= fEndDate;
+            else if (fStartDate) matchDate = t.date >= fStartDate;
+            else if (fEndDate) matchDate = t.date <= fEndDate;
+            
+            const matchCat = fCat ? t.categoryName === fCat || t.category === fCat : true;
+            const amtString = t.amount.toString();
+            const matchSearch = sText ? (
+                t.categoryName?.toLowerCase().includes(sText) || 
+                t.category?.toLowerCase().includes(sText) || 
+                (t.note && t.note.toLowerCase().includes(sText)) ||
+                amtString.includes(sText)
+            ) : true;
+            
+            return matchDate && matchCat && matchSearch;
+        });
+
+        filteredSummary?.classList.remove('hide');
+        const fInc = displayData.filter(t => t.type === 'income').reduce((a,b)=>a+b.amount,0);
+        const fExp = displayData.filter(t => t.type === 'expense').reduce((a,b)=>a+b.amount,0);
+        
+        const fTxCount = document.getElementById('filterTxCount');
+        const fSumInc = document.getElementById('filterSumInc');
+        const fSumExp = document.getElementById('filterSumExp');
+        if (fTxCount) fTxCount.innerText = `(${displayData.length})`;
+        if (fSumInc) fSumInc.innerText = '+' + formatter.format(fInc) + 'đ';
+        if (fSumExp) fSumExp.innerText = '-' + formatter.format(fExp) + 'đ';
+        
+        const bal = fInc - fExp;
+        const elBal = document.getElementById('filterSumBal');
+        if (elBal) {
+            elBal.innerText = (bal > 0 ? '+' : '') + formatter.format(bal) + 'đ';
+            elBal.style.color = bal >= 0 ? 'var(--success)' : 'var(--danger)';
+        }
+    } else {
+        filteredSummary?.classList.add('hide');
+    }
+
+    const grouped = {};
+    displayData.forEach(t => {
+        const dateStr = t.date; 
+        if (!grouped[dateStr]) grouped[dateStr] = { items: [], in: 0, out: 0 };
+        grouped[dateStr].items.push(t);
+        if (t.type === 'income') grouped[dateStr].in += t.amount;
+        if (t.type === 'expense') grouped[dateStr].out += t.amount;
+    });
+
+    const sortedDates = Object.keys(grouped).sort().reverse();
+    
+    let listHTML = '<div class="timeline-wrapper-seamless">';
+
+    if(sortedDates.length === 0) {
+        listEl.innerHTML = `
+            <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px; opacity: 0.5;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <p style="font-size: 15px; font-weight: 500;">Không tìm thấy giao dịch nào</p>
+            </div>
+        `;
+        if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
+        if (typeof calculateStreak === 'function') calculateStreak(); 
+        document.getElementById('historyChartWrapper')?.classList.add('hide');
+        return;
+    }
+
+    const paginatedDates = sortedDates.slice(0, currentDateLimit);
+
+    for (const rawDate of paginatedDates) {
+        const data = grouped[rawDate];
+        const displayDateText = formatNiceDate(rawDate).replace('Hôm nay, ', '');
+
+        listHTML += `
+        <div class="date-group">
+            <div class="date-group-header">
+                <div class="timeline-group-marker"></div>
+                <div class="date-title" style="font-size: 15px;">${displayDateText}</div>
+                <div class="date-summary">
+                    <span class="text-success">+${formatter.format(data.in)}</span> &nbsp;|&nbsp; 
+                    <span class="text-danger">-${formatter.format(data.out)}</span>
+                </div>
+            </div>
+            <div class="date-group-items">
+        `;
+
+        data.items.sort((a, b) => b.id - a.id);
+
+        data.items.forEach(t => {
+            const isInc = t.type === 'income';
+            const cName = t.categoryName || t.category;
+            const catObj = categories.find(c => c.id === t.categoryId);
+            const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
+            const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+            const safeName = cName.replace(/'/g, "\\'");
+
+            listHTML += `
+                <div class="transaction-item timeline-item" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})">
+                    <div class="timeline-dot ${isInc ? 'in' : 'out'}"></div>
+                    <div class="t-left">
+                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">${iconSvg}</div>
+                        <div class="t-info">
+                            <div class="t-title" style="font-size: 15px;">${cName}</div>
+                            <div class="t-note" style="font-size: 12px;">${t.note || '...'}</div>
+                        </div>
+                    </div>
+                    <div class="t-action">
+                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}" style="font-size: 15px; font-weight: 800;">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        listHTML += `</div></div>`; 
+    }
+
+    listHTML += `</div>`; 
+
+    if (sortedDates.length > currentDateLimit) {
+        listHTML += `<button class="btn-load-more" onclick="currentDateLimit += ${DATES_PER_PAGE}; updateUI();">Xem thêm các ngày trước</button>`;
+    }
+
+    listEl.innerHTML = listHTML;
+    if(typeof renderBudgets === 'function') renderBudgets();
+    if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
+    if (typeof calculateStreak === 'function') calculateStreak();
+
+    // ==========================================
+    // VẼ BIỂU ĐỒ ĐƯỜNG KÉP CHO TAB LỊCH SỬ
+    // ==========================================
+    const historyChartWrapper = document.getElementById('historyChartWrapper');
+    const isCalendarHidden = document.getElementById('calendarViewContainer').classList.contains('hide');
+
+    if (historyChartWrapper && isCalendarHidden && sortedDates.length > 0) {
+        historyChartWrapper.classList.remove('hide');
+        
+        const chartLabels = [];
+        const chartIncData = [];
+        const chartExpData = [];
+
+        // Đảo ngược mảng để vẽ biểu đồ tiến tới (từ cũ -> mới)
+        const chartSortedDates = [...sortedDates].reverse();
+
+        chartSortedDates.forEach(dateStr => {
+            const d = grouped[dateStr];
+            const [y, m, day] = dateStr.split('-');
+            chartLabels.push(`${day}/${m}`);
+            chartIncData.push(d.in);
+            chartExpData.push(d.out);
+        });
+
+        const canvas = document.getElementById('historyLineChart');
+        if (canvas) {
+            if (window.histLineChartInst) {
+                window.histLineChartInst.destroy();
+            }
+            const ctx = canvas.getContext('2d');
+            window.histLineChartInst = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'Tiền Thu',
+                            data: chartIncData,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#2ecc71',
+                            pointRadius: 4,
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Tiền Chi',
+                            data: chartExpData,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#e74c3c',
+                            pointRadius: 4,
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false, mode: 'index' },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} },
+                            grid: { borderDash: [4, 4] }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { maxTicksLimit: 7, font: {size: 10} }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(c) {
+                                    return ' ' + c.dataset.label + ': ' + formatter.format(c.parsed.y) + 'đ';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    } else if (historyChartWrapper) {
+        historyChartWrapper.classList.add('hide');
+    }
+}
+
+// Ghi đè logic hiển thị Của Tab Lịch Sử
+window.switchHistoryView = function(view) {
+    if(view === 'list') {
+        document.getElementById('btnHistList').classList.add('active', 'income');
+        document.getElementById('btnHistCalendar').classList.remove('active', 'expense');
+        document.getElementById('histListViewFilters').classList.remove('hide');
+        document.getElementById('transactionList').classList.remove('hide');
+        document.getElementById('calendarViewContainer').classList.add('hide');
+        document.getElementById('filteredSummary').style.display = ''; 
+        updateUI(); // Gọi lại để hiển thị kèm biểu đồ
+    } else {
+        document.getElementById('btnHistCalendar').classList.add('active', 'expense');
+        document.getElementById('btnHistList').classList.remove('active', 'income');
+        document.getElementById('histListViewFilters').classList.add('hide');
+        document.getElementById('transactionList').classList.add('hide');
+        document.getElementById('filteredSummary').style.display = 'none'; 
+        document.getElementById('calendarViewContainer').classList.remove('hide');
+        document.getElementById('historyChartWrapper')?.classList.add('hide'); // Ẩn biểu đồ
+        renderCalendar();
+    }
+};
+Sau khi lưu file và tải lại ứng dụng, bạn bấm qua tab Lịch sử sẽ thấy một biểu đồ hai đường (Xanh lá - Thu, Đỏ - Chi) nổi lên ở phía trên cùng của danh sách giao dịch. Đặc biệt, bất cứ khi nào bạn thay đổi bộ lọc ở bên trên (VD: Chỉ xem tháng trước, lọc theo Tag), biểu đồ này sẽ tự động thay hình đổi dạng ngay lập tức!
+
+Bạn muốn làm gì tiếp?
+
+Xuất biểu đồ thành hình ảnh
+
+Thêm hiệu ứng hoạt ảnh cho biểu đồ
+
+So sánh dữ liệu với tháng trước
+ok tôi đã cập nhật vào như này vì code kia thiếu 2 dòng logic cho chế độ xem lịch: function updateUI() {
+
+    const fStart = document.getElementById('filterStartDate');
+
+    const fEnd = document.getElementById('filterEndDate');
+
+    const fStartDate = fStart ? fStart.value : '';
+
+    const fEndDate = fEnd ? fEnd.value : '';
+
+    const sText = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
+
+    const activeCatPill = document.querySelector('#historyCategoryFilter .cat-pill.active');
+
+    const fCat = activeCatPill ? activeCatPill.getAttribute('data-filter') : '';
+
+    
+
+    const activeQuickFilter = document.querySelector('.btn-quick-filter.active');
+
+    const isQuickAll = activeQuickFilter ? activeQuickFilter.getAttribute('data-range') === 'all' : false;
+
+    
+
+    const listEl = document.getElementById('transactionList');
+
+    const filteredSummary = document.getElementById('filteredSummary');
+
+    if (!listEl) return;
+
+
+
+    const totalIncomeAll = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+
+    const totalExpenseAll = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+
+    currentBalances.total = totalIncomeAll - totalExpenseAll;
+
+    currentBalances.income = totalIncomeAll;
+
+    currentBalances.expense = totalExpenseAll;
+
+    renderBalances();
+
+
+
+    let displayData = [...transactions];
+
+    const isFiltering = (!isQuickAll && (fStartDate || fEndDate)) || sText || fCat;
+
+
+
+    if (isFiltering) {
+
+        displayData = transactions.filter(t => {
+
+            let matchDate = true;
+
+            if (fStartDate && fEndDate) matchDate = t.date >= fStartDate && t.date <= fEndDate;
+
+            else if (fStartDate) matchDate = t.date >= fStartDate;
+
+            else if (fEndDate) matchDate = t.date <= fEndDate;
+
+            
+
+            const matchCat = fCat ? t.categoryName === fCat || t.category === fCat : true;
+
+            const amtString = t.amount.toString();
+
+            const matchSearch = sText ? (
+
+                t.categoryName?.toLowerCase().includes(sText) || 
+
+                t.category?.toLowerCase().includes(sText) || 
+
+                (t.note && t.note.toLowerCase().includes(sText)) ||
+
+                amtString.includes(sText)
+
+            ) : true;
+
+            
+
+            return matchDate && matchCat && matchSearch;
+
+        });
+
+
+
+        filteredSummary?.classList.remove('hide');
+
+        const fInc = displayData.filter(t => t.type === 'income').reduce((a,b)=>a+b.amount,0);
+
+        const fExp = displayData.filter(t => t.type === 'expense').reduce((a,b)=>a+b.amount,0);
+
+        
+
+        const fTxCount = document.getElementById('filterTxCount');
+
+        const fSumInc = document.getElementById('filterSumInc');
+
+        const fSumExp = document.getElementById('filterSumExp');
+
+        if (fTxCount) fTxCount.innerText = `(${displayData.length})`;
+
+        if (fSumInc) fSumInc.innerText = '+' + formatter.format(fInc) + 'đ';
+
+        if (fSumExp) fSumExp.innerText = '-' + formatter.format(fExp) + 'đ';
+
+        
+
+        const bal = fInc - fExp;
+
+        const elBal = document.getElementById('filterSumBal');
+
+        if (elBal) {
+
+            elBal.innerText = (bal > 0 ? '+' : '') + formatter.format(bal) + 'đ';
+
+            elBal.style.color = bal >= 0 ? 'var(--success)' : 'var(--danger)';
+
+        }
+
+    } else {
+
+        filteredSummary?.classList.add('hide');
+
+    }
+
+
+
+    const grouped = {};
+
+    displayData.forEach(t => {
+
+        const dateStr = t.date; 
+
+        if (!grouped[dateStr]) grouped[dateStr] = { items: [], in: 0, out: 0 };
+
+        grouped[dateStr].items.push(t);
+
+        if (t.type === 'income') grouped[dateStr].in += t.amount;
+
+        if (t.type === 'expense') grouped[dateStr].out += t.amount;
+
+    });
+
+
+
+    const sortedDates = Object.keys(grouped).sort().reverse();
+
+    
+
+    let listHTML = '<div class="timeline-wrapper-seamless">';
+
+
+
+    if(sortedDates.length === 0) {
+
+        listEl.innerHTML = `
+
+            <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
+
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px; opacity: 0.5;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+
+                <p style="font-size: 15px; font-weight: 500;">Không tìm thấy giao dịch nào</p>
+
+            </div>
+
+        `;
+
+        if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
+
+        if (typeof calculateStreak === 'function') calculateStreak(); 
+
+        document.getElementById('historyChartWrapper')?.classList.add('hide');
+
+        return;
+
+    }
+
+
+
+    const paginatedDates = sortedDates.slice(0, currentDateLimit);
+
+
+
+    for (const rawDate of paginatedDates) {
+
+        const data = grouped[rawDate];
+
+        const displayDateText = formatNiceDate(rawDate).replace('Hôm nay, ', '');
+
+
+
+        listHTML += `
+
+        <div class="date-group">
+
+            <div class="date-group-header">
+
+                <div class="timeline-group-marker"></div>
+
+                <div class="date-title" style="font-size: 15px;">${displayDateText}</div>
+
+                <div class="date-summary">
+
+                    <span class="text-success">+${formatter.format(data.in)}</span> &nbsp;|&nbsp; 
+
+                    <span class="text-danger">-${formatter.format(data.out)}</span>
+
+                </div>
+
+            </div>
+
+            <div class="date-group-items">
+
+        `;
+
+
+
+        data.items.sort((a, b) => b.id - a.id);
+
+
+
+        data.items.forEach(t => {
+
+            const isInc = t.type === 'income';
+
+            const cName = t.categoryName || t.category;
+
+            const catObj = categories.find(c => c.id === t.categoryId);
+
+            const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
+
+            const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+
+            const safeName = cName.replace(/'/g, "\\'");
+
+
+
+            listHTML += `
+
+                <div class="transaction-item timeline-item" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})">
+
+                    <div class="timeline-dot ${isInc ? 'in' : 'out'}"></div>
+
+                    <div class="t-left">
+
+                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">${iconSvg}</div>
+
+                        <div class="t-info">
+
+                            <div class="t-title" style="font-size: 15px;">${cName}</div>
+
+                            <div class="t-note" style="font-size: 12px;">${t.note || '...'}</div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="t-action">
+
+                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}" style="font-size: 15px; font-weight: 800;">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+
+                    </div>
+
+                </div>
+
+            `;
+
+        });
+
+        
+
+        listHTML += `</div></div>`; 
+
+    }
+
+
+
+    listHTML += `</div>`; 
+
+
+
+    if (sortedDates.length > currentDateLimit) {
+
+        listHTML += `<button class="btn-load-more" onclick="currentDateLimit += ${DATES_PER_PAGE}; updateUI();">Xem thêm các ngày trước</button>`;
+
+    }
+
+
+
+    listEl.innerHTML = listHTML;
+
+    if(typeof renderBudgets === 'function') renderBudgets();
+
+    if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
+
+    if (typeof calculateStreak === 'function') calculateStreak();
+
+
+
+    // ==========================================
+
+    // VẼ BIỂU ĐỒ ĐƯỜNG KÉP CHO TAB LỊCH SỬ
+
+    // ==========================================
+
+    const historyChartWrapper = document.getElementById('historyChartWrapper');
+
+    const isCalendarHidden = document.getElementById('calendarViewContainer').classList.contains('hide');
+
+
+
+    if (historyChartWrapper && isCalendarHidden && sortedDates.length > 0) {
+
+        historyChartWrapper.classList.remove('hide');
+
+        
+
+        const chartLabels = [];
+
+        const chartIncData = [];
+
+        const chartExpData = [];
+
+
+
+        // Đảo ngược mảng để vẽ biểu đồ tiến tới (từ cũ -> mới)
+
+        const chartSortedDates = [...sortedDates].reverse();
+
+
+
+        chartSortedDates.forEach(dateStr => {
+
+            const d = grouped[dateStr];
+
+            const [y, m, day] = dateStr.split('-');
+
+            chartLabels.push(`${day}/${m}`);
+
+            chartIncData.push(d.in);
+
+            chartExpData.push(d.out);
+
+        });
+
+
+
+        const canvas = document.getElementById('historyLineChart');
+
+        if (canvas) {
+
+            if (window.histLineChartInst) {
+
+                window.histLineChartInst.destroy();
+
+            }
+
+            const ctx = canvas.getContext('2d');
+
+            window.histLineChartInst = new Chart(ctx, {
+
+                type: 'line',
+
+                data: {
+
+                    labels: chartLabels,
+
+                    datasets: [
+
+                        {
+
+                            label: 'Tiền Thu',
+
+                            data: chartIncData,
+
+                            borderColor: '#2ecc71',
+
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+
+                            borderWidth: 2,
+
+                            pointBackgroundColor: '#fff',
+
+                            pointBorderColor: '#2ecc71',
+
+                            pointRadius: 4,
+
+                            fill: true,
+
+                            tension: 0.4
+
+                        },
+
+                        {
+
+                            label: 'Tiền Chi',
+
+                            data: chartExpData,
+
+                            borderColor: '#e74c3c',
+
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+
+                            borderWidth: 2,
+
+                            pointBackgroundColor: '#fff',
+
+                            pointBorderColor: '#e74c3c',
+
+                            pointRadius: 4,
+
+                            fill: true,
+
+                            tension: 0.4
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    interaction: { intersect: false, mode: 'index' },
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} },
+
+                            grid: { borderDash: [4, 4] }
+
+                        },
+
+                        x: {
+
+                            grid: { display: false },
+
+                            ticks: { maxTicksLimit: 7, font: {size: 10} }
+
+                        }
+
+                    },
+
+                    plugins: {
+
+                        legend: { display: false },
+
+                        tooltip: {
+
+                            callbacks: {
+
+                                label: function(c) {
+
+                                    return ' ' + c.dataset.label + ': ' + formatter.format(c.parsed.y) + 'đ';
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            });
+
+        }
+
+    } else if (historyChartWrapper) {
+
+        historyChartWrapper.classList.add('hide');
+
+    }
+
+}
+
+// LOGIC CHO CHẾ ĐỘ XEM LỊCH
+
+let currentCalDate = new Date();
+
+let selectedCalDateStr = todayStr; 
+
+// Ghi đè logic hiển thị Của Tab Lịch Sử
+
+window.switchHistoryView = function(view) {
+
+    if(view === 'list') {
+
+        document.getElementById('btnHistList').classList.add('active', 'income');
+
+        document.getElementById('btnHistCalendar').classList.remove('active', 'expense');
+
+        document.getElementById('histListViewFilters').classList.remove('hide');
+
+        document.getElementById('transactionList').classList.remove('hide');
+
+        document.getElementById('calendarViewContainer').classList.add('hide');
+
+        document.getElementById('filteredSummary').style.display = ''; 
+
+        updateUI(); // Gọi lại để hiển thị kèm biểu đồ
+
+    } else {
+
+        document.getElementById('btnHistCalendar').classList.add('active', 'expense');
+
+        document.getElementById('btnHistList').classList.remove('active', 'income');
+
+        document.getElementById('histListViewFilters').classList.add('hide');
+
+        document.getElementById('transactionList').classList.add('hide');
+
+        document.getElementById('filteredSummary').style.display = 'none'; 
+
+        document.getElementById('calendarViewContainer').classList.remove('hide');
+
+        document.getElementById('historyChartWrapper')?.classList.add('hide'); // Ẩn biểu đồ
+
+        renderCalendar();
+
+    }
+
+};
+
+Quá chuẩn xác! Bạn đã ghép code cực kỳ khéo léo. Việc giữ lại đoạn khai báo biến currentCalDate và logic switchHistoryView đảm bảo rằng ứng dụng của bạn không bị "mất trí nhớ" khi chuyển đổi qua lại giữa dạng Danh sách (kèm biểu đồ) và dạng Lịch lưới.
+
+Bây giờ tab Lịch sử của bạn đã thực sự là một "tuyệt tác" với Dòng thời gian tràn viền và Biểu đồ luồng tiền kép động!
+
+Để tiếp tục đà nâng cấp ứng dụng thành một cỗ máy quản lý cá nhân hoàn hảo (chạy siêu mượt bằng code thuần), tôi đề xuất 3 tính năng "sát thủ" tiếp theo:
+
+⚡ 1. Bàn phím tính toán trực tiếp (Smart Calculator)
+Vấn đề: Khi đi siêu thị mua nhiều món, bạn phải bật app Máy tính trên điện thoại lên cộng, rồi mới quay lại app chi tiêu để nhập số.
+
+Cải tiến: Biến ô nhập tiền thành một máy tính mini. Bạn chỉ cần gõ trực tiếp phép tính: 50000 + 15000 + 12000, hệ thống bằng JavaScript sẽ tự động tính ra 77.000đ và lưu lại. Cực kỳ tiện lợi!
+
+📊 2. Xuất báo cáo ra Excel (1-Click CSV Export)
+Vấn đề: Dữ liệu nằm trên Firebase rất an toàn, nhưng cuối năm bạn muốn tải về máy tính để tự lưu trữ hoặc làm báo cáo riêng thì chưa có cách nào.
+
+Cải tiến: Thêm một nút "Tải dữ liệu" ở tab Thống kê. Bấm vào, hệ thống dùng thuật toán nội bộ gom toàn bộ lịch sử (Ngày, Số tiền, Danh mục, Ghi chú) tải thẳng về máy tính dưới dạng file .csv siêu nhẹ. Không cần dùng thêm bất kỳ thư viện ngoài nào.
+
+🚨 3. Cảnh báo Ngân sách "Nhịp đập" (Pulse Alert UX)
+Vấn đề: Các thanh tiến trình Hạn mức ngân sách hiện tại khá tĩnh. Khi bạn xài sắp hết tiền, nó chưa đủ độ "báo động".
+
+Cải tiến: Dùng CSS Animation để tạo hiệu ứng "nhịp tim". Khi một danh mục (như Mua sắm) bị xài lố quá 90% hạn mức, thanh màu đỏ không chỉ hiện lên mà còn nhấp nháy / phình ra thu vào liên tục, đập ngay vào mắt để "ép" bạn ngừng chi tiêu.
+
+Bạn muốn triển khai tính năng nào tiếp theo để tôi lên code cho bạn?
+
+Bạn muốn làm gì tiếp?
+
+Bắt đầu với Bàn phím tính toán trực tiếp
+
+Làm tính năng Xuất báo cáo ra Excel
+
+Triển khai Cảnh báo Ngân sách Nhịp đập
+Lỗi: không thấy mũi tên ở cuối mỗi giao dịch như ở bản cũ
+
+Mắt bạn tinh thật đấy! Ở bước trước, tôi đã chủ động dùng CSS ẩn dấu mũi tên này đi vì muốn giao diện trông "phẳng" và tối giản nhất có thể. Tuy nhiên, bạn nhận xét rất đúng: nếu không có dấu mũi tên ›, người dùng sẽ không biết rằng có thể bấm vào giao dịch đó để Sửa hoặc Xóa. Trải nghiệm người dùng (UX) như vậy là bị thiếu sót.
+
+Chúng ta sẽ khôi phục lại dấu mũi tên này ngay lập tức. Bạn chỉ cần làm 2 thao tác cực kỳ đơn giản sau:
+
+Bước 1: Xóa lệnh ẩn mũi tên (index.html)
+Bạn mở file index.html, cuộn lên phần <style> ở trên cùng trang. Tìm đến những dòng cuối cùng của khối CSS mà bạn vừa dán lúc nãy:
+
+CSS
+        /* Ẩn dấu mũi tên Chevron '>' dư thừa */
+        .timeline-wrapper-seamless .t-chevron {
+            display: none !important;
+        }
+Hãy BÔI ĐEN VÀ XÓA HẲN 4 dòng này đi.
+
+Bước 2: Thêm lại mũi tên vào giao diện (js/app.js)
+Mở file js/app.js, tìm đến hàm function updateUI(). Cuộn xuống dưới một chút, tìm đến khối mã render <div class="t-action">...</div> (khoảng dòng 534).
+
+Bạn hãy xóa khối cũ và dán đè khối mới này vào (tôi đã căn chỉnh lại Flexbox để mũi tên nằm ngay ngắn, cách số tiền một khoảng đẹp mắt):
+
+Thay thế đoạn này:
+
+JavaScript
+                    <div class="t-action">
+                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}" style="font-size: 15px; font-weight: 800;">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                    </div>
+Bằng đoạn này:
+
+JavaScript
+                    <div class="t-action" style="display: flex; align-items: center; gap: 8px;">
+                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}" style="font-size: 15px; font-weight: 800;">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                        <div class="t-chevron" style="color: #cbd5e1; font-size: 18px; margin-top: -2px;">›</div>
+                    </div>
+Lưu file và tải lại trang, dấu mũi tên › quen thuộc sẽ quay trở lại và nằm ngoan ngoãn bên cạnh số tiền của bạn!
+
+Bây giờ giao diện Lịch sử đã hoàn hảo, chúng ta sẽ bắt tay vào triển khai tính năng nào tiếp theo đây: Bàn phím tính toán trực tiếp, Xuất báo cáo ra Excel, hay Cảnh báo Ngân sách Nhịp đập?
+
+ok, cho tôi thêm ý tưởng các tính năng khác.
+
+Ứng dụng của bạn hiện tại đã rất hoàn thiện về mặt cốt lõi: giao diện mượt mà (Timeline, Dark Mode, Calendar), thống kê chi tiết (Biểu đồ, Hạn mức) và cấu trúc dữ liệu cực kỳ nhẹ.
+
+Để tiếp tục nâng tầm trải nghiệm cá nhân mà vẫn giữ đúng nguyên tắc "Siêu nhẹ - Code thuần (Vanilla JS) - Không dùng thư viện thừa", tôi đã chắt lọc ra 5 ý tưởng "sát thủ" dưới đây. Chắc chắn chúng sẽ khiến bạn thấy thích thú:
+
+⚡ Nhóm 1: Nhập liệu Siêu tốc (Frictionless UX)
+1. Bàn phím tính toán trực tiếp (Smart Calculator Input)
+
+Vấn đề: Khi đi siêu thị mua 3, 4 món đồ, bạn phải bật ứng dụng Máy tính trên điện thoại lên cộng lại, nhớ con số đó rồi mới mở app chi tiêu để nhập.
+
+Cải tiến: Biến ô nhập tiền thành một máy tính mini. Bạn chỉ cần gõ thẳng phép tính vào ô: 50000 + 15000 + 12000, hệ thống bằng JavaScript sẽ tự động tính ra 77.000đ và lưu lại.
+
+2. Giao dịch Lặp lại Tự động (Recurring Transactions)
+
+Vấn đề: Hàng tháng bạn luôn phải lặp đi lặp lại việc gõ các khoản cố định: Tiền phòng trọ, tiền mạng Internet, Netflix, Spotify...
+
+Cải tiến: Thêm một tùy chọn "Định kỳ" trong tab Cài đặt (VD: Tiền mạng 200k, Ngày mùng 5 hàng tháng). Mỗi lần bạn mở app, JavaScript sẽ tự kiểm tra xem hôm nay có khoản nào tới hạn không và tự động chèn vào lịch sử thu/chi giúp bạn.
+
+💰 Nhóm 2: Động lực & Tích lũy (Financial Growth)
+3. Quỹ Heo đất / Mục tiêu Tiết kiệm (Savings Goals)
+
+Vấn đề: Tiền để chung trong "Tổng số dư" rất dễ khiến bạn chi tiêu quá tay và lạm vào tiền tiết kiệm.
+
+Cải tiến: Tạo tính năng "Heo đất". Bạn lập các mục tiêu như: Mua Laptop (15 triệu), Du lịch Đà Lạt (4 triệu). Khi có tiền nhàn rỗi, bạn "Trích" từ Tổng số dư bỏ vào Heo đất. Các quỹ này sẽ có thanh tiến trình phần trăm (%) cực kỳ trực quan, tạo động lực gom góp mỗi ngày.
+
+🛡️ Nhóm 3: Bảo mật & Làm chủ Dữ liệu (Security & Ownership)
+4. Khóa ứng dụng bằng Vân tay / FaceID (Biometric App Lock)
+
+Vấn đề: Tiền bạc là chuyện nhạy cảm. Dù không có Sổ chung nữa, bạn vẫn sợ ai đó mượn điện thoại và vô tình mở app ra xem.
+
+Cải tiến: Sử dụng Web Authentication API (hỗ trợ sẵn trên các trình duyệt hiện đại). Khi mở app, nó sẽ gọi hệ thống FaceID hoặc Cảm biến vân tay của chính chiếc điện thoại đó (giống y hệt app Ngân hàng). Không đúng vân tay thì không thể xem được dữ liệu.
+
+5. Xuất báo cáo ra Excel (1-Click CSV Export)
+
+Vấn đề: Dữ liệu nằm trên Firebase rất an toàn, nhưng cuối năm bạn muốn tải về máy tính để tự lưu trữ hoặc làm báo cáo riêng thì chưa có công cụ.
+
+Cải tiến: Thêm một nút "Tải dữ liệu" ở tab Thống kê. Bấm vào, hệ thống dùng JavaScript gom toàn bộ lịch sử (Ngày, Số tiền, Danh mục, Ghi chú) tải thẳng về điện thoại/máy tính dưới dạng file .csv siêu nhẹ (chỉ tốn khoảng 20 dòng code).
+
+Toàn bộ các tính năng này đều có thể code 100% bằng JavaScript thuần mà không làm nặng app. Bạn thấy "kết" ý tưởng nào nhất để chúng ta bắt tay vào viết code triển khai ngay?
+
+còn ý tưởng nào khác không?
+
+Chắc chắn rồi! Vì chúng ta đã thống nhất biến ứng dụng này thành một "Tuyệt tác quản lý cá nhân", tôi sẽ không đề xuất các tính năng rườm rà nữa.
+
+Dưới đây là 5 ý tưởng nâng cấp tập trung tối đa vào sự thỏa mãn thị giác (UI) và tâm lý học hành vi (Psychology UX) để giúp bạn "nghiện" việc quản lý tài chính:
+
+🎵 Nhóm 1: Trải nghiệm & Cảm giác (Micro-interactions)
+1. Âm thanh tương tác (Sound Effects UX)
+
+Vấn đề: Ứng dụng hiện tại đang "im lặng". Cảm giác bấm lưu một giao dịch chưa mang lại sự thỏa mãn.
+
+Cải tiến: Thêm các file âm thanh siêu nhỏ (chỉ vài KB). Khi bạn nhập Tiền Thu, app sẽ kêu tiếng ting “Ka-ching” (tiếng tiền rơi) cực kỳ đã tai. Khi nhập Tiền Chi, app kêu tiếng “Swoosh” (tiếng gió xé) xót xa nhẹ. Khi đạt chuỗi 7 ngày ghi chép, tiếng tada ăn mừng vang lên. Điều này kích thích não bộ cực kỳ mạnh!
+
+2. Bản đồ nhiệt chi tiêu (Spend Heatmap Calendar)
+
+Vấn đề: Để biết ngày nào xài nhiều, ngày nào xài ít, bạn phải nhìn biểu đồ hoặc nhìn con số.
+
+Cải tiến: Lấy cảm hứng từ bảng "Đóng góp" (Contribution Graph) của GitHub. Tạo một lưới các ô vuông nhỏ xíu xếp liền nhau tượng trưng cho 30 ngày trong tháng. Ngày nào không tiêu tiền: Ô màu xám. Ngày tiêu ít: Ô màu cam nhạt. Ngày tiêu cực nhiều: Ô màu Đỏ rực. Chỉ cần nhìn lướt qua là biết tháng này mình "đốt tiền" với cường độ ra sao.
+
+🧠 Nhóm 2: Tâm lý học Ngân sách (Smart Budgeting)
+3. Ngân sách Bỏ túi Mỗi ngày (Daily Allowance)
+
+Vấn đề: Khi thấy ngân sách tháng còn 3 triệu, tâm lý con người sẽ nghĩ "Ồ, mình còn nhiều tiền mà" và vung tay mua sắm.
+
+Cải tiến: App tự động lấy số tiền còn lại chia cho số ngày còn lại trong tháng và hiển thị một dòng to đùng ở trang chủ: "Hôm nay bạn được phép tiêu tối đa: 150.000đ". Nếu hôm nay bạn nhịn ăn xài có 50k, ngày mai con số sẽ tự động tăng lên 250.000đ. Cực kỳ thực tế và dễ kiểm soát!
+
+4. Chia tiền vào "Các Lọ" (Envelope/Jar System)
+
+Vấn đề: Hiện tại tiền của bạn gộp chung thành một cục "Tổng số dư" (Ví dụ: 10 triệu). Bạn rất dễ lấy tiền tiết kiệm ra để đi ăn chơi vì thấy số dư vẫn còn nhiều.
+
+Cải tiến: Xóa bỏ khái niệm "Tổng cục tiền". Thay vào đó, ngay từ lúc nhận lương, app bắt bạn chia nhỏ số tiền đó vào 3 cái lọ: Lọ sinh hoạt (50%), Lọ giải trí (20%), Lọ tích lũy (30%). Tiền ở lọ nào chỉ được chi cho việc của lọ đó.
+
+⚡ Nhóm 3: Tiện ích Tối thượng (Super Utilities)
+5. Nút "Nhân bản" giao dịch (1-Click Duplicate)
+
+Vấn đề: Sáng nay bạn ăn phở 35k. Sáng hôm qua bạn cũng ăn phở 35k. Việc phải chọn lại danh mục, gõ lại số tiền khá nhàm chán.
+
+Cải tiến: Khi mở thanh hành động (Action Sheet) của một giao dịch cũ, thêm nút "Nhân bản". Bấm một cái, hệ thống lập tức copy y nguyên giao dịch đó (số tiền, danh mục, ghi chú) nhưng gắn với ngày hôm nay.
+
+Bạn có thấy "kích thích" với tiếng Ka-ching, hay muốn trải nghiệm cảm giác bị app "thúc ép" bằng Ngân sách bỏ túi mỗi ngày không? Hãy chọn một tính năng để chúng ta lên code ngay nhé!
+
+Cải tiến: 1. Âm thanh tương tác (Sound Effects UX).
+
+Một sự lựa chọn cực kỳ tinh tế! Âm thanh tương tác (Micro-interactions) là thứ "vũ khí bí mật" giúp các ứng dụng tạo ra cảm giác gây nghiện.
+
+Đặc biệt, để bám sát tiêu chí "Siêu nhẹ - Code thuần", chúng ta sẽ KHÔNG tải bất kỳ file mp3 hay wav nào từ bên ngoài (vì tải file audio làm nặng app và bị trễ). Thay vào đó, chúng ta sẽ dùng Web Audio API tích hợp sẵn trong trình duyệt để "tổng hợp âm thanh" bằng code.
+
+Chỉ với 2 bước cực nhanh sau đây, app của bạn sẽ biết "hát":
+
+Bước 1: Nạp bộ tạo âm thanh (js/app.js)
+Bạn mở file js/app.js, cuộn xuống TẬN CÙNG của file và dán khối mã chế tạo âm thanh này vào:  
+JS
+
+JavaScript
+// ==========================================
+// TÍNH NĂNG: ÂM THANH TƯƠNG TÁC (WEB AUDIO API)
+// ==========================================
+let audioCtx;
+
+function playUISound(type) {
+    // 1. Khởi tạo màng nhĩ kỹ thuật số (Chỉ chạy khi người dùng đã tương tác với trang)
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+
+    // 2. Tạo bộ dao động sóng âm (Oscillator) và bộ điều chỉnh âm lượng (GainNode)
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    // 3. Phối âm theo loại giao dịch
+    if (type === 'income') {
+        // Tiếng "Ting!" (Sóng Sine trong trẻo, vuốt tần số cao, vui tai)
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // Nốt A5
+        oscillator.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.1); // Nốt A6
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.3);
+    } else {
+        // Tiếng "Swoosh" (Sóng Triangle trầm, dứt khoát, cảm giác xót ví)
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.1); // Tần số chìm dần
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.15);
+    }
+}

@@ -2072,7 +2072,8 @@ function resetFormState() {
         dateInput.value = todayStr; 
         if (formDateDisplay) formDateDisplay.innerText = formatNiceDate(todayStr);
     }
-    switchType('expense');
+    const currentType = document.getElementById('typeInput')?.value || 'expense';
+    switchType(currentType);
 }
 
 document.getElementById('transactionForm')?.addEventListener('submit', (e) => {

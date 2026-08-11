@@ -27,6 +27,147 @@
         .cal-dot.in { background: var(--success); }
         .cal-dot.out { background: var(--danger); }
         .flatpickr-calendar { font-family: inherit; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: none; }
+		/* CSS NÚT THÊM NHANH (FAB) */
+        .fab-button {
+            position: fixed;
+            bottom: 85px; /* Nằm ngay trên Bottom Nav */
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 999;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .fab-button:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.5);
+        }
+        .fab-button:active {
+            transform: translateY(2px) scale(0.95);
+        }
+        .fab-button.hide {
+            transform: scale(0) rotate(-90deg);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .fab-button svg {
+            width: 26px;
+            height: 26px;
+            transition: transform 0.3s ease;
+        }
+        .fab-button.spin svg {
+            transform: rotate(90deg);
+        }
+		/* CSS FIX HOÀN CHỈNH CHO TIMELINE TRÀN VIỀN */
+        #transactionList {
+            overflow: visible !important;
+            padding-left: 2px;
+        }
+
+        .timeline-wrapper-seamless {
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        /* 1. Đường kẻ dọc đứt nét chạy thẳng xuyên suốt (Đẩy vào trong 22px để không bị xén) */
+        .timeline-wrapper-seamless::before {
+            content: '';
+            position: absolute;
+            left: 22px;
+            top: 20px;
+            bottom: 0;
+            border-left: 2px dashed #cbd5e1;
+            z-index: 1;
+        }
+        body.dark-theme .timeline-wrapper-seamless::before { 
+            border-left-color: #334155; 
+        }
+
+        /* 2. Tiêu đề ngày tháng */
+        .timeline-wrapper-seamless .date-group-header {
+            position: relative;
+            padding-left: 46px !important; /* Dành khoảng trống cho đường kẻ */
+            padding-top: 16px;
+            padding-bottom: 8px;
+            background: transparent !important;
+            z-index: 2;
+        }
+
+        /* Chấm tròn tiêu đề ngày */
+        .timeline-wrapper-seamless .timeline-group-marker {
+            position: absolute;
+            left: 17px; /* Căn đúng tâm đường kẻ */
+            top: 24px;
+            width: 12px;
+            height: 12px;
+            background: var(--bg-color);
+            border: 3px solid #94a3b8;
+            border-radius: 50%;
+            z-index: 3;
+        }
+        body.dark-theme .timeline-wrapper-seamless .timeline-group-marker { 
+            border-color: #475569; 
+        }
+
+        /* 3. Danh sách giao dịch */
+        .timeline-wrapper-seamless .date-group-items {
+            padding-left: 0 !important;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* XÓA SẠCH NỀN TRẮNG / SHADOW / BO GÓC / KHUNG VIỀN CỦA THẺ CARD */
+        .timeline-wrapper-seamless .transaction-item {
+            position: relative;
+            padding: 14px 12px 14px 46px !important; /* Đẩy nội dung sang phải nhường chỗ cho timeline */
+            margin-bottom: 0 !important;
+            background: transparent !important; /* Xóa nền trắng hoàn toàn */
+            box-shadow: none !important; /* Xóa bóng đổ */
+            border: none !important; /* Xóa khung viền */
+            border-bottom: 1px dashed #e2e8f0 !important; /* Chỉ giữ vạch gạch ngang mờ phân cách */
+            border-radius: 0 !important; /* Xóa bo góc */
+        }
+        .timeline-wrapper-seamless .transaction-item:last-child {
+            border-bottom: none !important;
+        }
+        body.dark-theme .timeline-wrapper-seamless .transaction-item {
+            border-bottom-color: #2d3748 !important;
+        }
+
+        /* Chấm Xanh/Đỏ nằm chính giữa đường kẻ đứt nét */
+        .timeline-wrapper-seamless .timeline-dot {
+            position: absolute;
+            left: 16px !important; /* Tọa độ dương, hiển thị trọn vẹn không bị mất góc */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-color);
+            z-index: 3;
+            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .timeline-wrapper-seamless .timeline-dot.in {
+            background: var(--success);
+            box-shadow: 0 0 0 1px var(--success);
+        }
+        .timeline-wrapper-seamless .timeline-dot.out {
+            background: var(--danger);
+            box-shadow: 0 0 0 1px var(--danger);
+        }
+
+        /* Ẩn dấu mũi tên Chevron '>' dư thừa */
+        .timeline-wrapper-seamless .t-chevron {
+            display: none !important;
+        }
     </style>
     <!-- SDK FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -321,7 +462,19 @@
                 </div>
             </div>
         </div>
-        
+        <!-- MỚI THÊM: BIỂU ĐỒ ĐƯỜNG THU/CHI THEO NGÀY -->
+            <div id="historyChartWrapper" class="hide" style="margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h4 style="font-size: 13px; color: var(--text-muted); font-weight: 700; margin: 0;">Luồng tiền</h4>
+                    <div style="display: flex; gap: 8px; font-size: 11px; font-weight: 700;">
+                        <span style="color: var(--success);"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--success); margin-right:4px;"></span>Thu</span>
+                        <span style="color: var(--danger);"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--danger); margin-right:4px;"></span>Chi</span>
+                    </div>
+                </div>
+                <div style="height: 180px; width: 100%;">
+                    <canvas id="historyLineChart"></canvas>
+                </div>
+            </div>
         <!-- DANH SÁCH GIAO DỊCH -->
         <div class="transaction-list" id="transactionList">
             <div class="loading-text">Đang tải dữ liệu...</div>
@@ -562,11 +715,6 @@
                 <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg> Đổi mật khẩu</div>
                 <div class="settings-item-right">›</div>
             </div>
-			<!-- NÚT MỞ SỔ CHUNG -->
-            <div class="settings-item" id="btnSettingsSharedLedger" style="margin-top: 10px;">
-                <div class="settings-item-left" style="color: var(--primary);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Sổ chi tiêu chung (Gia đình / Nhóm)</div>
-                <div class="settings-item-right">›</div>
-            </div>
             <div class="settings-item text-danger" id="btnSettingsLogout">
                 <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Đăng xuất</div>
                 <div class="settings-item-right"></div>
@@ -574,7 +722,13 @@
         </div>
     </div>
 </div> 
-
+<!-- NÚT THÊM NHANH (FAB) -->
+<button class="fab-button hide" id="fabAddTransaction" title="Thêm giao dịch mới">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+</button>
 <!-- BOTTOM NAVIGATION -->
 <div class="bottom-nav">
     <div class="nav-item active" id="tabHome">

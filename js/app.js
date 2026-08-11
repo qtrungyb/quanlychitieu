@@ -459,7 +459,6 @@ window.addEventListener('DOMContentLoaded', () => {
 auth.onAuthStateChanged(user => {
     if (user) {
         currentUser = user;
-		checkUserLedgerOnLogin(user.uid);
         document.getElementById('authOverlay')?.classList.add('hide');
 		document.getElementById('registerOverlay')?.classList.add('hide');
         
@@ -1305,17 +1304,19 @@ function updateUI() {
     });
 
     const sortedDates = Object.keys(grouped).sort().reverse();
-    let listHTML = '';
+    
+    let listHTML = '<div class="timeline-wrapper-seamless">';
 
     if(sortedDates.length === 0) {
         listEl.innerHTML = `
             <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px; opacity: 0.5;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 <p style="font-size: 15px; font-weight: 500;">Không tìm thấy giao dịch nào</p>
-                <p style="font-size: 13px; margin-top: 4px;">Hãy thử thay đổi bộ lọc thời gian hoặc từ khóa.</p>
             </div>
         `;
         if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
+        if (typeof calculateStreak === 'function') calculateStreak(); 
+        document.getElementById('historyChartWrapper')?.classList.add('hide');
         return;
     }
 
@@ -1328,7 +1329,8 @@ function updateUI() {
         listHTML += `
         <div class="date-group">
             <div class="date-group-header">
-                <div class="date-title">${displayDateText}</div>
+                <div class="timeline-group-marker"></div>
+                <div class="date-title" style="font-size: 15px;">${displayDateText}</div>
                 <div class="date-summary">
                     <span class="text-success">+${formatter.format(data.in)}</span> &nbsp;|&nbsp; 
                     <span class="text-danger">-${formatter.format(data.out)}</span>
@@ -1348,17 +1350,17 @@ function updateUI() {
             const safeName = cName.replace(/'/g, "\\'");
 
             listHTML += `
-                <div class="transaction-item" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})">
+                <div class="transaction-item timeline-item" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})">
+                    <div class="timeline-dot ${isInc ? 'in' : 'out'}"></div>
                     <div class="t-left">
-                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}">${iconSvg}</div>
+                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">${iconSvg}</div>
                         <div class="t-info">
-                            <div class="t-title">${cName}</div>
-                            <div class="t-note">${t.note || '...'}</div>
+                            <div class="t-title" style="font-size: 15px;">${cName}</div>
+                            <div class="t-note" style="font-size: 12px;">${t.note || '...'}</div>
                         </div>
                     </div>
                     <div class="t-action">
-                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
-                        <div class="t-chevron">›</div>
+                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}" style="font-size: 15px; font-weight: 800;">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
                     </div>
                 </div>
             `;
@@ -1367,6 +1369,8 @@ function updateUI() {
         listHTML += `</div></div>`; 
     }
 
+    listHTML += `</div>`; 
+
     if (sortedDates.length > currentDateLimit) {
         listHTML += `<button class="btn-load-more" onclick="currentDateLimit += ${DATES_PER_PAGE}; updateUI();">Xem thêm các ngày trước</button>`;
     }
@@ -1374,12 +1378,105 @@ function updateUI() {
     listEl.innerHTML = listHTML;
     if(typeof renderBudgets === 'function') renderBudgets();
     if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
-}
+    if (typeof calculateStreak === 'function') calculateStreak();
 
+    // ==========================================
+    // VẼ BIỂU ĐỒ ĐƯỜNG KÉP CHO TAB LỊCH SỬ
+    // ==========================================
+    const historyChartWrapper = document.getElementById('historyChartWrapper');
+    const isCalendarHidden = document.getElementById('calendarViewContainer').classList.contains('hide');
+
+    if (historyChartWrapper && isCalendarHidden && sortedDates.length > 0) {
+        historyChartWrapper.classList.remove('hide');
+        
+        const chartLabels = [];
+        const chartIncData = [];
+        const chartExpData = [];
+
+        // Đảo ngược mảng để vẽ biểu đồ tiến tới (từ cũ -> mới)
+        const chartSortedDates = [...sortedDates].reverse();
+
+        chartSortedDates.forEach(dateStr => {
+            const d = grouped[dateStr];
+            const [y, m, day] = dateStr.split('-');
+            chartLabels.push(`${day}/${m}`);
+            chartIncData.push(d.in);
+            chartExpData.push(d.out);
+        });
+
+        const canvas = document.getElementById('historyLineChart');
+        if (canvas) {
+            if (window.histLineChartInst) {
+                window.histLineChartInst.destroy();
+            }
+            const ctx = canvas.getContext('2d');
+            window.histLineChartInst = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'Tiền Thu',
+                            data: chartIncData,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#2ecc71',
+                            pointRadius: 4,
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Tiền Chi',
+                            data: chartExpData,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#e74c3c',
+                            pointRadius: 4,
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false, mode: 'index' },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} },
+                            grid: { borderDash: [4, 4] }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { maxTicksLimit: 7, font: {size: 10} }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(c) {
+                                    return ' ' + c.dataset.label + ': ' + formatter.format(c.parsed.y) + 'đ';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    } else if (historyChartWrapper) {
+        historyChartWrapper.classList.add('hide');
+    }
+}
 // LOGIC CHO CHẾ ĐỘ XEM LỊCH
 let currentCalDate = new Date();
 let selectedCalDateStr = todayStr; 
-
+// Ghi đè logic hiển thị Của Tab Lịch Sử
 window.switchHistoryView = function(view) {
     if(view === 'list') {
         document.getElementById('btnHistList').classList.add('active', 'income');
@@ -1388,6 +1485,7 @@ window.switchHistoryView = function(view) {
         document.getElementById('transactionList').classList.remove('hide');
         document.getElementById('calendarViewContainer').classList.add('hide');
         document.getElementById('filteredSummary').style.display = ''; 
+        updateUI(); // Gọi lại để hiển thị kèm biểu đồ
     } else {
         document.getElementById('btnHistCalendar').classList.add('active', 'expense');
         document.getElementById('btnHistList').classList.remove('active', 'income');
@@ -1395,9 +1493,11 @@ window.switchHistoryView = function(view) {
         document.getElementById('transactionList').classList.add('hide');
         document.getElementById('filteredSummary').style.display = 'none'; 
         document.getElementById('calendarViewContainer').classList.remove('hide');
+        document.getElementById('historyChartWrapper')?.classList.add('hide'); // Ẩn biểu đồ
         renderCalendar();
     }
 };
+
 
 window.changeCalendarMonth = function(delta) {
     currentCalDate.setMonth(currentCalDate.getMonth() + delta);
@@ -3800,139 +3900,51 @@ updateUI = function() {
     calculateStreak();           // Chạy thêm thuật toán tính chuỗi ngọn lửa
 };
 // ==========================================
-// TÍNH NĂNG: SỔ CHI TIÊU CHUNG (SHARED LEDGERS)
+// TÍNH NĂNG: NÚT THÊM NHANH (FAB - FLOATING ACTION BUTTON)
 // ==========================================
-let activeLedgerId = null; 
+const fabBtn = document.getElementById('fabAddTransaction');
 
-// 1. Mở Modal Quản lý Sổ chung
-function openSharedLedgerModal() {
-    document.getElementById('sharedLedgerOverlay')?.classList.add('show');
-    document.getElementById('sharedLedgerModal')?.classList.add('show');
-    updateSharedLedgerUIState();
-}
-window.openSharedLedgerModal = openSharedLedgerModal;
+if (fabBtn) {
+    fabBtn.addEventListener('click', () => {
+        // 1. Tạo hiệu ứng xoay icon 90 độ
+        fabBtn.classList.add('spin');
+        setTimeout(() => fabBtn.classList.remove('spin'), 300);
 
-function closeSharedLedgerModal() {
-    document.getElementById('sharedLedgerOverlay')?.classList.remove('show');
-    document.getElementById('sharedLedgerModal')?.classList.remove('show');
-}
-window.closeSharedLedgerModal = closeSharedLedgerModal;
-
-document.getElementById('btnSettingsSharedLedger')?.addEventListener('click', openSharedLedgerModal);
-
-// Cập nhật trạng thái hiển thị trong Modal
-function updateSharedLedgerUIState() {
-    const noState = document.getElementById('noLedgerState');
-    const activeState = document.getElementById('activeLedgerState');
-    const codeDisplay = document.getElementById('displayLedgerCode');
-
-    if (activeLedgerId) {
-        noState?.classList.add('hide');
-        activeState?.classList.remove('hide');
-        if (codeDisplay) codeDisplay.innerText = activeLedgerId;
-    } else {
-        noState?.classList.remove('hide');
-        activeState?.classList.add('hide');
-    }
-}
-
-// 2. Tạo Sổ chung mới
-window.createSharedLedger = function() {
-    if(!currentUser) return;
-    const newLedgerId = 'ledger_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-    
-    db.ref(`shared_ledgers/${newLedgerId}/info`).set({
-        createdAt: new Date().toISOString(),
-        owner: currentUser.uid
-    }).then(() => {
-        saveActiveLedger(newLedgerId);
-        showToast('Tạo sổ chung thành công!');
-        closeSharedLedgerModal();
-    }).catch(() => {
-        showToast('Lỗi khi tạo sổ', 'error');
-    });
-};
-
-// 3. Tham gia Sổ chung bằng Mã
-window.joinSharedLedger = function() {
-    if(!currentUser) return;
-    const codeInput = document.getElementById('joinLedgerCodeInput');
-    const code = codeInput ? codeInput.value.trim() : '';
-
-    if (!code) {
-        showToast('Vui lòng nhập mã sổ!', 'error');
-        return;
-    }
-
-    db.ref(`shared_ledgers/${code}/info`).once('value').then(snap => {
-        if (!snap.exists()) {
-            showToast('Mã sổ không tồn tại!', 'error');
-            return;
+        // 2. Chuyển về màn hình Nhập liệu (Home)
+        if (!document.getElementById('homeView').classList.contains('active')) {
+            switchTab('home');
         }
-        saveActiveLedger(code);
-        showToast('Đã tham gia sổ chung thành công!');
-        closeSharedLedgerModal();
-        if(codeInput) codeInput.value = '';
-    }).catch(() => {
-        showToast('Lỗi kết nối!', 'error');
-    });
-};
 
-// 4. Rời khỏi sổ chung (Quay lại sổ cá nhân)
-window.leaveSharedLedger = function() {
-    if(confirm('Bạn có chắc muốn rời khỏi sổ chung này để trở về sổ cá nhân?')) {
-        saveActiveLedger(null);
-        showToast('Đã rời sổ chung');
-        closeSharedLedgerModal();
-    }
-};
+        // 3. Reset form trắng trẻo để nhập dữ liệu mới
+        if (typeof resetFormState === 'function') resetFormState();
 
-// Lưu trạng thái Sổ đang hoạt động vào Profile của User trên Firebase
-function saveActiveLedger(ledgerId) {
-    activeLedgerId = ledgerId;
-    if (currentUser) {
-        db.ref(`users/${currentUser.uid}/activeLedgerId`).set(ledgerId);
-    }
-    initTransactionListener();
-}
-
-// 5. ĐIỀU PHƯỚC LUỒNG LẮNG NGHE DỮ LIỆU GIAO DỊCH (REALTIME SYNC)
-let currentTxRef = null;
-
-function initTransactionListener() {
-    if (!currentUser) return;
-
-    if (currentTxRef) {
-        currentTxRef.off();
-    }
-
-    const targetPath = activeLedgerId 
-        ? `shared_ledgers/${activeLedgerId}/transactions` 
-        : `users/${currentUser.uid}/transactions`;
-
-    currentTxRef = db.ref(targetPath);
-    txRef = currentTxRef; // Đồng bộ với biến toàn cục
-
-    currentTxRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        let loadedTransactions = [];
-        if (data) {
-            for (let dateKey in data) {
-                for (let txId in data[dateKey]) {
-                    loadedTransactions.push({ id: Number(txId), date: dateKey, ...data[dateKey][txId] });
-                }
+        // 4. Cuộn mượt mà lên đầu trang và tự động nhấp nháy chuột vào ô Nhập Tiền
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => {
+            const amtInput = document.getElementById('amountInputDisplay');
+            if (amtInput) {
+                amtInput.focus();
+                // Kích hoạt bàn phím số trên điện thoại
+                amtInput.click();
             }
-        }
-        transactions = loadedTransactions;
-        updateUI();
-        renderCharts(); 
+        }, 300);
     });
 }
 
-// 6. KHÔI PHỤC TRẠNG THÁI SỔ KHI ĐĂNG NHẬP
-function checkUserLedgerOnLogin(uid) {
-    db.ref(`users/${uid}/activeLedgerId`).once('value').then(snap => {
-        activeLedgerId = snap.val() || null;
-        initTransactionListener();
-    });
-}
+// 5. THUẬT TOÁN ĐÁNH CHẶN: Chỉ hiện nút FAB khi không ở tab Home
+const originalSwitchTabForFAB = switchTab;
+switchTab = function(tabName) {
+    originalSwitchTabForFAB(tabName); // Chạy logic chuyển tab gốc
+    
+    const fab = document.getElementById('fabAddTransaction');
+    if (fab) {
+        if (tabName === 'home') {
+            fab.classList.add('hide'); // Ẩn khi ở màn hình nhập liệu
+        } else {
+            fab.classList.remove('hide'); // Hiện lơ lửng ở các màn hình khác
+        }
+    }
+};
+
+// Gọi thử 1 lần lúc mới tải trang để ẩn FAB đi (vì trang mặc định là tab Home)
+setTimeout(() => { switchTab('home'); }, 100);

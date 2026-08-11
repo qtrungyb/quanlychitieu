@@ -259,6 +259,31 @@
             50% { transform: scale(1.2); }
             100% { transform: scale(1); }
         }
+		/* SỬA LỖI MẤT PHÂN CÁCH VÀ TRÀN KHUNG LỊCH SỬ */
+        .timeline-wrapper-seamless .date-group-items {
+            background: transparent !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        
+        .timeline-wrapper-seamless .transaction-item.swipe-front {
+            background: transparent !important;
+            border-bottom: 1px dashed #cbd5e1 !important;
+        }
+        
+        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front {
+            border-bottom-color: #334155 !important;
+        }
+
+        /* KHÔI PHỤC VẠCH KẺ ĐỨT NÉT PHÂN TÁC TRÊN TAB THỐNG KÊ */
+        #analyticsView > div {
+            border-bottom: 1px dashed #e2e8f0;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        body.dark-theme #analyticsView > div {
+            border-bottom-color: #2d3748;
+        }
     </style>
     <!-- SDK FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>

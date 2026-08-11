@@ -1359,8 +1359,9 @@ function updateUI() {
                             <div class="t-note" style="font-size: 12px;">${t.note || '...'}</div>
                         </div>
                     </div>
-                    <div class="t-action">
+                    <div class="t-action" style="display: flex; align-items: center; gap: 8px;">
                         <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}" style="font-size: 15px; font-weight: 800;">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                        <div class="t-chevron" style="color: #cbd5e1; font-size: 18px; margin-top: -2px;">›</div>
                     </div>
                 </div>
             `;

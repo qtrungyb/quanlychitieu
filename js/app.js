@@ -4098,3 +4098,305 @@ function initSwipeActions() {
 document.addEventListener('DOMContentLoaded', () => {
     initSwipeActions();
 });
+// ==========================================
+// TÍNH NĂNG: HỆ THỐNG HUY HIỆU (VŨ TRỤ GAMIFICATION V3 - ĐA NHÓM)
+// ==========================================
+let unlockedBadges = {};
+
+// 1. Kho tàng 42 Huy hiệu Độc quyền (Được chia làm 6 Nhóm)
+const BADGES_CONFIG = [
+    // --- Nhóm 1: ⏳ KỶ LUẬT BỀN BỈ (Streak) ---
+    { id: 'streak_3', name: 'Khởi Động', desc: 'Ghi chép 3 ngày liên tiếp', icon: '🔥', group: 1 },
+    { id: 'streak_7', name: 'Tuần Trăng Mật', desc: 'Ghi chép 7 ngày liên tiếp', icon: '🥉', group: 1 },
+    { id: 'streak_21', name: 'Định Hình', desc: 'Ghi chép 21 ngày liên tiếp', icon: '🥈', group: 1 },
+    { id: 'streak_100', name: 'Kỷ Luật Thép', desc: 'Ghi chép 100 ngày liên tiếp', icon: '🥇', group: 1 },
+    { id: 'streak_365', name: 'Khổ Luyện', desc: 'Ghi chép 365 ngày (1 năm) không sót ngày nào', icon: '🐉', group: 1 },
+
+    // --- Nhóm 2: 🎯 CỘT MỐC GIAO DỊCH (Milestones) ---
+    { id: 'count_10', name: 'Mầm Non', desc: 'Đạt 10 giao dịch đầu tiên', icon: '👶', group: 2 },
+    { id: 'count_100', name: 'Bứt Tốc', desc: 'Đạt 100 giao dịch', icon: '🚀', group: 2 },
+    { id: 'count_500', name: 'Máy Đếm Tiền', desc: 'Đạt 500 giao dịch', icon: '🏦', group: 2 },
+    { id: 'count_1000', name: 'Đại Gia', desc: 'Đạt 1.000 giao dịch', icon: '👑', group: 2 },
+    { id: 'count_2000', name: 'Thần Gõ Phím', desc: 'Đạt 2.000 giao dịch', icon: '⌨️', group: 2 },
+
+    // --- Nhóm 3: 🍔 ĐAM MÊ & LỐI SỐNG (Lifestyle) ---
+    { id: 'shop_king', name: 'Vua Mua Sắm', desc: 'Có hơn 20 lần vung tiền vào Mua sắm', icon: '🛍️', group: 3 },
+    { id: 'shopee_lord', name: 'Chúa Tể Chốt Đơn', desc: 'Ghi chú "shopee", "lazada", "tiktok" 5 lần', icon: '🛒', group: 3 },
+    { id: 'boba_addict', name: 'Bể Trà Sữa', desc: 'Uống trà sữa hơn 10 lần', icon: '🧋', group: 3 },
+    { id: 'boba_enemy', name: 'Kẻ Thù Trà Sữa', desc: 'Ghi chú "nhịn trà sữa" hoặc "cai trà sữa"', icon: '🛡️', group: 3 },
+    { id: 'foodie', name: 'Cái Mỏ Khoét', desc: 'Phát sinh 30 giao dịch Ăn uống', icon: '🍲', group: 3 },
+    { id: 'travel_bug', name: 'Cuồng Chân', desc: 'Ghi chú "vé máy bay", "khách sạn", "du lịch" 3 lần', icon: '✈️', group: 3 },
+    { id: 'pet_lover', name: 'Sen Yêu Boss', desc: 'Ghi chú liên quan đến chó/mèo/pate 5 lần', icon: '🐈', group: 3 },
+    { id: 'beauty_guru', name: 'Đại Sứ Nhan Sắc', desc: 'Làm đẹp, spa, mỹ phẩm 5 lần', icon: '💄', group: 3 },
+    { id: 'tech_bro', name: 'Hệ Công Nghệ', desc: 'Mua đồ công nghệ (điện thoại/laptop) trên 10 triệu', icon: '💻', group: 3 },
+
+    // --- Nhóm 4: 📈 QUẢN LÝ THÔNG MINH (Finance Mastery) ---
+    { id: 'piggy_bank', name: 'Heo Đất Béo', desc: 'Trích hơn 1 triệu với ghi chú "tiết kiệm"', icon: '🐷', group: 4 },
+    { id: 'investor', name: 'Cá Mập Phố Wall', desc: 'Ghi chú "cổ phiếu", "chứng khoán", "vàng" 5 lần', icon: '📈', group: 4 },
+    { id: 'pay_debt', name: 'Uy Tín Đầy Mình', desc: 'Ghi chú "trả nợ" hoặc "thanh toán nợ"', icon: '🤝', group: 4 },
+    { id: 'refund_lord', name: 'Trùm Hoàn Tiền', desc: 'Nhận Tiền thu với ghi chú "hoàn tiền", "refund"', icon: '🔄', group: 4 },
+    { id: 'adulting', name: 'Người Trưởng Thành', desc: 'Thanh toán tiền Điện, Nước, Mạng', icon: '🧾', group: 4 },
+
+    // --- Nhóm 5: 🎭 HIỆN THỰC KHỐC LIỆT (Tears & Fines) ---
+    { id: 'traffic_fine', name: 'Đóng Họ Quốc Gia', desc: 'Bị Công an phạt (Ghi chú "phạt", "csgt", "công an")', icon: '👮', group: 5 },
+    { id: 'broken_bike', name: 'Thánh Nhọ', desc: 'Xe hư giữa đường ("sửa xe", "thủng săm", "bơm xe")', icon: '🔧', group: 5 },
+    { id: 'borrow_money', name: 'Phao Cứu Sinh', desc: 'Phải vay mượn người khác ("vay tiền", "mượn tiền")', icon: '🆘', group: 5 },
+    { id: 'broke_af', name: 'Cạp Đất Mà Ăn', desc: 'Số dư tổng tụt xuống dưới 10.000đ', icon: '🍂', group: 5 },
+    { id: 'broke_mid', name: 'Viêm Màng Túi', desc: 'Còn dưới 50k mà chưa qua ngày 15 của tháng', icon: '🫠', group: 5 },
+
+    // --- Nhóm 6: 🐣 ẨN SỐ & THỜI GIAN (Easter Eggs) ---
+    { id: 'egg_owl', name: 'Cú Đêm', desc: 'Chi tiền vào lúc 0h - 4h sáng', icon: '🦉', group: 6 },
+    { id: 'egg_bird', name: 'Gà Mờ', desc: 'Tiêu tiền vào khung giờ 4h - 6h sáng', icon: '🐓', group: 6 },
+    { id: 'order_rush', name: 'Xả Lũ Chốt Đơn', desc: 'Phát sinh hơn 10 giao dịch chi tiền chỉ trong 1 ngày', icon: '📦', group: 6 },
+    { id: 'weekend_party', name: 'Dân Chơi Cuối Tuần', desc: 'Chi hơn 5 khoản trong 1 ngày Thứ 7 hoặc Chủ Nhật', icon: '🪩', group: 6 },
+    { id: 'lucky_hand', name: 'Bàn Tay Vàng', desc: 'Khoản thu mang tên "trúng thưởng" / "lì xì" / "vietlott"', icon: '🧧', group: 6 },
+    { id: 'big_spender', name: 'Khách Sộp', desc: 'Có 1 khoản chi vung tay trên 10 triệu', icon: '💸', group: 6 },
+    { id: 'valentine_sad', name: 'Lễ Tình Nhân', desc: 'Phát sinh giao dịch đúng ngày 14/02', icon: '💔', group: 6 },
+    { id: 'salary_joy', name: 'Ting Ting!', desc: 'Nhận "Tiền lương" vào ngày 1, 5, 10 hoặc 15', icon: '💰', group: 6 },
+    { id: 'rich_kid', name: 'Đại Gia Ngầm', desc: 'Tổng số dư vượt mốc 50 triệu đồng', icon: '💎', group: 6 }
+];
+
+const BADGE_GROUPS = {
+    1: '⏳ Kỷ Luật Bền Bỉ',
+    2: '🎯 Cột Mốc Giao Dịch',
+    3: '🍔 Đam Mê & Lối Sống',
+    4: '📈 Quản Lý Thông Minh',
+    5: '🎭 Hiện Thực Khốc Liệt',
+    6: '🐣 Ẩn Số & Sự Kiện'
+};
+
+// 2. Hàm vẽ Tủ trưng bày (Phân nhóm chuyên nghiệp)
+function renderBadgeCabinet() {
+    const cabinet = document.getElementById('badgeCabinet');
+    if (!cabinet) return;
+    
+    // Tính toán tỷ lệ hoàn thành
+    const unlockedCount = Object.keys(unlockedBadges).length;
+    const progressPercent = Math.round((unlockedCount / BADGES_CONFIG.length) * 100);
+    
+    // Xóa grid mặc định của container cha để chia grid theo nhóm con
+    cabinet.style.display = 'block'; 
+    
+    let html = `
+        <div style="margin-bottom: 24px; padding: 16px; background: var(--card-bg); border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; font-weight: 800; color: var(--text-main);">
+                <span>Tiến độ Thu thập</span>
+                <span style="color: var(--primary);">${unlockedCount}/${BADGES_CONFIG.length} (${progressPercent}%)</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="width: ${progressPercent}%; height: 100%; background: linear-gradient(90deg, #f5af19, #f12711); transition: 1s ease-out;"></div>
+            </div>
+        </div>
+    `;
+
+    // Render từng nhóm
+    for (let groupId = 1; groupId <= 6; groupId++) {
+        const groupBadges = BADGES_CONFIG.filter(b => b.group === groupId);
+        const unlockedInGroup = groupBadges.filter(b => unlockedBadges[b.id]).length;
+        
+        html += `
+            <div style="margin-bottom: 24px;">
+                <h4 style="font-size: 14px; font-weight: 800; margin-bottom: 12px; color: var(--text-main); display: flex; justify-content: space-between;">
+                    ${BADGE_GROUPS[groupId]}
+                    <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); background: var(--bg-color); padding: 2px 8px; border-radius: 10px;">${unlockedInGroup}/${groupBadges.length}</span>
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+        `;
+        
+        groupBadges.forEach(b => {
+            const isUnlocked = unlockedBadges[b.id] ? 'unlocked' : '';
+            html += `
+                <div class="badge-item ${isUnlocked}" onclick="openBadgeInfo('${b.id}')" style="cursor: pointer;">
+                    <div class="badge-icon">${b.icon}</div>
+                    <div class="badge-name">${b.name}</div>
+                </div>
+            `;
+        });
+        
+        html += `</div></div>`; // Đóng Grid và Group
+    }
+
+    cabinet.innerHTML = html;
+}
+
+// 3. Hàm mở Popup hiển thị chi tiết Huy hiệu
+window.openBadgeInfo = function(id) {
+    const b = BADGES_CONFIG.find(x => x.id === id);
+    if (!b) return;
+
+    const isUnlocked = !!unlockedBadges[b.id];
+    const iconEl = document.getElementById('biIcon');
+    const statusEl = document.getElementById('biStatus');
+    const btnClose = document.querySelector('#badgeInfoModal button');
+
+    document.getElementById('biName').innerText = b.name;
+    document.getElementById('biDesc').innerText = b.desc;
+    iconEl.innerText = b.icon;
+
+    if (isUnlocked) {
+        // UI khi Đã mở khóa
+        const unlockTime = new Date(unlockedBadges[b.id]);
+        const dateStr = `${String(unlockTime.getDate()).padStart(2, '0')}/${String(unlockTime.getMonth()+1).padStart(2, '0')}/${unlockTime.getFullYear()}`;
+        
+        iconEl.style.filter = 'drop-shadow(0 10px 25px rgba(255,215,0,0.6))';
+        iconEl.style.transform = 'scale(1.1)';
+        
+        statusEl.innerText = `🌟 ĐÃ MỞ KHÓA (${dateStr})`;
+        statusEl.style.background = 'var(--success-light)';
+        statusEl.style.color = 'var(--success)';
+        
+        btnClose.style.background = 'var(--primary)';
+        btnClose.style.color = 'white';
+    } else {
+        // UI khi Chưa mở khóa
+        iconEl.style.filter = 'grayscale(1) opacity(0.4)';
+        iconEl.style.transform = 'scale(1)';
+        
+        statusEl.innerText = '🔒 CHƯA MỞ KHÓA';
+        statusEl.style.background = '#f1f5f9';
+        statusEl.style.color = '#64748b';
+        
+        btnClose.style.background = '#e2e8f0';
+        btnClose.style.color = '#475569';
+    }
+
+    // Hiển thị trực tiếp bằng Javascript
+    document.getElementById('badgeInfoOverlay').style.display = 'block';
+    document.getElementById('badgeInfoModal').style.display = 'block';
+};
+
+window.closeBadgeInfo = function() {
+    document.getElementById('badgeInfoOverlay').style.display = 'none';
+    document.getElementById('badgeInfoModal').style.display = 'none';
+};
+
+// 4. AI Phân tích dữ liệu & Trao thưởng (Đã nâng cấp Regex siêu nhạy)
+function evaluateAchievements() {
+    if (!currentUser || transactions.length === 0) return;
+    let newlyUnlocked = null;
+    
+    // --- CHUẨN BỊ DỮ LIỆU ĐỂ PHÂN TÍCH ---
+    const totalTx = transactions.length;
+    const currentStreak = parseInt(document.getElementById('streakCount')?.innerText || '0');
+    const expTxs = transactions.filter(t => t.type === 'expense');
+    const incTxs = transactions.filter(t => t.type === 'income');
+    
+    const today = new Date();
+    const todayDateNum = today.getDate();
+    
+    // Đếm số đơn trong từng ngày
+    const dateCounts = {};
+    expTxs.forEach(t => { dateCounts[t.date] = (dateCounts[t.date] || 0) + 1; });
+    const maxDailyOrders = Object.values(dateCounts).length > 0 ? Math.max(...Object.values(dateCounts)) : 0;
+
+    // --- TIẾN HÀNH QUÉT ĐIỀU KIỆN ---
+    BADGES_CONFIG.forEach(b => {
+        if (unlockedBadges[b.id]) return; 
+        
+        let isMet = false;
+        
+        // Nhóm 1: Kỷ luật
+        if (b.id === 'streak_3' && currentStreak >= 3) isMet = true;
+        if (b.id === 'streak_7' && currentStreak >= 7) isMet = true;
+        if (b.id === 'streak_21' && currentStreak >= 21) isMet = true;
+        if (b.id === 'streak_100' && currentStreak >= 100) isMet = true;
+        if (b.id === 'streak_365' && currentStreak >= 365) isMet = true;
+        
+        // Nhóm 2: Số lượng
+        if (b.id === 'count_10' && totalTx >= 10) isMet = true;
+        if (b.id === 'count_100' && totalTx >= 100) isMet = true;
+        if (b.id === 'count_500' && totalTx >= 500) isMet = true;
+        if (b.id === 'count_1000' && totalTx >= 1000) isMet = true;
+        if (b.id === 'count_2000' && totalTx >= 2000) isMet = true;
+        
+        // Nhóm 3: Lối sống (Regex)
+        if (b.id === 'shop_king' && expTxs.filter(t => t.categoryName?.toLowerCase().includes('mua sắm')).length >= 20) isMet = true;
+        if (b.id === 'shopee_lord' && expTxs.filter(t => t.note?.toLowerCase().match(/shopee|lazada|tiktok|tiki/)).length >= 5) isMet = true;
+        if (b.id === 'boba_addict' && expTxs.filter(t => t.note?.toLowerCase().match(/trà sữa|boba|phê la|koi|highlands|phúc long/)).length >= 10) isMet = true;
+        if (b.id === 'boba_enemy' && transactions.some(t => t.note?.toLowerCase().match(/cai trà sữa|nhịn trà sữa|không uống trà sữa/))) isMet = true;
+        if (b.id === 'foodie' && expTxs.filter(t => t.categoryName?.toLowerCase().includes('ăn uống')).length >= 30) isMet = true;
+        if (b.id === 'travel_bug' && expTxs.filter(t => t.note?.toLowerCase().match(/vé máy bay|du lịch|homestay|khách sạn|resort/)).length >= 3) isMet = true;
+        if (b.id === 'pet_lover' && expTxs.filter(t => t.note?.toLowerCase().match(/thú cưng|chó|mèo|pate|cát mèo/)).length >= 5) isMet = true;
+        if (b.id === 'beauty_guru' && expTxs.filter(t => t.note?.toLowerCase().match(/mỹ phẩm|skincare|spa|cắt tóc|làm đẹp|nail/)).length >= 5) isMet = true;
+        if (b.id === 'tech_bro' && expTxs.some(t => t.amount >= 10000000 && t.note?.toLowerCase().match(/điện thoại|laptop|apple|samsung|bàn phím|chuột/))) isMet = true;
+
+        // Nhóm 4: Quản lý Thông minh
+        if (b.id === 'piggy_bank' && expTxs.some(t => t.amount >= 1000000 && t.note?.toLowerCase().match(/tiết kiệm|heo đất/))) isMet = true;
+        if (b.id === 'investor' && expTxs.filter(t => t.note?.toLowerCase().match(/cổ phiếu|chứng khoán|vàng|sjc|coin|crypto/)).length >= 5) isMet = true;
+        if (b.id === 'pay_debt' && expTxs.some(t => t.note?.toLowerCase().match(/trả nợ|thanh toán nợ/))) isMet = true;
+        if (b.id === 'refund_lord' && incTxs.some(t => t.note?.toLowerCase().match(/hoàn tiền|refund/))) isMet = true;
+        if (b.id === 'adulting' && expTxs.filter(t => t.categoryName?.toLowerCase().match(/hóa đơn|điện|nước|mạng|internet/)).length >= 5) isMet = true;
+
+        // Nhóm 5: Hiện thực khốc liệt
+        if (b.id === 'traffic_fine' && expTxs.some(t => t.note?.toLowerCase().match(/phạt|công an|csgt|giao thông/))) isMet = true;
+        if (b.id === 'broken_bike' && expTxs.some(t => t.note?.toLowerCase().match(/sửa xe|thủng săm|bơm xe|vá xe|thay dầu/))) isMet = true;
+        if (b.id === 'borrow_money' && expTxs.some(t => t.note?.toLowerCase().match(/vay tiền|mượn tiền|vay nợ/))) isMet = true;
+        if (b.id === 'broke_af' && currentBalances.total >= 0 && currentBalances.total < 10000 && totalTx > 5) isMet = true;
+        if (b.id === 'broke_mid' && currentBalances.total >= 0 && currentBalances.total < 50000 && todayDateNum <= 15 && totalTx > 10) isMet = true;
+
+        // Nhóm 6: Ẩn số & Thời gian
+        if (b.id === 'egg_owl' && expTxs.some(t => new Date(t.id).getHours() >= 0 && new Date(t.id).getHours() < 4)) isMet = true;
+        if (b.id === 'egg_bird' && expTxs.some(t => new Date(t.id).getHours() >= 4 && new Date(t.id).getHours() < 6)) isMet = true;
+        if (b.id === 'order_rush' && maxDailyOrders >= 10) isMet = true;
+        
+        if (b.id === 'weekend_party') {
+            const hasCrazyWeekend = Object.keys(dateCounts).some(dateStr => {
+                const dayOfWeek = new Date(dateStr).getDay();
+                return (dayOfWeek === 0 || dayOfWeek === 6) && dateCounts[dateStr] >= 5;
+            });
+            if (hasCrazyWeekend) isMet = true;
+        }
+
+        if (b.id === 'lucky_hand' && incTxs.some(t => t.note?.toLowerCase().match(/trúng thưởng|lì xì|được cho|cho tiền|vietlott/))) isMet = true;
+        if (b.id === 'big_spender' && expTxs.some(t => t.amount >= 10000000)) isMet = true;
+        
+        if (b.id === 'valentine_sad' && expTxs.some(t => {
+            const txDate = new Date(t.date);
+            return txDate.getDate() === 14 && (txDate.getMonth() + 1) === 2;
+        })) isMet = true;
+
+        if (b.id === 'salary_joy' && incTxs.some(t => {
+            const txDate = new Date(t.date).getDate();
+            return (txDate === 1 || txDate === 5 || txDate === 10 || txDate === 15) && t.categoryName?.toLowerCase().includes('lương');
+        })) isMet = true;
+
+        if (b.id === 'rich_kid' && currentBalances.total >= 50000000) isMet = true;
+
+        // LƯU VÀO FIREBASE NẾU ĐẠT CHUẨN
+        if (isMet) {
+            unlockedBadges[b.id] = Date.now();
+            db.ref(`users/${currentUser.uid}/badges/${b.id}`).set(Date.now());
+            newlyUnlocked = b; 
+        }
+    });
+
+    // Bắn pháo hoa nếu có huy hiệu mới!
+    if (newlyUnlocked) {
+        document.getElementById('badgePopupName').innerText = newlyUnlocked.name;
+        document.getElementById('badgePopupIcon').innerText = newlyUnlocked.icon;
+        document.getElementById('badgePopupDesc').innerText = newlyUnlocked.desc;
+        
+        document.getElementById('badgePopupOverlay').style.display = 'block';
+        document.getElementById('badgePopupModal').style.display = 'block';
+        
+        if(typeof playUISound === 'function') playUISound('income'); 
+        renderBadgeCabinet();
+    }
+}
+
+// 5. Lắng nghe dữ liệu huy hiệu từ Firebase
+auth.onAuthStateChanged(user => {
+    if(user) {
+        db.ref(`users/${user.uid}/badges`).on('value', snap => {
+            unlockedBadges = snap.val() || {};
+            renderBadgeCabinet();
+        });
+    }
+});
+
+// 6. Móc nối để tự động chạy ngầm mỗi khi cập nhật UI
+const originalUpdateUIForBadges = updateUI;
+updateUI = function() {
+    originalUpdateUIForBadges();
+    setTimeout(() => { evaluateAchievements(); }, 600); // Đợi giao diện load xong mới chấm điểm
+};

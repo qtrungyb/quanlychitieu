@@ -213,6 +213,52 @@
             background: var(--bg-color);
             z-index: -1;
         }
+		/* CSS HỆ THỐNG HUY HIỆU (GAMIFICATION) */
+        .badge-item {
+            aspect-ratio: 1;
+            border-radius: 16px;
+            background: var(--card-bg);
+            border: 1px solid #e2e8f0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 8px; position: relative; overflow: hidden;
+            transition: all 0.3s ease;
+            filter: grayscale(1); /* Mặc định là đen trắng (chưa mở khóa) */
+            opacity: 0.5;
+        }
+        body.dark-theme .badge-item { border-color: #2d3748; }
+        
+        .badge-icon { font-size: 32px; margin-bottom: 4px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .badge-name { font-size: 10px; font-weight: 800; line-height: 1.2; }
+        
+        /* Khi Đã Mở Khóa */
+        .badge-item.unlocked {
+            filter: grayscale(0);
+            opacity: 1;
+            border-color: #ffd700;
+            background: linear-gradient(135deg, #fffcf0, #fff7c2);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+            transform: translateY(-2px);
+        }
+        body.dark-theme .badge-item.unlocked { background: linear-gradient(135deg, #3a3210, #544400); }
+        
+        /* Hiệu ứng phản quang kim loại (Foil Effect) chớp nháy liên tục */
+        .badge-item.unlocked::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.8), transparent);
+            transform: rotate(45deg) translateY(-100%);
+            animation: foilShine 4s infinite;
+        }
+        
+        @keyframes foilShine {
+            0% { transform: rotate(45deg) translateY(-100%); }
+            20% { transform: rotate(45deg) translateY(100%); }
+            100% { transform: rotate(45deg) translateY(100%); }
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
     </style>
     <!-- SDK FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -599,44 +645,66 @@
             </div>
         </div>
 
-        <div class="chart-card">
-            <div class="chart-header" style="flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 class="chart-title">Cơ cấu danh mục</h3>
-                    <span class="chart-subtitle">Đang tải...</span>
-                </div>
-                <div class="type-toggle" style="margin-bottom: 0;">
-                    <button type="button" class="btn-toggle active expense" id="btnPieExp" style="height: 36px; font-size: 14px;">Tiền Chi</button>
-                    <button type="button" class="btn-toggle income" id="btnPieInc" style="height: 36px; font-size: 14px;">Tiền Thu</button>
-                </div>
-            </div>
-            
-            <div class="chart-container"><canvas id="pieChart"></canvas></div>
-            <div id="pieEmptyState" class="empty-chart hide"><p id="pieEmptyText">Chưa có dữ liệu</p></div>
+        <!-- ========================================== -->
+            <!-- KHU VỰC BIỂU ĐỒ ĐÃ ĐƯỢC SẮP XẾP LẠI -->
+            <!-- ========================================== -->
 
-            <div id="top5Container" style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
-                <div class="chart-header" style="margin-bottom: 12px;">
-                    <h3 class="chart-title" style="font-size: 14px;" id="top5Title">Top 5 khoản chi lớn nhất</h3>
+            <!-- 1. BIỂU ĐỒ CỘT (BAR CHART) -->
+            <div style="margin-top: 24px;">
+                <h3 class="chart-title" style="font-size: 15px; margin: 0;">So sánh Thu / Chi</h3>
+                <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;"></p>
+                <div style="height: 220px; width: 100%;">
+                    <canvas id="barChart"></canvas>
                 </div>
-                <div class="transaction-list" id="topExpenseList" style="gap: 0;"></div>
             </div>
-        </div>
 
-        <div class="chart-card" style="margin-bottom: 20px;">
-            <div class="chart-header">
-                <h3 class="chart-title">Thu / Chi</h3>
-                <span class="chart-subtitle">Đang tải...</span>
+            <!-- 2. BIỂU ĐỒ ĐƯỜNG (LINE CHART) -->
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
+                <h3 class="chart-title" style="font-size: 15px; margin: 0;">Biến động Số dư</h3>
+                <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;"></p>
+                <div style="height: 200px; width: 100%;">
+                    <canvas id="lineChart"></canvas>
+                </div>
             </div>
-            <div class="chart-container"><canvas id="barChart"></canvas></div>
-        </div>
-	<div class="chart-card" style="margin-bottom: 40px;">
-            <div class="chart-header">
-                <h3 class="chart-title">Xu hướng số dư</h3>
-                <span class="chart-subtitle">Đang tải...</span>
+
+            <!-- 3. BIỂU ĐỒ TRÒN (PIE CHART) -->
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div>
+                        <h3 class="chart-title" style="font-size: 15px; margin: 0;">Cơ cấu Tỷ trọng</h3>
+                        <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin: 4px 0 0 0;"></p>
+                    </div>
+                    <div style="display: flex; gap: 8px; background: var(--bg-color); padding: 4px; border-radius: 10px;">
+                        <button id="btnPieExp" class="btn-toggle active expense" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; font-weight: 700;">Chi</button>
+                        <button id="btnPieInc" class="btn-toggle income" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; font-weight: 700;">Thu</button>
+                    </div>
+                </div>
+                <div style="height: 220px; width: 100%; position: relative;">
+                    <canvas id="pieChart"></canvas>
+                    <div id="pieEmptyState" class="hide" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-muted);">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 8px; opacity: 0.5;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        <span id="pieEmptyText" style="font-size: 13px;">Chưa có dữ liệu</span>
+                    </div>
+                </div>
             </div>
-            <div class="chart-container"><canvas id="lineChart"></canvas></div>
-        </div>
-	</div>	
+
+            <!-- 4. TOP 5 GIAO DỊCH -->
+            <div id="top5Container" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
+                <h3 id="top5Title" class="chart-title" style="font-size: 15px; margin-bottom: 16px;">Top 5 khoản chi lớn nhất</h3>
+                <div id="topExpenseList">
+                    <!-- Giao dịch Top 5 sẽ được nhúng vào đây -->
+                </div>
+            </div>
+
+            <!-- 5. TỦ TRƯNG BÀY HUY HIỆU -->
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0; padding-bottom: 24px;">
+                <h3 class="chart-title" style="font-size: 15px; margin-bottom: 4px;">🏆 Bộ sưu tập Huy hiệu</h3>
+                <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Mở khóa các cột mốc để nhận thưởng</p>
+                <div id="badgeCabinet" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                    <!-- JS sẽ render vào đây -->
+                </div>
+            </div>
+		</div>	
 	<!-- TAB MỚI: SỔ VAY NỢ (Nằm ngang hàng với các view-section khác) -->
     <div id="debtView" class="view-section">
         <div class="history-filters-card" style="padding-top: 16px;">
@@ -1127,5 +1195,27 @@
 <!-- SCRIPTS -->
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
+<!-- POPUP MỞ KHÓA HUY HIỆU MỚI -->
+    <div class="overlay hide" id="badgePopupOverlay" style="z-index: 9999;"></div>
+    <div class="modal hide" id="badgePopupModal" style="z-index: 10000; text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #1e1b4b, #4338ca); color: white; border: 2px solid #ffd700; box-shadow: 0 10px 40px rgba(79, 70, 229, 0.5);">
+        <div id="badgePopupConfetti" style="font-size: 64px; animation: bounceIn 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);">🎉</div>
+        <div id="badgePopupIcon" style="font-size: 72px; margin: 16px 0; filter: drop-shadow(0 0 20px rgba(255,215,0,0.8));">🏆</div>
+        <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 8px; color: #ffd700; text-transform: uppercase; letter-spacing: 1px;">Mở khóa thành tựu!</h2>
+        <h3 id="badgePopupName" style="font-size: 20px; font-weight: 700; margin-bottom: 12px;">Tên Huy Hiệu</h3>
+        <p id="badgePopupDesc" style="font-size: 14px; color: #e0e7ff; margin-bottom: 24px; opacity: 0.9;">Mô tả cách đạt được</p>
+        <button onclick="closeBadgePopup()" class="btn-primary" style="background: #ffd700; color: #1e1b4b; box-shadow: 0 4px 15px rgba(255,215,0,0.4);">Tuyệt vời!</button>
+    </div>
+<!-- POPUP THÔNG TIN CHI TIẾT HUY HIỆU (ĐÃ FIX LỖI HIỂN THỊ) -->
+    <div class="overlay" id="badgeInfoOverlay" style="display: none; z-index: 9999;" onclick="closeBadgeInfo()"></div>
+    <div class="modal" id="badgeInfoModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; text-align: center; padding: 32px 20px; background: var(--bg-color); border: 1px solid #e2e8f0; border-radius: 24px; width: 300px; max-width: 90vw; box-shadow: 0 15px 50px rgba(0,0,0,0.15);">
+        <div id="biIcon" style="font-size: 72px; margin-bottom: 12px; transition: 0.3s;">🏆</div>
+        <h3 id="biName" style="font-size: 22px; font-weight: 900; margin-bottom: 12px; color: var(--text-main);">Tên Huy Hiệu</h3>
+        
+        <div id="biStatus" style="display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; margin-bottom: 16px; letter-spacing: 0.5px;">Trạng thái</div>
+        
+        <p id="biDesc" style="font-size: 14px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; padding: 0 10px;">Cách đạt được</p>
+        
+        <button onclick="closeBadgeInfo()" class="btn-primary" style="width: 100%; border-radius: 14px; padding: 14px; font-size: 15px; background: #e2e8f0; color: #475569; border: none; box-shadow: none;">Đóng</button>
+    </div>
 </body>
 </html>

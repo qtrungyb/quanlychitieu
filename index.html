@@ -163,6 +163,56 @@
             background: var(--danger);
             box-shadow: 0 0 0 1px var(--danger);
         }
+		/* 1. TIÊU ĐỀ NGÀY THÁNG BÁM DÍNH (STICKY HEADER) */
+        .timeline-wrapper-seamless .date-group-header {
+            position: sticky;
+            top: 55px; /* Chiều cao cách thanh Top Nav ở trên cùng */
+            z-index: 10;
+            background: var(--bg-color) !important; /* Xóa nền trong suốt để che khuất dữ liệu trượt phía dưới */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            border-radius: 0 0 12px 12px;
+        }
+        body.dark-theme .timeline-wrapper-seamless .date-group-header {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+        }
+
+        /* 2. VUỐT ĐỂ XÓA/SỬA (SWIPE TO ACTION) */
+        .swipe-container {
+            position: relative;
+            overflow: hidden; /* Giấu các nút Xóa/Sửa đi */
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        body.dark-theme .swipe-container { border-bottom-color: #2d3748; }
+        
+        .swipe-actions {
+            position: absolute;
+            right: 0; top: 0; bottom: 0;
+            display: flex;
+            z-index: 1; /* Nằm dưới cùng */
+        }
+        .swipe-actions button {
+            border: none; color: white; width: 60px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .swipe-actions .btn-edit { background: var(--primary); }
+        .swipe-actions .btn-delete { background: var(--danger); }
+
+        .swipe-front {
+            position: relative;
+            z-index: 2; /* Nằm trên */
+            border: none !important;
+            background: transparent !important;
+            transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+            width: 100%;
+        }
+        
+        /* Tạo nền giả cho Giao dịch (Che khuất nút, nhưng chừa 36px bên trái cho đường Timeline) */
+        .swipe-front::before {
+            content: ''; position: absolute;
+            left: 36px; right: 0; top: 0; bottom: 0;
+            background: var(--bg-color);
+            z-index: -1;
+        }
     </style>
     <!-- SDK FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>

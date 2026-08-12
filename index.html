@@ -162,6 +162,54 @@
         .modern-card.list-card {
             padding: 16px 0; 
         }
+		/* ========================================== */
+        /* THIẾT KẾ THẺ BO TRÒN TỪNG MỤC (CARD UI)    */
+        /* ========================================== */
+        
+        /* 1. Đổi nền 2 Tab thành xám nhạt để nổi bật thẻ trắng */
+        #historyView, #analyticsView {
+            background-color: #f8fafc !important; 
+            padding: 12px !important;
+            min-height: 100vh;
+        }
+        body.dark-theme #historyView, body.dark-theme #analyticsView {
+            background-color: #0f172a !important; 
+        }
+
+        /* 2. Cấu trúc Thẻ trắng bo góc */
+        .modern-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px; /* Khoảng cách rời rạc giữa các thẻ */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); /* Bóng đổ 3D nhẹ */
+            border: 1px solid #f1f5f9;
+        }
+        body.dark-theme .modern-card {
+            background: #1e293b;
+            border-color: #334155;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Thẻ đặc biệt chứa danh sách (Cắt bỏ padding để sát lề) */
+        .modern-card.list-card {
+            padding: 16px 0; 
+        }
+		/* ========================================== */
+        /* PHỤC HỒI CSS NÚT VUỐT (SỬA/XÓA) BỊ THIẾU   */
+        /* ========================================== */
+        .swipe-actions {
+            position: absolute;
+            right: 0; top: 0; bottom: 0;
+            display: flex;
+            z-index: 1; /* Nằm dưới lớp giao dịch */
+        }
+        .swipe-actions button {
+            border: none; color: white; width: 60px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .swipe-actions .btn-edit { background: var(--primary); }
+        .swipe-actions .btn-delete { background: var(--danger); }
     </style>
 
     <!-- SDK FIREBASE -->
@@ -334,7 +382,7 @@
         </div>
     </div>
 
-    <!-- TAB 2: LỊCH SỬ -->
+    <!-- TAB 2: LỊCH SỬ (CARD UI) -->
     <div id="historyView" class="view-section">
         
         <!-- THẺ 1: BỘ LỌC TÌM KIẾM -->
@@ -367,9 +415,9 @@
             </div>
         </div>
 
-        <!-- THẺ 2: TỔNG KẾT TÌM KIẾM (Ẩn/Hiện tự động) -->
+        <!-- THẺ 2: TỔNG KẾT TÌM KIẾM -->
         <div id="filteredSummary" class="modern-card hide">
-            <div class="summary-header">Tổng kết tìm kiếm <span id="filterTxCount" style="color:var(--primary); font-weight: 800;">(0)</span></div>
+            <div class="summary-header">Tổng kết <span id="filterTxCount" style="color:var(--primary); font-weight: 800;">(0)</span></div>
             <div class="summary-cards-grid">
                 <div class="summary-card box-in"><div class="sc-label">Tổng Thu</div><div class="sc-val" id="filterSumInc">+0đ</div></div>
                 <div class="summary-card box-out"><div class="sc-label">Tổng Chi</div><div class="sc-val" id="filterSumExp">-0đ</div></div>
@@ -377,7 +425,7 @@
             </div>
         </div>
         
-        <!-- THẺ 3: BIỂU ĐỒ LUỒNG TIỀN (Ẩn/Hiện tự động) -->
+        <!-- THẺ 3: BIỂU ĐỒ LUỒNG TIỀN -->
         <div id="historyChartWrapper" class="modern-card hide">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h4 style="font-size: 14px; color: var(--text-main); font-weight: 800; margin: 0;">Luồng tiền</h4>
@@ -394,7 +442,7 @@
             <div class="transaction-list" id="transactionList"><div class="loading-text">Đang tải dữ liệu...</div></div>
         </div>
 
-        <!-- THẺ LỊCH LƯỚI (Khi chọn Dạng Lịch) -->
+        <!-- THẺ LỊCH LƯỚI (Dành riêng cho giao diện Lịch) -->
         <div id="calendarViewContainer" class="hide">
             <div class="modern-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -409,7 +457,8 @@
         </div>
     </div>
 
-    <!-- TAB 3: THỐNG KÊ -->
+
+    <!-- TAB 3: THỐNG KÊ (CARD UI) -->
     <div id="analyticsView" class="view-section">
         
         <!-- THẺ 1: BỘ LỌC NGÀY THÁNG -->
@@ -433,26 +482,26 @@
             </div>
 
             <div id="statsMonthContainer" class="hide">
-                <div style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--bg-gray, #f8fafc); border: 1px solid #e2e8f0; border-radius: 12px; padding: 0 12px; height: 44px;">
+                <div style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0 12px; height: 44px;">
                     <input type="month" id="statsMonthPicker" style="border: none; background: transparent; font-size: 15px; font-weight: 700; outline: none; color: var(--text-main);">
                 </div>
             </div>
         </div>
 
-        <!-- THẺ 2: MỤC SỐ DƯ KHẢ DỤNG -->
+        <!-- THẺ 2: SỐ DƯ KHẢ DỤNG -->
         <div class="modern-card" style="text-align: center; padding: 24px 16px;">
             <div class="kpi-title" style="margin-bottom: 8px;">Số dư khả dụng</div>
             <div class="hero-kpi-value" id="kpiNetFlow" style="font-size: 32px;">0 đ</div>
-            <div class="kpi-desc" id="kpiNetFlowDesc" style="margin-top: 12px; display: inline-block; background: var(--bg-color, #f1f5f9); padding: 6px 16px; border-radius: 20px;">
+            <div class="kpi-desc" id="kpiNetFlowDesc" style="margin-top: 12px; display: inline-block; background: #f1f5f9; padding: 6px 16px; border-radius: 20px;">
                 <span>Thu: <span class="text-success">0đ</span></span>
                 <span style="color: #cbd5e1; margin: 0 8px;">|</span>
                 <span>Chi: <span class="text-danger">0đ</span></span>
             </div>
         </div>
 
-        <!-- THẺ 3 & 4: MỤC TRUNG BÌNH CHI VÀ CHI LỚN NHẤT (Nằm song song) -->
+        <!-- THẺ 3 & 4: TRUNG BÌNH CHI & CHI LỚN NHẤT (NẰM SONG SONG NHAU) -->
         <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-            <div class="modern-card" style="flex: 1; margin-bottom: 0;">
+            <div class="modern-card" style="margin-bottom: 0; padding: 16px; flex: 1;">
                 <div class="kpi-title">Trung bình chi</div>
                 <div style="display: flex; align-items: center; gap: 6px; margin: 8px 0;">
                     <div class="kpi-value text-danger" id="kpiAvgExpense" style="font-size: 18px;">0 đ</div>
@@ -461,35 +510,35 @@
                 <div class="kpi-desc">/ ngày</div>
             </div>
             
-            <div class="modern-card" style="flex: 1; margin-bottom: 0;">
+            <div class="modern-card" style="margin-bottom: 0; padding: 16px; flex: 1;">
                 <div class="kpi-title">Chi lớn nhất</div>
                 <div class="kpi-value" id="kpiMaxExpense" style="font-size: 18px; margin: 8px 0;">0 đ</div>
                 <div class="kpi-desc" id="kpiMaxExpenseName" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Chưa có dữ liệu</div>
             </div>
         </div>
 
-        <!-- THẺ 5: MỤC BIỂU ĐỒ CỘT -->
+        <!-- THẺ 5: BIỂU ĐỒ CỘT -->
         <div class="modern-card">
             <h3 class="chart-title" style="font-size: 15px; margin: 0;">So sánh Thu / Chi</h3>
             <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;"></p>
             <div style="height: 220px; width: 100%;"><canvas id="barChart"></canvas></div>
         </div>
 
-        <!-- THẺ 6: MỤC BIỂU ĐỒ ĐƯỜNG -->
+        <!-- THẺ 6: BIỂU ĐỒ ĐƯỜNG -->
         <div class="modern-card">
             <h3 class="chart-title" style="font-size: 15px; margin: 0;">Biến động Số dư</h3>
             <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;"></p>
             <div style="height: 200px; width: 100%;"><canvas id="lineChart"></canvas></div>
         </div>
 
-        <!-- THẺ 7: MỤC CƠ CẤU TỶ TRỌNG (TRÒN) -->
+        <!-- THẺ 7: BIỂU ĐỒ TRÒN (CƠ CẤU) -->
         <div class="modern-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <div>
                     <h3 class="chart-title" style="font-size: 15px; margin: 0;">Cơ cấu Tỷ trọng</h3>
                     <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin: 4px 0 0 0;"></p>
                 </div>
-                <div style="display: flex; gap: 8px; background: var(--bg-gray, #f1f5f9); padding: 4px; border-radius: 10px;">
+                <div style="display: flex; gap: 8px; background: #f1f5f9; padding: 4px; border-radius: 10px;">
                     <button id="btnPieExp" class="btn-toggle active expense" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; font-weight: 700;">Chi</button>
                     <button id="btnPieInc" class="btn-toggle income" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; font-weight: 700;">Thu</button>
                 </div>
@@ -503,16 +552,16 @@
             </div>
         </div>
 
-        <!-- THẺ 8: MỤC TOP 5 -->
+        <!-- THẺ 8: TOP 5 KHOẢN CHI -->
         <div class="modern-card list-card" id="top5Container">
-            <h3 id="top5Title" class="chart-title" style="font-size: 15px; margin-bottom: 16px; padding: 0 16px;">Top 5 khoản chi lớn nhất</h3>
+            <h3 id="top5Title" class="chart-title" style="font-size: 15px; margin-bottom: 16px; padding: 0 20px;">Top 5 khoản chi lớn nhất</h3>
             <div id="topExpenseList"></div>
         </div>
 
-        <!-- THẺ 9: MỤC HUY HIỆU -->
+        <!-- THẺ 9: BỘ SƯU TẬP HUY HIỆU -->
         <div class="modern-card" style="margin-bottom: 40px;">
             <h3 class="chart-title" style="font-size: 16px; margin-bottom: 4px;">🏆 Vũ trụ Huy hiệu</h3>
-            <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Mở khóa các thành tựu của bạn</p>
+            <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Mở khóa các thành tựu của bạn</p>
             <div id="badgeCabinet"></div>
         </div>
     </div>

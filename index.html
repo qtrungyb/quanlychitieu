@@ -167,45 +167,63 @@
         body.dark-theme .pie-switch button.active.income { background: var(--card-bg); }
 
         /* ======================================================== */
-        /* CẬP NHẬT CSS ĐỂ HIỂN THỊ ĐẦY ĐỦ % VÀ PHÓNG TO HUY HIỆU   */
+        /* CẬP NHẬT CSS SỬA LỖI HIỂN THỊ HUY HIỆU VÀ % CHI          */
         /* ======================================================== */
         
-        /* Sửa lỗi hiển thị % bị cắt ở Trung bình chi */
+        /* Cho phép xu hướng (trend) và % tự rớt dòng nếu thiếu chỗ */
         .kpi-trend-wrapper { 
             display: flex; 
             align-items: baseline; 
             gap: 6px; 
-            flex-wrap: wrap; /* Cho phép rớt dòng nếu quá dài */
+            flex-wrap: wrap; 
         }
         .trend-badge { 
             white-space: nowrap; 
             font-size: 13px; 
         }
 
-        /* Tùy chỉnh Huy hiệu: To hơn, rõ ràng hơn, 3 cột thay vì 4 */
-        #badgeCabinet {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr) !important; /* Ép hiển thị 3 cột để thẻ to ra */
-            gap: 16px;
-            padding: 0 4px;
-        }
+        /* 
+           Tùy chỉnh Huy hiệu: 
+           1. Bỏ ép cứng cột để khung hiển thị đúng cấu trúc JS (4 cột/hàng).
+           2. Tự động co giãn chiều cao thẻ để chứa đủ tên huy hiệu dài.
+        */
+        #badgeCabinet { display: block; }
+        
         .badge-item {
-            aspect-ratio: 1; border-radius: 24px; background: var(--card-bg); border: 1px solid #f1f5f9;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; padding: 12px; position: relative; overflow: hidden;
-            transition: all 0.3s ease; filter: grayscale(1); opacity: 0.5; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            height: auto !important;     /* Giải phóng chiều cao tự nhiên thay vì vuông góc 1:1 */
+            min-height: 95px;            /* Chiều cao tổi thiểu giữ form vững chắc */
+            border-radius: 20px; 
+            background: var(--card-bg); 
+            border: 1px solid #f1f5f9;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: flex-start; /* Nội dung dồn từ trên xuống, chữ thừa tự rớt dòng */
+            text-align: center; 
+            padding: 12px 4px;           /* Cắt giảm lề 2 bên để tối đa diện tích bề ngang cho chữ */
+            position: relative; 
+            overflow: hidden;            /* Giữ lại để bo viền hiệu ứng bóng lóa (shine) */
+            transition: all 0.3s ease; 
+            filter: grayscale(1); 
+            opacity: 0.5; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
         body.dark-theme .badge-item { border-color: #2d3748; }
+        
         .badge-icon { 
-            font-size: 42px !important; /* Tăng kích thước Icon */
-            margin-bottom: 8px; 
+            font-size: 34px !important;  /* Nâng kích thước vừa tầm mắt */
+            margin-bottom: 6px; 
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); 
         }
+        
         .badge-name { 
-            font-size: 11.5px !important; /* Tăng kích thước chữ */
+            font-size: 11px !important;  /* Cỡ chữ an toàn, rõ nét */
             font-weight: 800; 
             line-height: 1.3; 
+            width: 100%;
+            word-wrap: break-word;       /* Phép màu giúp ngắt dòng mượt mà */
         }
+        
         .badge-item.unlocked {
             filter: grayscale(0); opacity: 1; border-color: #ffd700;
             background: linear-gradient(135deg, #fffcf0, #fff7c2);
@@ -217,6 +235,53 @@
             background: linear-gradient(45deg, transparent, rgba(255,255,255,0.8), transparent);
             transform: rotate(45deg) translateY(-100%); animation: foilShine 4s infinite;
         }
+        
+        /* ========================================== */
+        /* THIẾT KẾ FLAT SECTION (CHO TAB THỐNG KÊ)   */
+        /* ========================================== */
+        .flat-section {
+            padding: 24px 8px 12px 8px; 
+            border-bottom: 1px solid rgba(0,0,0,0.06); 
+        }
+        .flat-section:last-child { border-bottom: none; padding-bottom: 40px; }
+        body.dark-theme .flat-section { border-bottom-color: rgba(255,255,255,0.05); }
+        
+        .flat-section .chart-title { 
+            font-size: 17px; 
+            font-weight: 800; 
+            color: var(--text-main); 
+            margin-bottom: 6px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            letter-spacing: -0.3px;
+        }
+        .flat-section .chart-title::before {
+            content: '';
+            display: block;
+            width: 5px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 6px;
+        }
+
+        .flat-section .chart-subtitle {
+            background: transparent !important;
+            padding: 0 0 0 13px !important; 
+            margin-bottom: 12px !important; 
+            border-radius: 0 !important;
+        }
+        
+        .flat-section .transaction-item { 
+            background: transparent !important; 
+            padding: 14px 8px !important; 
+            border: none !important;
+            border-bottom: 1px dashed rgba(0,0,0,0.06) !important; 
+            box-shadow: none !important;
+            border-radius: 0 !important;
+        }
+        body.dark-theme .flat-section .transaction-item { border-bottom-color: rgba(255,255,255,0.05) !important; }
+        .flat-section .transaction-item:last-child { border-bottom: none !important; }
     </style>
 
     <!-- SDK FIREBASE -->
@@ -532,7 +597,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Bỏ giới hạn độ rộng để biểu đồ tròn to rõ như cũ -->
                 <div class="chart-container" style="height: 260px; width: 100%; position: relative;">
                     <canvas id="pieChart"></canvas>
                     <div id="pieEmptyState" class="hide" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-muted);">

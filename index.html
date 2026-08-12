@@ -17,7 +17,7 @@
     <!-- LIÊN KẾT FILE CSS CHÍNH -->
     <link rel="stylesheet" href="css/style.css">
 
-    <!-- CSS GIAO DIỆN TÙY CHỈNH (ĐÃ ĐƯỢC CĂN CHỈNH TỈ LỆ VÀNG FLAT DESIGN) -->
+    <!-- CSS GIAO DIỆN TÙY CHỈNH (ĐÃ ĐƯỢC CĂN CHỈNH LẠI KHOẢNG CÁCH) -->
     <style>
         /* 1. THIẾT KẾ THẺ CARD (FLAT DESIGN) CHO TAB 2 & 3 */
         #historyView, #analyticsView {
@@ -33,7 +33,7 @@
             background: var(--card-bg, #ffffff);
             border-radius: 20px;
             padding: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 12px; /* ĐÃ GIẢM: Kéo các thẻ lại gần nhau hơn */
             box-shadow: 0 2px 12px rgba(0,0,0,0.03); 
             border: 1px solid rgba(0,0,0,0.04);
         }
@@ -58,12 +58,12 @@
         .timeline-wrapper-seamless .date-group-header {
             position: sticky; top: 55px; z-index: 10;
             background: var(--card-bg, #ffffff) !important;
-            padding: 16px 16px 8px 16px !important; /* Căn lề chuẩn 16px */
-            border-bottom: 1px solid #f1f5f9; /* Đường kẻ mờ phân cách nhẹ nhàng */
+            padding: 16px 16px 8px 16px !important; 
+            border-bottom: 1px solid #f1f5f9; 
             margin-bottom: 0 !important;
             box-shadow: none !important;
             border-radius: 0;
-            display: flex; justify-content: space-between; align-items: center; /* Ép dàn đều */
+            display: flex; justify-content: space-between; align-items: center; 
         }
         body.dark-theme .timeline-wrapper-seamless .date-group-header { 
             background: var(--card-bg, #1e293b) !important; 
@@ -79,25 +79,24 @@
         .swipe-container {
             position: relative; overflow: hidden;
             background: transparent !important;
-            border-bottom: none !important; /* Đẩy border xuống swipe-front */
+            border-bottom: none !important; 
         }
 
         /* Lớp nội dung Giao dịch */
         .timeline-wrapper-seamless .transaction-item.swipe-front {
             position: relative; z-index: 2; width: 100%; 
             transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
-            background: var(--card-bg, #ffffff) !important; /* Nền đồng nhất che nút Sửa/Xóa */
-            padding: 14px 16px !important; /* Căn lề chuẩn 16px, bỏ khoảng trống 46px cũ */
+            background: var(--card-bg, #ffffff) !important; 
+            padding: 14px 16px !important; 
             margin-bottom: 0 !important; 
             border: none !important; box-shadow: none !important; border-radius: 0 !important;
-            border-bottom: 1px dashed #f1f5f9 !important; /* Phân cách giữa các item */
+            border-bottom: 1px dashed #f1f5f9 !important; 
         }
         body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front { 
             background: var(--card-bg, #1e293b) !important; 
             border-bottom-color: #334155 !important;
         }
         
-        /* Bỏ lớp nền giả cũ */
         .swipe-front::before { display: none !important; }
 
         /* Cấu hình Nút Sửa/Xóa nằm dưới lớp Swipe */
@@ -176,44 +175,41 @@
         /* THIẾT KẾ FLAT SECTION (CHO TAB THỐNG KÊ)   */
         /* ========================================== */
         .flat-section {
-            padding: 36px 8px 16px 8px; /* Không gian thở (Breathing room) chuẩn UX */
+            padding: 24px 8px 12px 8px; /* ĐÃ GIẢM PADDING: Thu gọn khoảng trống thừa */
             border-bottom: 1px solid rgba(0,0,0,0.06); 
         }
         .flat-section:last-child { border-bottom: none; padding-bottom: 40px; }
         body.dark-theme .flat-section { border-bottom-color: rgba(255,255,255,0.05); }
         
         .flat-section .chart-title { 
-            font-size: 18px; 
+            font-size: 17px; 
             font-weight: 800; 
             color: var(--text-main); 
             margin-bottom: 6px; 
             display: flex; 
             align-items: center; 
-            gap: 10px; /* Khoảng cách từ thanh line đến chữ */
+            gap: 8px; 
             letter-spacing: -0.3px;
         }
-        /* Thanh nhấn màu xanh đầu tiêu đề (Typography Accent) */
         .flat-section .chart-title::before {
             content: '';
             display: block;
             width: 5px;
-            height: 18px;
+            height: 16px;
             background: var(--primary);
             border-radius: 6px;
         }
 
-        /* FIX: Xóa màu nền của phụ đề (ngày tháng) để đồng nhất với tiêu đề */
         .flat-section .chart-subtitle {
             background: transparent !important;
-            padding: 0 0 0 15px !important; /* Căn thẳng hàng với chữ của tiêu đề (5px line + 10px gap) */
-            margin-top: 2px !important;
+            padding: 0 0 0 13px !important; 
+            margin-bottom: 12px !important; /* ĐÃ GIẢM MARGIN */
             border-radius: 0 !important;
         }
         
-        /* Chỉnh lại list Top 5 cho trong trẻo, bám sát nền */
         .flat-section .transaction-item { 
             background: transparent !important; 
-            padding: 16px 8px !important; 
+            padding: 14px 8px !important; 
             border: none !important;
             border-bottom: 1px dashed rgba(0,0,0,0.06) !important; 
             box-shadow: none !important;
@@ -221,6 +217,42 @@
         }
         body.dark-theme .flat-section .transaction-item { border-bottom-color: rgba(255,255,255,0.05) !important; }
         .flat-section .transaction-item:last-child { border-bottom: none !important; }
+
+        /* NÚT CÔNG TẮC (SWITCH) DÀNH CHO BIỂU ĐỒ TRÒN */
+        .pie-switch {
+            display: inline-flex;
+            background: rgba(0,0,0,0.05);
+            border-radius: 30px;
+            padding: 4px;
+            position: relative;
+        }
+        body.dark-theme .pie-switch { background: rgba(255,255,255,0.08); }
+        
+        .pie-switch button {
+            background: transparent;
+            border: none;
+            border-radius: 26px;
+            padding: 6px 20px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .pie-switch button.active.expense {
+            background: #fff;
+            color: var(--danger);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .pie-switch button.active.income {
+            background: #fff;
+            color: var(--success);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        body.dark-theme .pie-switch button.active.expense,
+        body.dark-theme .pie-switch button.active.income {
+            background: var(--card-bg);
+        }
     </style>
 
     <!-- SDK FIREBASE -->
@@ -382,7 +414,7 @@
         </div>
     </div>
 
-    <!-- TAB 2: LỊCH SỬ (CARD UI CÂN ĐỐI) -->
+    <!-- TAB 2: LỊCH SỬ -->
     <div id="historyView" class="view-section">
         
         <!-- THẺ 1: BỘ LỌC TÌM KIẾM -->
@@ -454,12 +486,12 @@
         </div>
     </div>
 
-    <!-- TAB 3: THỐNG KÊ (GIAO DIỆN QUẢN TRỊ - GIỮ NGUYÊN SẮP XẾP & HUY HIỆU) -->
+    <!-- TAB 3: THỐNG KÊ (GIAO DIỆN QUẢN TRỊ - CÂN ĐỐI & RÚT GỌN KHOẢNG CÁCH) -->
     <div id="analyticsView" class="view-section">
         
         <!-- BỘ LỌC NGÀY THÁNG -->
-        <div class="chart-card" style="margin-bottom: 8px; padding: 16px;">
-            <div class="type-toggle" style="margin-bottom: 16px;">
+        <div class="chart-card" style="margin-bottom: 12px; padding: 16px;">
+            <div class="type-toggle" style="margin-bottom: 12px;">
                 <button type="button" class="btn-toggle active" id="btnModeRange" style="font-size: 14px; background: var(--primary); color: white;">Tùy chỉnh ngày</button>
                 <button type="button" class="btn-toggle" id="btnModeMonth" style="font-size: 14px;">Theo tháng</button>
             </div>
@@ -469,20 +501,20 @@
                 <div class="filter-date-wrapper active" id="statsEndDateWrapper"><span class="date-text" id="statsEndDateDisplay">Đến ngày</span><input type="date" id="statsEndDate"></div>
             </div>
             <div id="statsMonthContainer" class="hide">
-                <input type="month" id="statsMonthPicker" style="border: none; background: transparent; font-size: 15px; font-weight: 700; width: 100%; text-align: center;">
+                <input type="month" id="statsMonthPicker" style="border: none; background: transparent; font-size: 15px; font-weight: 700; width: 100%; text-align: center; height: 44px; outline: none; color: var(--text-main);">
             </div>
         </div>
 
         <!-- SỐ DƯ KHẢ DỤNG -->
-        <div class="hero-kpi">
+        <div class="hero-kpi" style="padding-bottom: 16px; padding-top: 4px;">
             <div class="kpi-title">Số dư khả dụng</div>
             <div class="hero-kpi-value" id="kpiNetFlow">0 đ</div>
             <div class="kpi-desc" id="kpiNetFlowDesc"></div>
         </div>
 
         <!-- TRUNG BÌNH & MAX CHI -->
-        <div class="kpi-container">
-            <div class="kpi-card">
+        <div class="kpi-container" style="gap: 12px; margin-bottom: 12px;">
+            <div class="kpi-card" style="margin-bottom: 0;">
                 <div class="kpi-title">Trung bình chi</div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <div class="kpi-value text-danger" id="kpiAvgExpense">0 đ</div>
@@ -490,7 +522,7 @@
                 </div>
                 <div class="kpi-desc">/ ngày</div>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" style="margin-bottom: 0;">
                 <div class="kpi-title">Chi lớn nhất</div>
                 <div class="kpi-value" id="kpiMaxExpense">0 đ</div>
                 <div class="kpi-desc" id="kpiMaxExpenseName"></div>
@@ -498,41 +530,46 @@
         </div>
 
         <!-- BIỂU ĐỒ CỘT -->
-        <div class="chart-card" style="margin-bottom: 20px;">
-            <div class="chart-header">
+        <div class="chart-card" style="margin-bottom: 12px;">
+            <div class="chart-header" style="margin-bottom: 16px;">
                 <h3 class="chart-title">So sánh Thu / Chi</h3>
-                <span class="chart-subtitle"></span>
+                <span class="chart-subtitle" style="display: inline-block; margin-top: 4px;"></span>
             </div>
-            <div class="chart-container"><canvas id="barChart"></canvas></div>
+            <div class="chart-container" style="height: 220px;"><canvas id="barChart"></canvas></div>
         </div>
 
         <!-- BIỂU ĐỒ ĐƯỜNG -->
-        <div class="chart-card" style="margin-bottom: 20px;">
-            <div class="chart-header">
+        <div class="chart-card" style="margin-bottom: 12px;">
+            <div class="chart-header" style="margin-bottom: 16px;">
                 <h3 class="chart-title">Biến động Số dư</h3>
-                <span class="chart-subtitle"></span>
+                <span class="chart-subtitle" style="display: inline-block; margin-top: 4px;"></span>
             </div>
-            <div class="chart-container"><canvas id="lineChart"></canvas></div>
+            <div class="chart-container" style="height: 200px;"><canvas id="lineChart"></canvas></div>
         </div>
 
-        <!-- BIỂU ĐỒ TRÒN -->
-        <div class="chart-card" style="margin-bottom: 20px;">
-            <div class="chart-header" style="flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; width: 100%;">
-                    <h3 class="chart-title">Cơ cấu Tỷ trọng</h3>
-                    <span class="chart-subtitle"></span>
+        <!-- BIỂU ĐỒ TRÒN (TOGGLE SWITCH & BIG CHART) -->
+        <div class="chart-card" style="margin-bottom: 12px;">
+            <div class="chart-header" style="flex-direction: column; gap: 12px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <h3 class="chart-title" style="margin: 0;">Cơ cấu Tỷ trọng</h3>
+                    <div class="pie-switch">
+                        <button id="btnPieExp" class="btn-toggle active expense">Chi</button>
+                        <button id="btnPieInc" class="btn-toggle income">Thu</button>
+                    </div>
                 </div>
-                <div class="type-toggle" style="margin-bottom: 0; width: 100%;">
-                    <button type="button" class="btn-toggle active expense" id="btnPieExp">Tiền Chi</button>
-                    <button type="button" class="btn-toggle income" id="btnPieInc">Tiền Thu</button>
+                <div style="width: 100%; text-align: left;"><span class="chart-subtitle" style="display: inline-block;"></span></div>
+            </div>
+            <div class="chart-container" style="height: 260px; position: relative;">
+                <canvas id="pieChart"></canvas>
+                <div id="pieEmptyState" class="hide" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-muted);">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.3;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <span id="pieEmptyText" style="font-size: 14px; font-weight: 500;">Chưa có dữ liệu</span>
                 </div>
             </div>
-            <div class="chart-container"><canvas id="pieChart"></canvas></div>
-            <div id="pieEmptyState" class="empty-chart hide"><p>Chưa có dữ liệu</p></div>
         </div>
 
         <!-- TOP 5 GIAO DỊCH -->
-        <div class="chart-card" id="top5Container" style="margin-bottom: 20px; padding-bottom: 8px;">
+        <div class="chart-card" id="top5Container" style="margin-bottom: 12px; padding-bottom: 8px;">
             <div class="chart-header" style="margin-bottom: 16px;">
                 <h3 class="chart-title" id="top5Title">Top 5 khoản chi lớn nhất</h3>
             </div>
@@ -540,7 +577,7 @@
         </div>
 
         <!-- VŨ TRỤ HUY HIỆU -->
-        <div class="chart-card" style="margin-bottom: 40px;">
+        <div class="chart-card" style="margin-bottom: 32px;">
             <div class="chart-header" style="flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 16px;">
                 <h3 class="chart-title" style="margin: 0;">🏆 Vũ trụ Huy hiệu</h3>
                 <span style="font-size: 12px; color: var(--text-muted);">Mở khóa các thành tựu của bạn</span>
@@ -549,6 +586,7 @@
         </div>
 
     </div>
+
     <!-- TAB 4: SỔ VAY NỢ -->
     <div id="debtView" class="view-section">
         <div class="history-filters-card" style="padding-top: 16px;">

@@ -175,20 +175,38 @@
         /* THIẾT KẾ FLAT SECTION (CHO TAB THỐNG KÊ)   */
         /* ========================================== */
         .flat-section {
-            padding: 28px 4px; 
-            border-bottom: 1px solid rgba(0,0,0,0.06); /* Nét kẻ siêu mờ phân cách */
+            padding: 36px 8px 16px 8px; /* Không gian thở (Breathing room) chuẩn UX */
+            border-bottom: 1px solid rgba(0,0,0,0.06); 
         }
         .flat-section:last-child { border-bottom: none; padding-bottom: 40px; }
         body.dark-theme .flat-section { border-bottom-color: rgba(255,255,255,0.05); }
         
-        .flat-section .chart-title { font-size: 16px; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+        .flat-section .chart-title { 
+            font-size: 18px; 
+            font-weight: 800; 
+            color: var(--text-main); 
+            margin-bottom: 6px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; /* Khoảng cách từ thanh line đến chữ */
+            letter-spacing: -0.3px;
+        }
+        /* Thanh nhấn màu xanh đầu tiêu đề (Typography Accent) */
+        .flat-section .chart-title::before {
+            content: '';
+            display: block;
+            width: 5px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 6px;
+        }
         
         /* Chỉnh lại list Top 5 cho trong trẻo, bám sát nền */
         .flat-section .transaction-item { 
             background: transparent !important; 
-            padding: 14px 0 !important; 
+            padding: 16px 8px !important; 
             border: none !important;
-            border-bottom: 1px dashed rgba(0,0,0,0.05) !important; 
+            border-bottom: 1px dashed rgba(0,0,0,0.06) !important; 
             box-shadow: none !important;
             border-radius: 0 !important;
         }
@@ -427,10 +445,10 @@
         </div>
     </div>
 
-    <!-- TAB 3: THỐNG KÊ (HỖN HỢP CARD & FLAT DESIGN) -->
+    <!-- TAB 3: THỐNG KÊ (HỖN HỢP CARD & FLAT DESIGN CAO CẤP) -->
     <div id="analyticsView" class="view-section">
         
-        <!-- === KHU VỰC 1: CÁC CHỈ SỐ KPI (GIỮ DẠNG THẺ CARD) === -->
+        <!-- === KHU VỰC 1: CÁC CHỈ SỐ KPI (DẠNG THẺ CARD) === -->
         
         <!-- BỘ LỌC NGÀY THÁNG -->
         <div class="modern-card">
@@ -453,19 +471,19 @@
             </div>
 
             <div id="statsMonthContainer" class="hide">
-                <div style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); border-radius: 12px; padding: 0 12px; height: 44px;">
-                    <input type="month" id="statsMonthPicker" style="border: none; background: transparent; font-size: 15px; font-weight: 700; outline: none; color: var(--text-main);">
+                <div style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); border-radius: 12px; padding: 0 12px; height: 48px;">
+                    <input type="month" id="statsMonthPicker" style="border: none; background: transparent; font-size: 15px; font-weight: 700; outline: none; color: var(--text-main); width: 100%; text-align: center;">
                 </div>
             </div>
         </div>
 
         <!-- SỐ DƯ KHẢ DỤNG -->
-        <div class="modern-card text-center">
-            <div class="kpi-title" style="margin-bottom: 8px;">Số dư khả dụng</div>
-            <div class="hero-kpi-value" id="kpiNetFlow" style="font-size: 32px;">0 đ</div>
-            <div class="kpi-desc" id="kpiNetFlowDesc" style="margin-top: 12px; display: inline-block; background: rgba(0,0,0,0.03); padding: 6px 16px; border-radius: 20px;">
+        <div class="modern-card text-center" style="padding: 30px 16px;">
+            <div class="kpi-title" style="margin-bottom: 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Số dư khả dụng</div>
+            <div class="hero-kpi-value" id="kpiNetFlow" style="font-size: 38px; font-weight: 900;">0 đ</div>
+            <div class="kpi-desc" id="kpiNetFlowDesc" style="margin-top: 18px; display: inline-flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.03); padding: 8px 24px; border-radius: 30px; font-size: 13px; font-weight: 600;">
                 <span>Thu: <span class="text-success">0đ</span></span>
-                <span style="color: #cbd5e1; margin: 0 8px;">|</span>
+                <span style="color: #cbd5e1; margin: 0 12px;">|</span>
                 <span>Chi: <span class="text-danger">0đ</span></span>
             </div>
         </div>
@@ -488,53 +506,53 @@
             </div>
         </div>
 
-        <!-- === KHU VỰC 2: PHÂN TÍCH CHI TIẾT (BỎ CARD, DÙNG FLAT SECTION) === -->
+        <!-- === KHU VỰC 2: PHÂN TÍCH CHI TIẾT (FLAT SECTION TRÀN NỀN) === -->
 
         <!-- BIỂU ĐỒ CỘT -->
         <div class="flat-section">
             <h3 class="chart-title">So sánh Thu / Chi</h3>
-            <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;"></p>
-            <div style="position: relative; height: 220px; width: 100%;"><canvas id="barChart"></canvas></div>
+            <p class="chart-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px; padding-left: 15px;"></p>
+            <div style="position: relative; height: 230px; width: 100%;"><canvas id="barChart"></canvas></div>
         </div>
 
         <!-- BIỂU ĐỒ ĐƯỜNG -->
         <div class="flat-section">
             <h3 class="chart-title">Biến động Số dư</h3>
-            <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;"></p>
+            <p class="chart-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px; padding-left: 15px;"></p>
             <div style="position: relative; height: 200px; width: 100%;"><canvas id="lineChart"></canvas></div>
         </div>
 
         <!-- BIỂU ĐỒ TRÒN -->
         <div class="flat-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
                 <div>
-                    <h3 class="chart-title" style="margin: 0;">Cơ cấu Tỷ trọng</h3>
-                    <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin: 4px 0 0 0;"></p>
+                    <h3 class="chart-title" style="margin-bottom: 4px;">Cơ cấu Tỷ trọng</h3>
+                    <p class="chart-subtitle" style="font-size: 13px; color: var(--text-muted); margin: 0; padding-left: 15px;"></p>
                 </div>
-                <div style="display: flex; gap: 4px; background: rgba(0,0,0,0.04); padding: 4px; border-radius: 10px;">
-                    <button id="btnPieExp" class="btn-toggle active expense" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; font-weight: 700;">Chi</button>
-                    <button id="btnPieInc" class="btn-toggle income" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; font-weight: 700;">Thu</button>
+                <div style="display: flex; gap: 4px; background: rgba(0,0,0,0.04); padding: 4px; border-radius: 12px;">
+                    <button id="btnPieExp" class="btn-toggle active expense" style="padding: 6px 16px; font-size: 13px; border-radius: 8px; border: none; font-weight: 700;">Chi</button>
+                    <button id="btnPieInc" class="btn-toggle income" style="padding: 6px 16px; font-size: 13px; border-radius: 8px; border: none; font-weight: 700;">Thu</button>
                 </div>
             </div>
-            <div style="height: 220px; width: 100%; position: relative;">
+            <div style="height: 230px; width: 100%; position: relative;">
                 <canvas id="pieChart"></canvas>
                 <div id="pieEmptyState" class="hide" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-muted);">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 8px; opacity: 0.5;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    <span id="pieEmptyText" style="font-size: 13px;">Chưa có dữ liệu</span>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.3;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <span id="pieEmptyText" style="font-size: 14px; font-weight: 500;">Chưa có dữ liệu</span>
                 </div>
             </div>
         </div>
 
         <!-- TOP 5 -->
         <div class="flat-section" id="top5Container">
-            <h3 id="top5Title" class="chart-title" style="margin-bottom: 16px;">Top 5 khoản chi lớn nhất</h3>
+            <h3 id="top5Title" class="chart-title" style="margin-bottom: 20px;">Top 5 khoản chi lớn nhất</h3>
             <div id="topExpenseList"></div>
         </div>
 
         <!-- HUY HIỆU -->
         <div class="flat-section">
-            <h3 class="chart-title">🏆 Vũ trụ Huy hiệu</h3>
-            <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Mở khóa các thành tựu của bạn</p>
+            <h3 class="chart-title">Vũ trụ Huy hiệu</h3>
+            <p class="chart-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px; padding-left: 15px;">Mở khóa các thành tựu của bạn</p>
             <div id="badgeCabinet"></div>
         </div>
         

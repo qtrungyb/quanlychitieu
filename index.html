@@ -45,32 +45,37 @@
         .modern-card.p-0 { padding: 16px 0; } 
         .modern-card.text-center { text-align: center; }
 
-        /* 2. DANH SÁCH GIAO DỊCH (LỊCH SỬ) - THIẾT KẾ FLAT LIST CÂN ĐỐI */
+        /* 2. DANH SÁCH GIAO DỊCH (LỊCH SỬ) - THIẾT KẾ TRONG TRẺO GIỐNG TOP 5 */
         #transactionList { overflow: visible !important; padding-left: 0; }
         .timeline-wrapper-seamless { position: relative; padding-bottom: 12px; }
         
+        /* Ẩn hoàn toàn các chấm và đường kẻ dọc timeline */
         .timeline-wrapper-seamless::before { display: none !important; }
         .timeline-wrapper-seamless .timeline-group-marker { display: none !important; }
         .timeline-wrapper-seamless .timeline-dot { display: none !important; }
 
+        /* Tiêu đề ngày tháng hòa vào nền */
         .timeline-wrapper-seamless .date-group-header {
             position: sticky; top: 55px; z-index: 10;
-            background: var(--card-bg, #ffffff) !important;
-            padding: 16px 16px 8px 16px !important; 
-            border-bottom: 1px solid #f1f5f9; 
+            background: #f4f7f9 !important; /* Đồng nhất với nền app */
+            padding: 24px 8px 8px 8px !important; 
+            border-bottom: none !important; /* Xóa đường kẻ dưới ngày tháng */
             margin-bottom: 0 !important;
             box-shadow: none !important;
             border-radius: 0;
             display: flex; justify-content: space-between; align-items: center; 
         }
         body.dark-theme .timeline-wrapper-seamless .date-group-header { 
-            background: var(--card-bg, #1e293b) !important; 
-            border-bottom-color: #334155; 
+            background: #0f172a !important; 
         }
 
+        /* Xóa khung hộp (card) bao quanh các giao dịch */
         .timeline-wrapper-seamless .date-group-items {
             padding-left: 0 !important; position: relative; z-index: 2;
-            background: transparent !important; border-radius: 0 !important; box-shadow: none !important;
+            background: transparent !important; 
+            border: none !important; 
+            border-radius: 0 !important; 
+            box-shadow: none !important;
         }
 
         .swipe-container {
@@ -79,18 +84,19 @@
             border-bottom: none !important; 
         }
 
+        /* Lớp nội dung Giao dịch: Cần có màu nền trùng với màu App để che nút vuốt bên dưới */
         .timeline-wrapper-seamless .transaction-item.swipe-front {
             position: relative; z-index: 2; width: 100%; 
             transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
-            background: var(--card-bg, #ffffff) !important; 
-            padding: 14px 16px !important; 
+            background: #f4f7f9 !important; /* TRẢ LẠI MÀU NỀN ĐỂ CHE NÚT SỬA/XÓA */
+            padding: 14px 8px !important; 
             margin-bottom: 0 !important; 
             border: none !important; box-shadow: none !important; border-radius: 0 !important;
-            border-bottom: 1px dashed #f1f5f9 !important; 
+            border-bottom: 1px dashed rgba(0,0,0,0.06) !important; 
         }
         body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front { 
-            background: var(--card-bg, #1e293b) !important; 
-            border-bottom-color: #334155 !important;
+            background: #0f172a !important; /* TRẢ LẠI MÀU NỀN DARK MODE */
+            border-bottom-color: rgba(255,255,255,0.05) !important;
         }
         
         .swipe-front::before { display: none !important; }
@@ -495,8 +501,8 @@
             <div style="position: relative; height: 180px; width: 100%;"><canvas id="historyLineChart"></canvas></div>
         </div>
 
-        <!-- THẺ 4: DANH SÁCH GIAO DỊCH (Tràn viền card) -->
-        <div class="modern-card p-0" id="histListContainerCard">
+        <!-- THẺ 4: DANH SÁCH GIAO DỊCH (FLAT DESIGN) -->
+        <div id="histListContainerCard" style="padding: 0 8px;">
             <div class="transaction-list" id="transactionList"><div class="loading-text">Đang tải dữ liệu...</div></div>
         </div>
 
@@ -570,33 +576,35 @@
             
             <!-- BIỂU ĐỒ CỘT -->
             <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px dashed rgba(0,0,0,0.08);">
-                <div class="chart-header" style="margin-bottom: 16px;">
-                    <h3 class="chart-title" style="font-size: 16px;">So sánh Thu / Chi</h3>
-                    <span class="chart-subtitle" style="display: none;"></span>
+                <div style="margin-bottom: 16px;">
+                    <h3 class="chart-title" style="font-size: 16px; margin-bottom: 4px;">So sánh Thu / Chi</h3>
+                    <span class="chart-subtitle" style="background: transparent; padding: 0; display: block;"></span>
                 </div>
                 <div class="chart-container" style="height: 220px;"><canvas id="barChart"></canvas></div>
             </div>
 
             <!-- BIỂU ĐỒ ĐƯỜNG -->
             <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px dashed rgba(0,0,0,0.08);">
-                <div class="chart-header" style="margin-bottom: 16px;">
-                    <h3 class="chart-title" style="font-size: 16px;">Biến động Số dư</h3>
-                    <span class="chart-subtitle" style="display: none;"></span>
+                <div style="margin-bottom: 16px;">
+                    <h3 class="chart-title" style="font-size: 16px; margin-bottom: 4px;">Biến động Số dư</h3>
+                    <span class="chart-subtitle" style="background: transparent; padding: 0; display: block;"></span>
                 </div>
                 <div class="chart-container" style="height: 200px;"><canvas id="lineChart"></canvas></div>
             </div>
 
             <!-- BIỂU ĐỒ TRÒN -->
             <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px dashed rgba(0,0,0,0.08);">
-                <div class="chart-header" style="flex-direction: column; gap: 12px; margin-bottom: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 4px;">
                         <h3 class="chart-title" style="font-size: 16px; margin: 0;">Cơ cấu Tỷ trọng</h3>
                         <div class="pie-switch">
                             <button id="btnPieExp" class="btn-toggle active expense">Chi</button>
                             <button id="btnPieInc" class="btn-toggle income">Thu</button>
                         </div>
                     </div>
+                    <span class="chart-subtitle" style="background: transparent; padding: 0; display: block;"></span>
                 </div>
+                <!-- Bỏ giới hạn độ rộng để biểu đồ tròn to rõ như cũ -->
                 <div class="chart-container" style="height: 260px; width: 100%; position: relative;">
                     <canvas id="pieChart"></canvas>
                     <div id="pieEmptyState" class="hide" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-muted);">

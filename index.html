@@ -2,19 +2,24 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-	<script>
+    <script>
         if (!localStorage.getItem('hasSeenIntro')) {
             window.location.replace('intro.html');
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Quản lý chi tiêu</title>
-	<!-- FLATPICKR (DATE PICKER) -->
+    <!-- FLATPICKR (DATE PICKER) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/vn.js"></script>
+    
+    <!-- LIÊN KẾT FILE CSS CHÍNH TRƯỚC -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- GỘP TẤT CẢ CSS TÙY CHỈNH VÀO 1 KHỐI DUY NHẤT ĐỂ TRÁNH XUNG ĐỘT -->
     <style>
-        /* CSS LỊCH LƯỚI */
+        /* 1. LỊCH LƯỚI */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
         .cal-day-header { font-size: 11px; font-weight: 800; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
         .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: 1px solid transparent; position: relative; background: var(--bg-color); color: var(--text-main); transition: 0.2s; }
@@ -27,264 +32,105 @@
         .cal-dot.in { background: var(--success); }
         .cal-dot.out { background: var(--danger); }
         .flatpickr-calendar { font-family: inherit; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: none; }
-		/* CSS NÚT THÊM NHANH (FAB) */
+
+        /* 2. NÚT THÊM NHANH (FAB) */
         .fab-button {
-            position: fixed;
-            bottom: 85px; /* Nằm ngay trên Bottom Nav */
-            right: 20px;
-            width: 56px;
-            height: 56px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 999;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: fixed; bottom: 85px; right: 20px; width: 56px; height: 56px;
+            background: var(--primary); color: white; border: none; border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4); display: flex; align-items: center;
+            justify-content: center; cursor: pointer; z-index: 999; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        .fab-button:hover {
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.5);
-        }
-        .fab-button:active {
-            transform: translateY(2px) scale(0.95);
-        }
-        .fab-button.hide {
-            transform: scale(0) rotate(-90deg);
-            opacity: 0;
-            pointer-events: none;
-        }
-        .fab-button svg {
-            width: 26px;
-            height: 26px;
-            transition: transform 0.3s ease;
-        }
-        .fab-button.spin svg {
-            transform: rotate(90deg);
-        }
-		/* CSS FIX HOÀN CHỈNH CHO TIMELINE TRÀN VIỀN */
-        #transactionList {
-            overflow: visible !important;
-            padding-left: 2px;
-        }
+        .fab-button:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 8px 25px rgba(67, 97, 238, 0.5); }
+        .fab-button:active { transform: translateY(2px) scale(0.95); }
+        .fab-button.hide { transform: scale(0) rotate(-90deg); opacity: 0; pointer-events: none; }
+        .fab-button svg { width: 26px; height: 26px; transition: transform 0.3s ease; }
+        .fab-button.spin svg { transform: rotate(90deg); }
 
-        .timeline-wrapper-seamless {
-            position: relative;
-            padding-bottom: 20px;
-        }
-
-        /* 1. Đường kẻ dọc đứt nét chạy thẳng xuyên suốt (Đẩy vào trong 22px để không bị xén) */
+        /* 3. DÒNG THỜI GIAN KẾT HỢP VUỐT (SWIPE TO ACTION) - ĐÃ FIX CHUẨN XÁC */
+        #transactionList { overflow: visible !important; padding-left: 2px; }
+        .timeline-wrapper-seamless { position: relative; padding-bottom: 20px; }
         .timeline-wrapper-seamless::before {
-            content: '';
-            position: absolute;
-            left: 22px;
-            top: 20px;
-            bottom: 0;
-            border-left: 2px dashed #cbd5e1;
-            z-index: 1;
+            content: ''; position: absolute; left: 22px; top: 20px; bottom: 0;
+            border-left: 2px dashed #cbd5e1; z-index: 1;
         }
-        body.dark-theme .timeline-wrapper-seamless::before { 
-            border-left-color: #334155; 
-        }
-
-        /* 2. Tiêu đề ngày tháng */
+        body.dark-theme .timeline-wrapper-seamless::before { border-left-color: #334155; }
+        
         .timeline-wrapper-seamless .date-group-header {
-            position: relative;
-            padding-left: 46px !important; /* Dành khoảng trống cho đường kẻ */
-            padding-top: 16px;
-            padding-bottom: 8px;
-            background: transparent !important;
-            z-index: 2;
+            position: sticky; top: 55px; z-index: 10; background: var(--bg-color) !important;
+            padding-left: 46px !important; padding-top: 16px; padding-bottom: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-radius: 0 0 12px 12px;
         }
-
-        /* Chấm tròn tiêu đề ngày */
+        body.dark-theme .timeline-wrapper-seamless .date-group-header { box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        
         .timeline-wrapper-seamless .timeline-group-marker {
-            position: absolute;
-            left: 17px; /* Căn đúng tâm đường kẻ */
-            top: 24px;
-            width: 12px;
-            height: 12px;
-            background: var(--bg-color);
-            border: 3px solid #94a3b8;
-            border-radius: 50%;
-            z-index: 3;
+            position: absolute; left: 17px; top: 24px; width: 12px; height: 12px;
+            background: var(--bg-color); border: 3px solid #94a3b8; border-radius: 50%; z-index: 3;
         }
-        body.dark-theme .timeline-wrapper-seamless .timeline-group-marker { 
-            border-color: #475569; 
-        }
+        body.dark-theme .timeline-wrapper-seamless .timeline-group-marker { border-color: #475569; }
 
-        /* 3. Danh sách giao dịch */
         .timeline-wrapper-seamless .date-group-items {
-            padding-left: 0 !important;
-            position: relative;
-            z-index: 2;
+            padding-left: 0 !important; position: relative; z-index: 2;
+            background: transparent !important; border-radius: 0 !important; box-shadow: none !important;
         }
 
-        /* XÓA SẠCH NỀN TRẮNG / SHADOW / BO GÓC / KHUNG VIỀN CỦA THẺ CARD */
-        .timeline-wrapper-seamless .transaction-item {
-            position: relative;
-            padding: 14px 12px 14px 46px !important; /* Đẩy nội dung sang phải nhường chỗ cho timeline */
-            margin-bottom: 0 !important;
-            background: transparent !important; /* Xóa nền trắng hoàn toàn */
-            box-shadow: none !important; /* Xóa bóng đổ */
-            border: none !important; /* Xóa khung viền */
-            border-bottom: 1px dashed #e2e8f0 !important; /* Chỉ giữ vạch gạch ngang mờ phân cách */
-            border-radius: 0 !important; /* Xóa bo góc */
-        }
-        .timeline-wrapper-seamless .transaction-item:last-child {
-            border-bottom: none !important;
-        }
-        body.dark-theme .timeline-wrapper-seamless .transaction-item {
-            border-bottom-color: #2d3748 !important;
-        }
-
-        /* Chấm Xanh/Đỏ nằm chính giữa đường kẻ đứt nét */
-        .timeline-wrapper-seamless .timeline-dot {
-            position: absolute;
-            left: 16px !important; /* Tọa độ dương, hiển thị trọn vẹn không bị mất góc */
-            top: 50%;
-            transform: translateY(-50%);
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 2px solid var(--bg-color);
-            z-index: 3;
-            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        .timeline-wrapper-seamless .timeline-dot.in {
-            background: var(--success);
-            box-shadow: 0 0 0 1px var(--success);
-        }
-        .timeline-wrapper-seamless .timeline-dot.out {
-            background: var(--danger);
-            box-shadow: 0 0 0 1px var(--danger);
-        }
-		/* 1. TIÊU ĐỀ NGÀY THÁNG BÁM DÍNH (STICKY HEADER) */
-        .timeline-wrapper-seamless .date-group-header {
-            position: sticky;
-            top: 55px; /* Chiều cao cách thanh Top Nav ở trên cùng */
-            z-index: 10;
-            background: var(--bg-color) !important; /* Xóa nền trong suốt để che khuất dữ liệu trượt phía dưới */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-            border-radius: 0 0 12px 12px;
-        }
-        body.dark-theme .timeline-wrapper-seamless .date-group-header {
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
-        }
-
-        /* 2. VUỐT ĐỂ XÓA/SỬA (SWIPE TO ACTION) */
         .swipe-container {
-            position: relative;
-            overflow: hidden; /* Giấu các nút Xóa/Sửa đi */
-            border-bottom: 1px dashed #e2e8f0;
+            position: relative; overflow: hidden;
+            border-bottom: 1px dashed #e2e8f0; /* Phân cách giữa các giao dịch */
         }
-        body.dark-theme .swipe-container { border-bottom-color: #2d3748; }
-        
-        .swipe-actions {
-            position: absolute;
-            right: 0; top: 0; bottom: 0;
-            display: flex;
-            z-index: 1; /* Nằm dưới cùng */
-        }
-        .swipe-actions button {
-            border: none; color: white; width: 60px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .swipe-actions .btn-edit { background: var(--primary); }
-        .swipe-actions .btn-delete { background: var(--danger); }
+        body.dark-theme .swipe-container { border-bottom-color: #334155; }
 
-        .swipe-front {
-            position: relative;
-            z-index: 2; /* Nằm trên */
-            border: none !important;
-            background: transparent !important;
-            transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
-            width: 100%;
+        .timeline-wrapper-seamless .transaction-item.swipe-front {
+            position: relative; z-index: 2; width: 100%; transition: transform 0.25s ease;
+            background: transparent !important; border: none !important; box-shadow: none !important;
+            margin-bottom: 0 !important; padding: 14px 12px 14px 46px !important; border-radius: 0 !important;
         }
         
-        /* Tạo nền giả cho Giao dịch (Che khuất nút, nhưng chừa 36px bên trái cho đường Timeline) */
         .swipe-front::before {
-            content: ''; position: absolute;
-            left: 36px; right: 0; top: 0; bottom: 0;
-            background: var(--bg-color);
-            z-index: -1;
+            content: ''; position: absolute; left: 36px; right: 0; top: 0; bottom: 0;
+            background: var(--bg-color); z-index: -1;
         }
-		/* CSS HỆ THỐNG HUY HIỆU (GAMIFICATION) */
+
+        .timeline-wrapper-seamless .timeline-dot {
+            position: absolute; left: 16px !important; top: 50%; transform: translateY(-50%);
+            width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--bg-color); z-index: 3;
+        }
+        .timeline-wrapper-seamless .timeline-dot.in { background: var(--success); box-shadow: 0 0 0 1px var(--success); }
+        .timeline-wrapper-seamless .timeline-dot.out { background: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+
+        /* 4. HỆ THỐNG HUY HIỆU (GAMIFICATION) */
         .badge-item {
-            aspect-ratio: 1;
-            border-radius: 16px;
-            background: var(--card-bg);
-            border: 1px solid #e2e8f0;
+            aspect-ratio: 1; border-radius: 16px; background: var(--card-bg); border: 1px solid #e2e8f0;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; padding: 8px; position: relative; overflow: hidden;
-            transition: all 0.3s ease;
-            filter: grayscale(1); /* Mặc định là đen trắng (chưa mở khóa) */
-            opacity: 0.5;
+            transition: all 0.3s ease; filter: grayscale(1); opacity: 0.5;
         }
         body.dark-theme .badge-item { border-color: #2d3748; }
-        
         .badge-icon { font-size: 32px; margin-bottom: 4px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
         .badge-name { font-size: 10px; font-weight: 800; line-height: 1.2; }
         
-        /* Khi Đã Mở Khóa */
         .badge-item.unlocked {
-            filter: grayscale(0);
-            opacity: 1;
-            border-color: #ffd700;
+            filter: grayscale(0); opacity: 1; border-color: #ffd700;
             background: linear-gradient(135deg, #fffcf0, #fff7c2);
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
-            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2); transform: translateY(-2px);
         }
         body.dark-theme .badge-item.unlocked { background: linear-gradient(135deg, #3a3210, #544400); }
-        
-        /* Hiệu ứng phản quang kim loại (Foil Effect) chớp nháy liên tục */
         .badge-item.unlocked::after {
             content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
             background: linear-gradient(45deg, transparent, rgba(255,255,255,0.8), transparent);
-            transform: rotate(45deg) translateY(-100%);
-            animation: foilShine 4s infinite;
+            transform: rotate(45deg) translateY(-100%); animation: foilShine 4s infinite;
         }
         
-        @keyframes foilShine {
-            0% { transform: rotate(45deg) translateY(-100%); }
-            20% { transform: rotate(45deg) translateY(100%); }
-            100% { transform: rotate(45deg) translateY(100%); }
-        }
-        @keyframes bounceIn {
-            0% { transform: scale(0); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-		/* SỬA LỖI MẤT PHÂN CÁCH VÀ TRÀN KHUNG LỊCH SỬ */
-        .timeline-wrapper-seamless .date-group-items {
-            background: transparent !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-        }
-        
-        .timeline-wrapper-seamless .transaction-item.swipe-front {
-            background: transparent !important;
-            border-bottom: 1px dashed #cbd5e1 !important;
-        }
-        
-        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front {
-            border-bottom-color: #334155 !important;
-        }
+        @keyframes foilShine { 0% { transform: rotate(45deg) translateY(-100%); } 20%, 100% { transform: rotate(45deg) translateY(100%); } }
+        @keyframes bounceIn { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* KHÔI PHỤC VẠCH KẺ ĐỨT NÉT PHÂN TÁC TRÊN TAB THỐNG KÊ */
-        #analyticsView > div {
-            border-bottom: 1px dashed #e2e8f0;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-        }
-        body.dark-theme #analyticsView > div {
-            border-bottom-color: #2d3748;
-        }
+        /* 5. THANH TIẾN TRÌNH NGÂN SÁCH */
+        .budget-item { width: 100%; }
+        .budget-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); }
+        .budget-bar-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; position: relative; }
+        .budget-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease-out, background-color 0.5s; }
+        .budget-stats { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--text-muted); font-weight: 500;}
     </style>
+
     <!-- SDK FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
@@ -295,17 +141,6 @@
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#4361ee">
     <link rel="apple-touch-icon" href="./icon-192.png">
-    
-    <!-- LIÊN KẾT FILE CSS -->
-    <link rel="stylesheet" href="css/style.css">
-	<style>
-        /* CSS CHO THANH TIẾN TRÌNH NGÂN SÁCH */
-        .budget-item { width: 100%; }
-        .budget-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); }
-        .budget-bar-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; position: relative; }
-        .budget-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease-out, background-color 0.5s; }
-        .budget-stats { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--text-muted); font-weight: 500;}
-    </style>
 </head>
 <body>
 
@@ -337,7 +172,6 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </button>
             
-            <!-- NÚT CHUYỂN SANG MÀN HÌNH ĐĂNG KÝ -->
             <div style="text-align: center; margin-top: 20px;">
                 <span style="font-size: 13px; color: var(--text-muted);">Chưa có tài khoản? </span>
                 <a href="#" id="btnShowRegister" style="font-size: 13px; font-weight: 700; color: var(--primary); text-decoration: none;">Đăng ký ngay</a>
@@ -346,7 +180,7 @@
     </div>
 </div>
 
-<!-- MÀN HÌNH ĐĂNG KÝ (PUBLIC) -->
+<!-- MÀN HÌNH ĐĂNG KÝ -->
 <div id="registerOverlay" class="auth-overlay hide">
     <div class="auth-card">
         <div class="auth-logo" style="background: var(--success);"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg></div>
@@ -377,31 +211,6 @@
     </div>
 </div>
 
-<!-- POPUP ĐỔI MẬT KHẨU -->
-<div id="changePwdOverlay" class="auth-overlay hide">
-    <div class="auth-card">
-        <h2 class="auth-title" style="margin-bottom: 24px; font-size: 18px;">ĐỔI MẬT KHẨU</h2>
-        <form id="changePwdForm">
-            <div class="auth-input-group">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <input type="password" id="oldPasswordInput" class="auth-form-control" placeholder="Mật khẩu hiện tại" required>
-            </div>
-            <div class="auth-input-group">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <input type="password" id="newPasswordInput" class="auth-form-control" placeholder="Mật khẩu mới (từ 6 ký tự)" required minlength="6">
-            </div>
-            <div class="auth-input-group">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <input type="password" id="confirmNewPasswordInput" class="auth-form-control" placeholder="Nhập lại mật khẩu mới" required minlength="6">
-            </div>
-            <div style="display: flex; gap: 12px; margin-top: 8px;">
-                <button type="button" id="btnCancelChangePwd" class="btn-auth btn-cancel" style="flex: 1;">Hủy</button>
-                <button type="button" id="btnSubmitChangePwd" class="btn-auth btn-login" style="flex: 1.5; margin: 0;">Lưu Mật Khẩu</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <div class="toast" id="toastMsg">✓ Thành công!</div>
 
 <!-- MAIN APP CONTAINER -->
@@ -412,23 +221,17 @@
         <h1>QUẢN LÝ CHI TIÊU</h1>
         
         <div style="display: flex; align-items: center; gap: 12px;">
-            <!-- CHUỖI NGÀY GHI CHÉP (STREAK) -->
             <div id="streakBadge" style="display: none; align-items: center; gap: 4px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #e84393; padding: 4px 10px; border-radius: 12px; font-weight: 800; font-size: 13px; box-shadow: 0 4px 10px rgba(232, 67, 147, 0.2); cursor: default;">
                 <span id="streakCount">0</span> 🔥
             </div>
 
-            <!-- MENU USER -->
             <div class="user-menu" id="userMenu">
-                <div class="avatar-btn" id="btnAvatar" style="cursor: pointer;">
-                    <img src="" alt="Avatar" id="avatarImg">
-                </div>
+                <div class="avatar-btn" id="btnAvatar" style="cursor: pointer;"><img src="" alt="Avatar" id="avatarImg"></div>
                 <div class="status-indicator"></div>
-                
                 <div class="dropdown-menu" id="dropdownMenu">
                     <div class="dropdown-header"><span class="dropdown-name" id="dropdownName">XIN CHÀO</span></div>
                     <button class="dropdown-item text-danger" id="btnLogoutAvatar">
-                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                        Đăng xuất
+                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Đăng xuất
                     </button>
                 </div>
             </div>
@@ -447,39 +250,22 @@
             </div>
             <div class="card-balance" id="totalBalance">******</div>
             
-            <!-- HÀNG 1: THU / CHI -->
             <div class="card-stats">
-                <div class="stat-col">
-                    <span class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg> Tổng Thu</span>
-                    <span class="stat-val in" id="totalIncome">******</span>
-                </div>
-                <div class="stat-col">
-                    <span class="stat-label">Tổng Chi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg></span>
-                    <span class="stat-val out" id="totalExpense">******</span>
-                </div>
+                <div class="stat-col"><span class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg> Tổng Thu</span><span class="stat-val in" id="totalIncome">******</span></div>
+                <div class="stat-col"><span class="stat-label">Tổng Chi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg></span><span class="stat-val out" id="totalExpense">******</span></div>
             </div>
 
-            <!-- HÀNG 2: VAY / NỢ (MỚI THÊM) -->
             <div class="card-stats" style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.2);">
-                <div class="stat-col">
-                    <span class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Cho vay</span>
-                    <span class="stat-val" id="totalLent" style="color: #fceceb;">******</span>
-                </div>
-                <div class="stat-col">
-                    <span class="stat-label">Đi vay<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></span>
-                    <span class="stat-val" id="totalBorrowed" style="color: #fff5ec;">******</span>
-                </div>
+                <div class="stat-col"><span class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Cho vay</span><span class="stat-val" id="totalLent" style="color: #fceceb;">******</span></div>
+                <div class="stat-col"><span class="stat-label">Đi vay<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></span><span class="stat-val" id="totalBorrowed" style="color: #fff5ec;">******</span></div>
             </div>
         </div>
-		<!-- KHỐI HIỂN THỊ NGÂN SÁCH THÁNG -->
-		<div class="card hide" id="budgetCard" style="margin-bottom: 20px;">
-			<div class="card-header" style="margin-bottom: 16px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 12px;">
-				<h3 style="font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0;">Ngân sách tháng này</h3>
-			</div>
-			<div id="budgetList" style="display: flex; flex-direction: column; gap: 16px;">
-				<div class="loading-text" style="font-size: 13px;">Đang tính toán...</div>
-			</div>
-		</div>
+
+        <div class="card hide" id="budgetCard" style="margin-bottom: 20px;">
+            <div class="card-header" style="margin-bottom: 16px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 12px;"><h3 style="font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0;">Ngân sách tháng này</h3></div>
+            <div id="budgetList" style="display: flex; flex-direction: column; gap: 16px;"><div class="loading-text" style="font-size: 13px;">Đang tính toán...</div></div>
+        </div>
+
         <div class="card" id="formCard">
             <form id="transactionForm">
                 <div class="type-toggle">
@@ -489,18 +275,11 @@
                 <input type="hidden" id="typeInput" value="income">
                 
                 <div class="form-group">
-                    <div class="modern-date-wrapper">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        <span class="date-text" id="formDateDisplay">Hôm nay</span>
-                        <input type="date" id="dateInput" required>
-                    </div>
+                    <div class="modern-date-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span class="date-text" id="formDateDisplay">Hôm nay</span><input type="date" id="dateInput" required></div>
                 </div>
 
                 <div class="form-group">
-                    <div class="amount-wrapper">
-                        <input type="text" id="amountInputDisplay" class="form-control input-amount" placeholder="0" inputmode="numeric" required>
-                        <span class="amount-currency">đ</span>
-                    </div>
+                    <div class="amount-wrapper"><input type="text" id="amountInputDisplay" class="form-control input-amount" placeholder="0" inputmode="numeric" required><span class="amount-currency">đ</span></div>
                     <input type="hidden" id="amountInputRaw" required>
                     <div class="quick-amounts">
                         <button type="button" class="btn-quick" data-val="5000">+5K</button>
@@ -512,17 +291,9 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <div class="category-scroll" id="categoryScroll">
-                        <div class="loading-text" style="font-size: 13px;">Đang tải danh mục...</div>
-                    </div>
-                    <input type="hidden" id="categoryIdInput" required>
-                    <input type="hidden" id="categoryNameInput" required>
-                </div>
+                <div class="form-group"><div class="category-scroll" id="categoryScroll"><div class="loading-text" style="font-size: 13px;">Đang tải danh mục...</div></div><input type="hidden" id="categoryIdInput" required><input type="hidden" id="categoryNameInput" required></div>
 
-                <div class="form-group" style="margin-bottom: 0;">
-                    <input type="text" id="noteInput" class="form-control" placeholder="Ghi chú (Không bắt buộc)">
-                </div>
+                <div class="form-group" style="margin-bottom: 0;"><input type="text" id="noteInput" class="form-control" placeholder="Ghi chú (Không bắt buộc)"></div>
                 
                 <button type="submit" class="btn-submit" id="submitBtn">Thêm giao dịch</button>
                 <button type="button" id="cancelEditBtn" class="btn-clear-filter hide" style="width: 100%; margin-top: 12px; justify-content: center; height: 48px;">Hủy chỉnh sửa</button>
@@ -533,22 +304,15 @@
     <!-- TAB 2: LỊCH SỬ -->
     <div id="historyView" class="view-section">
         <div class="history-filters-card">
-            <!-- TOGGLE XEM DANH SÁCH / LỊCH -->
             <div class="type-toggle" style="margin-bottom: 16px;">
                 <button class="btn-toggle active income" id="btnHistList" onclick="switchHistoryView('list')">Dạng Danh Sách</button>
                 <button class="btn-toggle expense" id="btnHistCalendar" onclick="switchHistoryView('calendar')">Dạng Lịch Lưới</button>
             </div>
 
-            <!-- BỘ LỌC DÀNH RIÊNG CHO DANH SÁCH -->
             <div id="histListViewFilters">
-                <div class="search-box">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input type="text" id="searchInput" placeholder="Tìm tên, ghi chú, số tiền...">
-                </div>
+                <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><input type="text" id="searchInput" placeholder="Tìm tên, ghi chú, số tiền..."></div>
 
-                <div class="category-scroll" id="historyCategoryFilter" style="margin-top: 12px; padding-bottom: 0;">
-                    <div class="cat-pill active" data-filter="">Tất cả</div>
-                </div>
+                <div class="category-scroll" id="historyCategoryFilter" style="margin-top: 12px; padding-bottom: 0;"><div class="cat-pill active" data-filter="">Tất cả</div></div>
 
                 <div class="quick-filters-scroll" id="quickDateFilters" style="margin-top: 12px; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
                     <button class="btn-quick-filter active" data-range="this_month">Tháng này</button>
@@ -563,9 +327,7 @@
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary); margin-right: 12px; flex-shrink: 0;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                         <input type="text" id="flatpickrRange" placeholder="Chạm để chọn khoảng thời gian" style="border: none; outline: none; background: transparent; width: 100%; font-size: 14px; font-weight: 700; color: var(--text-main);" readonly>
                     </div>
-                    <!-- 2 Input ẩn để duy trì logic cũ -->
-                    <input type="hidden" id="filterStartDate">
-                    <input type="hidden" id="filterEndDate">
+                    <input type="hidden" id="filterStartDate"><input type="hidden" id="filterEndDate">
                 </div>
             </div>
 
@@ -578,25 +340,20 @@
                 </div>
             </div>
         </div>
-        <!-- MỚI THÊM: BIỂU ĐỒ ĐƯỜNG THU/CHI THEO NGÀY -->
-            <div id="historyChartWrapper" class="hide" style="margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 16px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <h4 style="font-size: 13px; color: var(--text-muted); font-weight: 700; margin: 0;">Luồng tiền</h4>
-                    <div style="display: flex; gap: 8px; font-size: 11px; font-weight: 700;">
-                        <span style="color: var(--success);"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--success); margin-right:4px;"></span>Thu</span>
-                        <span style="color: var(--danger);"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--danger); margin-right:4px;"></span>Chi</span>
-                    </div>
-                </div>
-                <div style="height: 180px; width: 100%;">
-                    <canvas id="historyLineChart"></canvas>
+        
+        <div id="historyChartWrapper" class="hide" style="margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h4 style="font-size: 13px; color: var(--text-muted); font-weight: 700; margin: 0;">Luồng tiền</h4>
+                <div style="display: flex; gap: 8px; font-size: 11px; font-weight: 700;">
+                    <span style="color: var(--success);"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--success); margin-right:4px;"></span>Thu</span>
+                    <span style="color: var(--danger);"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--danger); margin-right:4px;"></span>Chi</span>
                 </div>
             </div>
-        <!-- DANH SÁCH GIAO DỊCH -->
-        <div class="transaction-list" id="transactionList">
-            <div class="loading-text">Đang tải dữ liệu...</div>
+            <div style="height: 180px; width: 100%;"><canvas id="historyLineChart"></canvas></div>
         </div>
 
-        <!-- LỊCH LƯỚI GIAO DỊCH -->
+        <div class="transaction-list" id="transactionList"><div class="loading-text">Đang tải dữ liệu...</div></div>
+
         <div id="calendarViewContainer" class="hide">
             <div class="history-filters-card" style="margin-top: 16px; padding: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -605,18 +362,14 @@
                     <button onclick="changeCalendarMonth(1)" style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid #e2e8f0; background: #fff; color: var(--text-main); font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">❯</button>
                 </div>
                 
-                <div class="calendar-grid" style="margin-bottom: 8px;">
-                    <div class="cal-day-header">T2</div><div class="cal-day-header">T3</div><div class="cal-day-header">T4</div><div class="cal-day-header">T5</div><div class="cal-day-header">T6</div><div class="cal-day-header">T7</div><div class="cal-day-header">CN</div>
-                </div>
+                <div class="calendar-grid" style="margin-bottom: 8px;"><div class="cal-day-header">T2</div><div class="cal-day-header">T3</div><div class="cal-day-header">T4</div><div class="cal-day-header">T5</div><div class="cal-day-header">T6</div><div class="cal-day-header">T7</div><div class="cal-day-header">CN</div></div>
                 <div class="calendar-grid" id="calendarGrid"></div>
             </div>
-
-            <!-- CHI TIẾT NGÀY ĐƯỢC CHỌN -->
             <div id="calendarSelectedDayDetails" style="padding: 0 16px; margin-bottom: 40px;"></div>
         </div>
     </div>
 
-    <!-- TAB 3: THỐNG KÊ -->
+    <!-- TAB 3: THỐNG KÊ (ĐÃ TRẢ VỀ CẤU TRÚC GỐC CHUẨN MỰC) -->
     <div id="analyticsView" class="view-section">
         <div class="chart-card" style="margin-bottom: 8px; padding: 16px;">
             <div class="type-toggle" style="margin-bottom: 16px;">
@@ -625,17 +378,17 @@
             </div>
             <input type="hidden" id="statsFilterMode" value="range">
             
-			<div id="statsRangeContainer" class="filter-row" style="width: 100%;">
-				<div class="filter-date-wrapper active" id="statsStartDateWrapper" style="min-width: 0;">
-					<span class="date-text" id="statsStartDateDisplay" style="overflow: hidden; text-overflow: ellipsis;">Từ ngày</span>
-					<input type="date" id="statsStartDate">
-				</div>
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted); flex-shrink: 0;"><path d="M5 12h14"></path></svg>
-				<div class="filter-date-wrapper active" id="statsEndDateWrapper" style="min-width: 0;">
-					<span class="date-text" id="statsEndDateDisplay" style="overflow: hidden; text-overflow: ellipsis;">Đến ngày</span>
-					<input type="date" id="statsEndDate">
-				</div>
-			</div>
+            <div id="statsRangeContainer" class="filter-row" style="width: 100%;">
+                <div class="filter-date-wrapper active" id="statsStartDateWrapper" style="min-width: 0;">
+                    <span class="date-text" id="statsStartDateDisplay" style="overflow: hidden; text-overflow: ellipsis;">Từ ngày</span>
+                    <input type="date" id="statsStartDate">
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted); flex-shrink: 0;"><path d="M5 12h14"></path></svg>
+                <div class="filter-date-wrapper active" id="statsEndDateWrapper" style="min-width: 0;">
+                    <span class="date-text" id="statsEndDateDisplay" style="overflow: hidden; text-overflow: ellipsis;">Đến ngày</span>
+                    <input type="date" id="statsEndDate">
+                </div>
+            </div>
 
             <div id="statsMonthContainer" class="hide">
                 <div style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--bg-color); border: 1px solid #e2e8f0; border-radius: 12px; padding: 0 12px; height: 44px;">
@@ -656,13 +409,13 @@
 
         <div class="kpi-container">
             <div class="kpi-card">
-				<div class="kpi-title">Trung bình chi</div>
-				<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-					<div class="kpi-value text-danger" id="kpiAvgExpense">0 đ</div>
-					<div class="trend-badge hide" id="kpiAvgExpenseTrend"></div>
-				</div>
-				<div class="kpi-desc">/ ngày</div>
-			</div>
+                <div class="kpi-title">Trung bình chi</div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <div class="kpi-value text-danger" id="kpiAvgExpense">0 đ</div>
+                    <div class="trend-badge hide" id="kpiAvgExpenseTrend"></div>
+                </div>
+                <div class="kpi-desc">/ ngày</div>
+            </div>
             <div class="kpi-card">
                 <div class="kpi-title">Chi lớn nhất</div>
                 <div class="kpi-value" id="kpiMaxExpense">0 đ</div>
@@ -670,238 +423,163 @@
             </div>
         </div>
 
-        <!-- ========================================== -->
-            <!-- KHU VỰC BIỂU ĐỒ ĐÃ ĐƯỢC SẮP XẾP LẠI -->
-            <!-- ========================================== -->
+        <!-- 1. BIỂU ĐỒ CỘT -->
+        <div style="margin-top: 24px;">
+            <h3 class="chart-title" style="font-size: 15px; margin: 0;">So sánh Thu / Chi</h3>
+            <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;"></p>
+            <div style="height: 220px; width: 100%;"><canvas id="barChart"></canvas></div>
+        </div>
 
-            <!-- 1. BIỂU ĐỒ CỘT (BAR CHART) -->
-            <div style="margin-top: 24px;">
-                <h3 class="chart-title" style="font-size: 15px; margin: 0;">So sánh Thu / Chi</h3>
-                <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;"></p>
-                <div style="height: 220px; width: 100%;">
-                    <canvas id="barChart"></canvas>
+        <!-- 2. BIỂU ĐỒ ĐƯỜNG -->
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
+            <h3 class="chart-title" style="font-size: 15px; margin: 0;">Biến động Số dư</h3>
+            <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;"></p>
+            <div style="height: 200px; width: 100%;"><canvas id="lineChart"></canvas></div>
+        </div>
+
+        <!-- 3. BIỂU ĐỒ TRÒN -->
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div>
+                    <h3 class="chart-title" style="font-size: 15px; margin: 0;">Cơ cấu Tỷ trọng</h3>
+                    <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin: 4px 0 0 0;"></p>
+                </div>
+                <div style="display: flex; gap: 8px; background: var(--bg-color); padding: 4px; border-radius: 10px;">
+                    <button id="btnPieExp" class="btn-toggle active expense" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; font-weight: 700;">Chi</button>
+                    <button id="btnPieInc" class="btn-toggle income" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; font-weight: 700;">Thu</button>
                 </div>
             </div>
-
-            <!-- 2. BIỂU ĐỒ ĐƯỜNG (LINE CHART) -->
-            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
-                <h3 class="chart-title" style="font-size: 15px; margin: 0;">Biến động Số dư</h3>
-                <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;"></p>
-                <div style="height: 200px; width: 100%;">
-                    <canvas id="lineChart"></canvas>
+            <div style="height: 220px; width: 100%; position: relative;">
+                <canvas id="pieChart"></canvas>
+                <div id="pieEmptyState" class="hide" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-muted);">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 8px; opacity: 0.5;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <span id="pieEmptyText" style="font-size: 13px;">Chưa có dữ liệu</span>
                 </div>
             </div>
+        </div>
 
-            <!-- 3. BIỂU ĐỒ TRÒN (PIE CHART) -->
-            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <div>
-                        <h3 class="chart-title" style="font-size: 15px; margin: 0;">Cơ cấu Tỷ trọng</h3>
-                        <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin: 4px 0 0 0;"></p>
-                    </div>
-                    <div style="display: flex; gap: 8px; background: var(--bg-color); padding: 4px; border-radius: 10px;">
-                        <button id="btnPieExp" class="btn-toggle active expense" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; font-weight: 700;">Chi</button>
-                        <button id="btnPieInc" class="btn-toggle income" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; font-weight: 700;">Thu</button>
-                    </div>
-                </div>
-                <div style="height: 220px; width: 100%; position: relative;">
-                    <canvas id="pieChart"></canvas>
-                    <div id="pieEmptyState" class="hide" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-muted);">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 8px; opacity: 0.5;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                        <span id="pieEmptyText" style="font-size: 13px;">Chưa có dữ liệu</span>
-                    </div>
-                </div>
-            </div>
+        <!-- 4. TOP 5 GIAO DỊCH -->
+        <div id="top5Container" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
+            <h3 id="top5Title" class="chart-title" style="font-size: 15px; margin-bottom: 16px;">Top 5 khoản chi lớn nhất</h3>
+            <div id="topExpenseList"></div>
+        </div>
 
-            <!-- 4. TOP 5 GIAO DỊCH -->
-            <div id="top5Container" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
-                <h3 id="top5Title" class="chart-title" style="font-size: 15px; margin-bottom: 16px;">Top 5 khoản chi lớn nhất</h3>
-                <div id="topExpenseList">
-                    <!-- Giao dịch Top 5 sẽ được nhúng vào đây -->
-                </div>
-            </div>
+        <!-- 5. TỦ TRƯNG BÀY HUY HIỆU -->
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0; padding-bottom: 24px;">
+            <h3 class="chart-title" style="font-size: 16px; margin-bottom: 4px;">🏆 Vũ trụ Huy hiệu</h3>
+            <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Mở khóa các thành tựu của bạn</p>
+            <div id="badgeCabinet"></div>
+        </div>
+    </div>
 
-            <!-- 5. TỦ TRƯNG BÀY HUY HIỆU -->
-            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e2e8f0; padding-bottom: 24px;">
-                <h3 class="chart-title" style="font-size: 15px; margin-bottom: 4px;">🏆 Bộ sưu tập Huy hiệu</h3>
-                <p class="chart-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Mở khóa các cột mốc để nhận thưởng</p>
-                <div id="badgeCabinet" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-                    <!-- JS sẽ render vào đây -->
-                </div>
-            </div>
-		</div>	
-	<!-- TAB MỚI: SỔ VAY NỢ (Nằm ngang hàng với các view-section khác) -->
+    <!-- TAB 4: SỔ VAY NỢ -->
     <div id="debtView" class="view-section">
         <div class="history-filters-card" style="padding-top: 16px;">
-            <!-- Toggle Cho Vay / Đi Vay -->
             <div class="type-toggle" style="margin-bottom: 16px;">
                 <button class="btn-toggle active income" id="btnTabLent" onclick="switchDebtTab('lent')">Cho vay</button>
                 <button class="btn-toggle expense" id="btnTabBorrowed" onclick="switchDebtTab('borrowed')">Đi vay</button>
             </div>
-
-            <!-- Thẻ Tổng quan -->
             <div class="summary-cards-grid" style="margin-bottom: 16px;">
                 <div class="summary-card box-bal" style="grid-column: span 2; border-color: rgba(243, 156, 18, 0.2); background: #fffaf0;">
                     <div class="sc-label" style="color: #f39c12;" id="debtSummaryLabel">Tổng tiền chưa thu</div>
                     <div class="sc-val" id="debtSummaryAmount" style="color: #f39c12; font-size: 24px;">0đ</div>
                 </div>
             </div>
-			<div class="search-box" style="margin-bottom: 16px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="debtSearchInput" placeholder="Tìm tên người vay, ghi chú, số tiền...">
-            </div>
+            <div class="search-box" style="margin-bottom: 16px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><input type="text" id="debtSearchInput" placeholder="Tìm tên người vay, ghi chú, số tiền..."></div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h4 style="font-size: 14px; color: var(--text-main);">Đang treo <span id="debtListCount" style="color: var(--primary);">(0)</span></h4>
-                <button onclick="openDebtForm()" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Thêm mới
-                </button>
+                <button onclick="openDebtForm()" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Thêm mới</button>
             </div>
-
-            <!-- Danh sách -->
             <div id="debtList" class="transaction-list" style="gap: 12px;"></div>
-            
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; margin-bottom: 12px;">
                 <h4 style="font-size: 14px; color: var(--text-muted); margin: 0;">Lịch sử đã hoàn tất</h4>
-                <button onclick="clearAllPaidDebts()" style="background: transparent; border: none; color: var(--danger); cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 4px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Xóa
-                </button>
+                <button onclick="clearAllPaidDebts()" style="background: transparent; border: none; color: var(--danger); cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Xóa</button>
             </div>
             <div id="debtPaidList" class="transaction-list" style="gap: 12px;"></div>
         </div>
     </div>
+
     <!-- TAB ADMIN -->
     <div id="adminView" class="view-section">
         <div class="history-filters-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <h3 style="font-size: 16px; font-weight: 800; color: var(--danger); margin: 0;">Quản trị hệ thống</h3>
-                <button class="btn-add-cat-inline" onclick="openCreateUserModal()" style="background: var(--success-light); color: var(--success);" title="Tạo tài khoản mới">
-                    <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
+                <button class="btn-add-cat-inline" onclick="openCreateUserModal()" style="background: var(--success-light); color: var(--success);" title="Tạo tài khoản mới"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
             </div>
-
             <div class="summary-cards-grid" style="margin-bottom: 16px;">
-                <div class="summary-card box-bal" style="grid-column: span 2; border-color: rgba(67, 97, 238, 0.2); background: #eef2ff;">
-                    <div class="sc-label" style="color: var(--primary);">Tổng số tài khoản</div>
-                    <div class="sc-val" id="adminTotalUsers" style="color: var(--primary); font-size: 24px;">0</div>
-                </div>
-                <div class="summary-card box-out" style="background: var(--danger-light); border-color: rgba(231, 76, 60, 0.2);">
-                    <div class="sc-label" style="color: var(--danger);">Quản trị (Admin)</div>
-                    <div class="sc-val" id="adminTotalAdmins" style="color: var(--danger);">0</div>
-                </div>
-                <div class="summary-card box-in" style="background: var(--success-light); border-color: rgba(46, 204, 113, 0.2);">
-                    <div class="sc-label" style="color: var(--success);">Người dùng</div>
-                    <div class="sc-val" id="adminTotalRegulars" style="color: var(--success);">0</div>
-                </div>
+                <div class="summary-card box-bal" style="grid-column: span 2; border-color: rgba(67, 97, 238, 0.2); background: #eef2ff;"><div class="sc-label" style="color: var(--primary);">Tổng số tài khoản</div><div class="sc-val" id="adminTotalUsers" style="color: var(--primary); font-size: 24px;">0</div></div>
+                <div class="summary-card box-out" style="background: var(--danger-light); border-color: rgba(231, 76, 60, 0.2);"><div class="sc-label" style="color: var(--danger);">Quản trị (Admin)</div><div class="sc-val" id="adminTotalAdmins" style="color: var(--danger);">0</div></div>
+                <div class="summary-card box-in" style="background: var(--success-light); border-color: rgba(46, 204, 113, 0.2);"><div class="sc-label" style="color: var(--success);">Người dùng</div><div class="sc-val" id="adminTotalRegulars" style="color: var(--success);">0</div></div>
             </div>
-
-            <div class="search-box" style="margin-bottom: 16px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="adminSearchUser" placeholder="Tìm tên, email hoặc UID...">
-            </div>
-
-            <div id="adminUserList" class="transaction-list" style="gap: 12px;">
-                <div class="loading-text">Đang tải danh sách...</div>
-            </div>
+            <div class="search-box" style="margin-bottom: 16px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><input type="text" id="adminSearchUser" placeholder="Tìm tên, email hoặc UID..."></div>
+            <div id="adminUserList" class="transaction-list" style="gap: 12px;"><div class="loading-text">Đang tải danh sách...</div></div>
         </div>
     </div>
 
-    <!-- TAB 4: THÊM (CÀI ĐẶT) -->
+    <!-- TAB 5: CÀI ĐẶT -->
     <div id="settingsView" class="view-section">
         <div class="settings-header">Cá nhân hóa</div>
-		<div id="adminPanelSection" class="hide">
-			<div class="settings-header" style="color: var(--danger);">Quản trị hệ thống</div>
-			<div class="settings-card" style="border: 1px solid rgba(231, 76, 60, 0.2);">
-				<div class="settings-item" id="btnSettingsAdminDashboard">
-					<div class="settings-item-left" style="color: var(--danger);">
-						<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-						Quản lý người dùng
-					</div>
-					<div class="settings-item-right" style="color: var(--danger);">›</div>
-				</div>
-			</div>
-		</div>
+        <div id="adminPanelSection" class="hide">
+            <div class="settings-header" style="color: var(--danger);">Quản trị hệ thống</div>
+            <div class="settings-card" style="border: 1px solid rgba(231, 76, 60, 0.2);">
+                <div class="settings-item" id="btnSettingsAdminDashboard">
+                    <div class="settings-item-left" style="color: var(--danger);"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> Quản lý người dùng</div>
+                    <div class="settings-item-right" style="color: var(--danger);">›</div>
+                </div>
+            </div>
+        </div>
         <div class="settings-card">
             <div class="settings-item" id="btnSettingsCatManager">
-                <div class="settings-item-left"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> Quản lý danh mục</div>
-                <div class="settings-item-right">›</div>
+                <div class="settings-item-left"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> Quản lý danh mục</div><div class="settings-item-right">›</div>
             </div>
-			<div class="settings-item" id="btnSettingsBudget">
-                <div class="settings-item-left" style="color: #f39c12;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg> Thiết lập Hạn mức chi tiêu</div>
-                <div class="settings-item-right">›</div>
+            <div class="settings-item" id="btnSettingsBudget">
+                <div class="settings-item-left" style="color: #f39c12;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg> Thiết lập Hạn mức chi tiêu</div><div class="settings-item-right">›</div>
             </div>
             <div class="settings-item" id="btnSettingsWalletTheme">
-                <div class="settings-item-left"><svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.688h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg> Màu thẻ Card</div>
-                <div class="settings-item-right">›</div>
+                <div class="settings-item-left"><svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.688h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg> Màu thẻ Card</div><div class="settings-item-right">›</div>
             </div>
-			<div class="settings-item" id="btnSettingsAppTheme">
-                <div class="settings-item-left"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Màu nền background</div>
-                <div class="settings-item-right">›</div>
+            <div class="settings-item" id="btnSettingsAppTheme">
+                <div class="settings-item-left"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Màu nền background</div><div class="settings-item-right">›</div>
             </div>
             <div class="settings-item" id="btnSettingsDarkMode">
-                <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg> <span id="settingsDarkModeText">Chế độ tối</span></div>
-                <div class="settings-item-right">›</div>
+                <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg> <span id="settingsDarkModeText">Chế độ tối</span></div><div class="settings-item-right">›</div>
             </div>
         </div>
 
         <div class="settings-header" style="margin-top: 10px;">Tài khoản</div>
         <div class="settings-card">
             <div class="settings-item" id="btnSettingsProfile">
-                <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Thông tin cá nhân</div>
-                <div class="settings-item-right">›</div>
+                <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Thông tin cá nhân</div><div class="settings-item-right">›</div>
             </div>
             <div class="settings-item" id="btnSettingsChangePwd">
-                <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg> Đổi mật khẩu</div>
-                <div class="settings-item-right">›</div>
+                <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg> Đổi mật khẩu</div><div class="settings-item-right">›</div>
             </div>
             <div class="settings-item text-danger" id="btnSettingsLogout">
-                <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Đăng xuất</div>
-                <div class="settings-item-right"></div>
+                <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Đăng xuất</div><div class="settings-item-right"></div>
             </div>
         </div>
     </div>
 </div> 
+
 <!-- NÚT THÊM NHANH (FAB) -->
 <button class="fab-button hide" id="fabAddTransaction" title="Thêm giao dịch mới">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
 </button>
+
 <!-- BOTTOM NAVIGATION -->
 <div class="bottom-nav">
-    <div class="nav-item active" id="tabHome">
-        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        <span>Nhập liệu</span>
-    </div>
-    <div class="nav-item" id="tabHistory">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-        <span>Lịch sử</span>
-    </div>
-    <div class="nav-item" id="tabStats">
-        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-        <span>Thống kê</span>
-    </div>
-    <div class="nav-item" id="tabDebt">
-        <svg viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-        <span>Sổ Nợ</span>
-    </div>
-    <div class="nav-item hide" id="tabAdmin" style="color: var(--danger);">
-        <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-        <span>Quản trị</span>
-    </div>
-    <div class="nav-item" id="tabSettings">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        <span>Thêm</span>
-    </div>
+    <div class="nav-item active" id="tabHome"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span>Nhập liệu</span></div>
+    <div class="nav-item" id="tabHistory"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>Lịch sử</span></div>
+    <div class="nav-item" id="tabStats"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg><span>Thống kê</span></div>
+    <div class="nav-item" id="tabDebt"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg><span>Sổ Nợ</span></div>
+    <div class="nav-item hide" id="tabAdmin" style="color: var(--danger);"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg><span>Quản trị</span></div>
+    <div class="nav-item" id="tabSettings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Thêm</span></div>
 </div>
 
 <!-- CÁC MODALS -->
 <div class="history-overlay" id="catManagerOverlay"></div>
 <div class="history-modal" id="catManagerModal" style="height: 85vh;">
-    <div class="history-modal-header">
-        <h3>Quản lý Danh mục</h3>
-        <button class="btn-close-modal" onclick="closeCatManager()">&times;</button>
-    </div>
+    <div class="history-modal-header"><h3>Quản lý Danh mục</h3><button class="btn-close-modal" onclick="closeCatManager()">&times;</button></div>
     <div class="history-modal-body" style="background: var(--bg-color)">
         <div class="cat-list-header"><h4>Tiền Chi</h4><button class="btn-add-cat-inline" onclick="openCatForm(null, 'expense')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button></div>
         <div class="cat-list" id="expenseCatList"></div>
@@ -915,15 +593,11 @@
     <div class="history-modal-header"><h3 id="catFormTitle">Thêm danh mục</h3><button class="btn-close-modal" onclick="closeCatForm()">&times;</button></div>
     <div class="history-modal-body" style="background: #fff">
         <div class="form-group"><input type="text" id="catNameInput" class="form-control" placeholder="Tên danh mục (VD: Đóng học phí)" required></div>
-		<!-- Ô Nhập Hạn Mức Ngân Sách -->
-		<div class="form-group" id="budgetLimitGroup" style="margin-top: 16px;">
-			<label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Hạn mức chi tiêu / Tháng (Tùy chọn)</label>
-			<div class="amount-wrapper" style="height: 48px;">
-				<input type="text" id="catBudgetDisplay" class="form-control input-amount" placeholder="Không giới hạn" inputmode="numeric" style="font-size: 16px;">
-				<span class="amount-currency">đ</span>
-			</div>
-			<input type="hidden" id="catBudgetRaw">
-		</div>
+        <div class="form-group" id="budgetLimitGroup" style="margin-top: 16px;">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Hạn mức chi tiêu / Tháng (Tùy chọn)</label>
+            <div class="amount-wrapper" style="height: 48px;"><input type="text" id="catBudgetDisplay" class="form-control input-amount" placeholder="Không giới hạn" inputmode="numeric" style="font-size: 16px;"><span class="amount-currency">đ</span></div>
+            <input type="hidden" id="catBudgetRaw">
+        </div>
         <div class="type-toggle" style="margin-bottom: 24px;">
             <button type="button" class="btn-toggle active income" id="btnCatTypeInc" onclick="setCatFormType('income')">Tiền Thu</button>
             <button type="button" class="btn-toggle expense" id="btnCatTypeExp" onclick="setCatFormType('expense')">Tiền Chi</button>
@@ -944,13 +618,8 @@
             <button type="button" class="btn-toggle expense" id="btnEditTxExp" onclick="setEditTxType('expense')">Tiền Chi</button>
         </div>
         <input type="hidden" id="editTxTypeInput" value="income">
-        <div class="form-group">
-            <div class="modern-date-wrapper"><span class="date-text" id="editTxDateDisplay"></span><input type="date" id="editTxDateInput" required></div>
-        </div>
-        <div class="form-group">
-            <div class="amount-wrapper"><input type="text" id="editTxAmountDisplay" class="form-control input-amount" placeholder="0"><span class="amount-currency">đ</span></div>
-            <input type="hidden" id="editTxAmountRaw" required>
-        </div>
+        <div class="form-group"><div class="modern-date-wrapper"><span class="date-text" id="editTxDateDisplay"></span><input type="date" id="editTxDateInput" required></div></div>
+        <div class="form-group"><div class="amount-wrapper"><input type="text" id="editTxAmountDisplay" class="form-control input-amount" placeholder="0"><span class="amount-currency">đ</span></div><input type="hidden" id="editTxAmountRaw" required></div>
         <div class="form-group"><div class="category-scroll" id="editTxCategoryScroll"></div><input type="hidden" id="editTxCategoryId" required><input type="hidden" id="editTxCategoryName" required></div>
         <div class="form-group"><input type="text" id="editTxNote" class="form-control" placeholder="Ghi chú (Không bắt buộc)"></div>
         <button type="button" class="btn-submit edit-mode" id="btnSaveEditTx" style="margin-top: 20px;">Lưu thay đổi</button>
@@ -1000,76 +669,45 @@
     <button class="sheet-btn btn-sheet-delete" onclick="setDefaultAvatar()" style="margin-top: 12px;">Xóa ảnh (Mặc định)</button>
     <button class="sheet-btn btn-sheet-cancel" onclick="closeAvatarActionSheet()">Đóng</button>
 </div>
+
 <!-- POPUP THANH TOÁN MỘT PHẦN -->
 <div class="history-overlay" id="partialPayOverlay" style="z-index: 10040;" onclick="closePartialPay()"></div>
 <div class="history-modal" id="partialPayModal" style="z-index: 10041; height: auto; max-height: 80vh;">
-    <div class="history-modal-header">
-        <h3>Thanh toán khoản nợ</h3>
-        <button class="btn-close-modal" onclick="closePartialPay()">&times;</button>
-    </div>
+    <div class="history-modal-header"><h3>Thanh toán khoản nợ</h3><button class="btn-close-modal" onclick="closePartialPay()">&times;</button></div>
     <div class="history-modal-body" style="background: #fff; padding-top: 20px;">
         <input type="hidden" id="ppDebtId">
         <div style="text-align: center; margin-bottom: 16px;">
             <div style="font-size: 13px; color: var(--text-muted);">Số tiền còn nợ</div>
             <div style="font-size: 24px; font-weight: 800; color: var(--danger);" id="ppRemainingAmt">0đ</div>
         </div>
-        
         <div class="form-group">
             <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Nhập số tiền thanh toán đợt này</label>
-            <div class="amount-wrapper" style="height: 48px;">
-                <input type="text" id="ppAmountDisplay" class="form-control input-amount" placeholder="0" inputmode="numeric" required style="font-size: 18px;">
-                <span class="amount-currency">đ</span>
-            </div>
+            <div class="amount-wrapper" style="height: 48px;"><input type="text" id="ppAmountDisplay" class="form-control input-amount" placeholder="0" inputmode="numeric" required style="font-size: 18px;"><span class="amount-currency">đ</span></div>
             <input type="hidden" id="ppAmountRaw">
         </div>
-
         <button type="button" class="btn-submit" id="btnSubmitPartialPay" style="margin-top: 16px; background: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">Xác nhận thanh toán một phần</button>
         <button type="button" onclick="payFullDebt()" class="btn-clear-filter" style="width: 100%; margin-top: 12px; justify-content: center; height: 48px; border: 1px solid var(--text-muted); color: var(--text-main);">Thanh toán toàn bộ (Tất toán)</button>
     </div>
 </div>
+
 <!-- FORM THÊM MỚI KHOẢN VAY NỢ -->
 <div class="history-overlay" id="debtFormOverlay" style="z-index: 10035;" onclick="closeDebtForm()"></div>
 <div class="history-modal" id="debtFormModal" style="z-index: 10036; height: auto; max-height: 90vh;">
-    <div class="history-modal-header">
-        <h3 id="debtFormTitle">Thêm khoản vay/nợ</h3>
-        <button class="btn-close-modal" onclick="closeDebtForm()">&times;</button>
-    </div>
+    <div class="history-modal-header"><h3 id="debtFormTitle">Thêm khoản vay/nợ</h3><button class="btn-close-modal" onclick="closeDebtForm()">&times;</button></div>
     <div class="history-modal-body" style="background: #fff; padding-top: 20px;">
         <input type="hidden" id="debtFormType" value="lent">
-        
-        <div class="form-group">
-            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;" id="debtPersonLabel">Tên người vay</label>
-            <input type="text" id="debtPersonInput" class="form-control" placeholder="Nhập tên..." required>
-        </div>
-        
+        <div class="form-group"><label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;" id="debtPersonLabel">Tên người vay</label><input type="text" id="debtPersonInput" class="form-control" placeholder="Nhập tên..." required></div>
         <div class="form-group">
             <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Số tiền</label>
-            <div class="amount-wrapper" style="height: 48px;">
-                <input type="text" id="debtAmountDisplay" class="form-control input-amount" placeholder="0" inputmode="numeric" required style="font-size: 18px;">
-                <span class="amount-currency">đ</span>
-            </div>
-            <input type="hidden" id="debtAmountRaw">
+            <div class="amount-wrapper" style="height: 48px;"><input type="text" id="debtAmountDisplay" class="form-control input-amount" placeholder="0" inputmode="numeric" required style="font-size: 18px;"><span class="amount-currency">đ</span></div><input type="hidden" id="debtAmountRaw">
         </div>
-
-        <div class="form-group">
-            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Ngày giao dịch</label>
-            <input type="date" id="debtDateInput" class="form-control" required>
-        </div>
-
-        <!-- Ô NGÀY HẸN TRẢ MỚI ĐƯỢC THÊM VÀO ĐÂY -->
-        <div class="form-group">
-            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Ngày hẹn trả (Tùy chọn)</label>
-            <input type="date" id="debtDueDateInput" class="form-control">
-        </div>
-
-        <div class="form-group" style="margin-bottom: 0;">
-            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Ghi chú (Tùy chọn)</label>
-            <input type="text" id="debtNoteInput" class="form-control" placeholder="Ví dụ: Hẹn cuối tháng trả">
-        </div>
-        
+        <div class="form-group"><label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Ngày giao dịch</label><input type="date" id="debtDateInput" class="form-control" required></div>
+        <div class="form-group"><label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Ngày hẹn trả (Tùy chọn)</label><input type="date" id="debtDueDateInput" class="form-control"></div>
+        <div class="form-group" style="margin-bottom: 0;"><label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Ghi chú (Tùy chọn)</label><input type="text" id="debtNoteInput" class="form-control" placeholder="Ví dụ: Hẹn cuối tháng trả"></div>
         <button type="button" class="btn-submit" id="btnSaveDebt" style="margin-top: 24px; background: #f39c12; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);">Lưu vào sổ</button>
     </div>
 </div>
+
 <!-- POPUP ADMIN -->
 <div class="history-overlay" id="adminDashboardOverlay" style="z-index: 10015;" onclick="closeAdminDashboard()"></div>
 <div class="history-modal" id="adminDashboardModal" style="z-index: 10016; height: 90vh;">
@@ -1085,10 +723,7 @@
         <div class="form-group"><label style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display: block;">Họ và tên</label><input type="text" id="newUserName" class="form-control" placeholder="Tên người dùng" required></div>
         <div class="form-group">
             <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display: block;">Tên đăng nhập</label>
-            <div style="position: relative; display: flex; align-items: center;">
-                <input type="text" id="newUserEmail" class="form-control" placeholder="Tên tài khoản" style="padding-right: 105px;" required>
-                <span style="position: absolute; right: 16px; font-size: 15px; font-weight: 600; color: #cbd5e1; pointer-events: none;">@chitieu.com</span>
-            </div>
+            <div style="position: relative; display: flex; align-items: center;"><input type="text" id="newUserEmail" class="form-control" placeholder="Tên tài khoản" style="padding-right: 105px;" required><span style="position: absolute; right: 16px; font-size: 15px; font-weight: 600; color: #cbd5e1; pointer-events: none;">@chitieu.com</span></div>
         </div>
         <div class="form-group"><label style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; display: block;">Mật khẩu</label><input type="password" id="newUserPassword" class="form-control" placeholder="Mật khẩu (từ 6 ký tự)" required minlength="6"></div>
         <button type="button" class="btn-submit" id="btnSubmitCreateUser" style="margin-top: 16px;">Xác nhận tạo</button>
@@ -1106,11 +741,7 @@
             <div class="search-box"><input type="text" id="admTxSearchInput" placeholder="Tìm kiếm..."></div>
             <div class="category-scroll" id="admTxCategoryFilter" style="margin-top: 12px; padding-bottom: 0;"></div>
             <div class="quick-filters-scroll" id="admTxQuickDateFilters" style="margin-top: 12px; display: flex; gap: 8px; overflow-x: auto;">
-                <button class="btn-quick-filter active" data-range="this_month">Tháng này</button>
-                <button class="btn-quick-filter" data-range="last_month">Tháng trước</button>
-                <button class="btn-quick-filter" data-range="this_week">Tuần này</button>
-                <button class="btn-quick-filter" data-range="all">Tất cả</button>
-                <button class="btn-quick-filter" data-range="custom">Tùy chỉnh</button>
+                <button class="btn-quick-filter active" data-range="this_month">Tháng này</button><button class="btn-quick-filter" data-range="last_month">Tháng trước</button><button class="btn-quick-filter" data-range="this_week">Tuần này</button><button class="btn-quick-filter" data-range="all">Tất cả</button><button class="btn-quick-filter" data-range="custom">Tùy chỉnh</button>
             </div>
             <div class="filter-row hide" id="admTxCustomDateContainer" style="margin-top: 12px; display: flex; gap: 8px;">
                 <div class="filter-date-wrapper active"><span class="date-text" id="admTxStartDateDisplay">Từ ngày</span><input type="date" id="admTxStartDate"></div>
@@ -1131,17 +762,14 @@
     <div class="history-modal-body" style="background: var(--bg-color); padding: 16px; flex: 1; overflow-y: auto;">
         <div class="chart-card" style="margin-bottom: 8px; padding: 16px;">
             <div class="type-toggle" style="margin-bottom: 16px;">
-                <button type="button" class="btn-toggle active" id="adm_btnModeRange" style="font-size: 14px; background: var(--primary); color: white;">Tùy chỉnh ngày</button>
-                <button type="button" class="btn-toggle" id="adm_btnModeMonth" style="font-size: 14px;">Theo tháng</button>
+                <button type="button" class="btn-toggle active" id="adm_btnModeRange" style="font-size: 14px; background: var(--primary); color: white;">Tùy chỉnh ngày</button><button type="button" class="btn-toggle" id="adm_btnModeMonth" style="font-size: 14px;">Theo tháng</button>
             </div>
             <input type="hidden" id="adm_statsFilterMode" value="range">
             <div id="adm_statsRangeContainer" class="filter-row" style="width: 100%;">
                 <div class="filter-date-wrapper active" id="adm_statsStartDateWrapper"><span class="date-text" id="adm_statsStartDateDisplay">Từ ngày</span><input type="date" id="adm_statsStartDate"></div>
                 <div class="filter-date-wrapper active" id="adm_statsEndDateWrapper"><span class="date-text" id="adm_statsEndDateDisplay">Đến ngày</span><input type="date" id="adm_statsEndDate"></div>
             </div>
-            <div id="adm_statsMonthContainer" class="hide">
-                <input type="month" id="adm_statsMonthPicker" style="border: none; background: transparent; font-size: 15px; font-weight: 700; width: 100%; text-align: center;">
-            </div>
+            <div id="adm_statsMonthContainer" class="hide"><input type="month" id="adm_statsMonthPicker" style="border: none; background: transparent; font-size: 15px; font-weight: 700; width: 100%; text-align: center;"></div>
         </div>
         <div class="hero-kpi"><div class="kpi-title">Số dư khả dụng</div><div class="hero-kpi-value" id="adm_kpiNetFlow">0 đ</div><div class="kpi-desc" id="adm_kpiNetFlowDesc"></div></div>
         <div class="kpi-container">
@@ -1160,87 +788,67 @@
         <div class="chart-card" style="margin-top: 20px; margin-bottom: 40px;"><div class="chart-header"><h3 class="chart-title">Xu hướng số dư</h3></div><div class="chart-container"><canvas id="adm_lineChart"></canvas></div></div>
     </div>
 </div>
+
 <!-- POPUP QUẢN LÝ HẠN MỨC NGÂN SÁCH NHANH -->
 <div class="history-overlay" id="budgetManagerOverlay" style="z-index: 10045;" onclick="closeBudgetManager()"></div>
 <div class="history-modal" id="budgetManagerModal" style="z-index: 10046; height: 85vh; display: flex; flex-direction: column;">
-    <div class="history-modal-header" style="flex-shrink: 0;">
-        <h3>Thiết lập Hạn mức</h3>
-        <button class="btn-close-modal" onclick="closeBudgetManager()">&times;</button>
-    </div>
+    <div class="history-modal-header" style="flex-shrink: 0;"><h3>Thiết lập Hạn mức</h3><button class="btn-close-modal" onclick="closeBudgetManager()">&times;</button></div>
     <div class="history-modal-body" style="background: var(--bg-color); padding-top: 16px; flex: 1; overflow-y: auto;">
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px; text-align: center; line-height: 1.5;">Nhập số tiền tối đa bạn muốn chi tiêu mỗi tháng cho từng danh mục. <br><b>Để trống nếu không giới hạn.</b></p>
-        
         <div id="budgetManagerList" style="display: flex; flex-direction: column; gap: 12px;"></div>
-        
         <button class="btn-submit" id="btnSaveAllBudgets" style="margin-top: 24px; margin-bottom: 24px; background: #f39c12; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);">Lưu tất cả hạn mức</button>
     </div>
 </div>
+
 <!-- MODAL SỔ CHI TIÊU CHUNG -->
 <div class="history-overlay" id="sharedLedgerOverlay" style="z-index: 10060;" onclick="closeSharedLedgerModal()"></div>
 <div class="history-modal" id="sharedLedgerModal" style="z-index: 10061; height: auto; max-height: 80vh;">
-    <div class="history-modal-header">
-        <h3>Sổ Chi Tiêu Chung</h3>
-        <button class="btn-close-modal" onclick="closeSharedLedgerModal()">&times;</button>
-    </div>
+    <div class="history-modal-header"><h3>Sổ Chi Tiêu Chung</h3><button class="btn-close-modal" onclick="closeSharedLedgerModal()">&times;</button></div>
     <div class="history-modal-body" style="background: #fff; padding-top: 20px;">
-        
-        <!-- TRẠNG THÁI: CHƯA THAM GIA SỔ CHUNG -->
         <div id="noLedgerState">
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">
-                Bạn đang sử dụng sổ cá nhân. Bạn có thể tự tạo một sổ chung mới để gửi mã cho người thân, hoặc nhập mã sổ của người khác để cùng quản lý thời gian thực.
-            </p>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Bạn đang sử dụng sổ cá nhân. Bạn có thể tự tạo một sổ chung mới để gửi mã cho người thân, hoặc nhập mã sổ của người khác để cùng quản lý thời gian thực.</p>
             <button type="button" class="btn-submit" onclick="createSharedLedger()" style="margin-bottom: 16px; background: var(--primary); box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);">Tạo sổ chung mới</button>
-            
-            <div style="position: relative; text-align: center; margin: 16px 0;">
-                <span style="background: #fff; padding: 0 10px; font-size: 12px; color: var(--text-muted); position: relative; z-index: 1;">HOẶC THAM GIA SỔ CÓ SẴN</span>
-                <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; z-index: 0;"></div>
-            </div>
-
-            <div class="form-group" style="margin-top: 16px;">
-                <input type="text" id="joinLedgerCodeInput" class="form-control" placeholder="Nhập mã sổ chung (VD: ledger_171...)" required>
-            </div>
+            <div style="position: relative; text-align: center; margin: 16px 0;"><span style="background: #fff; padding: 0 10px; font-size: 12px; color: var(--text-muted); position: relative; z-index: 1;">HOẶC THAM GIA SỔ CÓ SẴN</span><div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; z-index: 0;"></div></div>
+            <div class="form-group" style="margin-top: 16px;"><input type="text" id="joinLedgerCodeInput" class="form-control" placeholder="Nhập mã sổ chung (VD: ledger_171...)" required></div>
             <button type="button" onclick="joinSharedLedger()" class="btn-submit" style="background: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">Tham gia ngay</button>
         </div>
-
-        <!-- TRẠNG THÁI: ĐÃ VÀO SỔ CHUNG -->
         <div id="activeLedgerState" class="hide" style="text-align: center;">
-            <div style="width: 60px; height: 60px; border-radius: 50%; background: #eef2ff; color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            </div>
+            <div style="width: 60px; height: 60px; border-radius: 50%; background: #eef2ff; color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
             <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">MÃ SỔ CHUNG CỦA BẠN</div>
             <div id="displayLedgerCode" style="font-size: 16px; font-weight: 800; color: var(--primary); font-family: monospace; background: #f8f9fa; padding: 10px 16px; border-radius: 8px; border: 1px dashed #cbd5e1; display: inline-block; margin-bottom: 20px; word-break: break-all;">---</div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.4;">
-                Mọi giao dịch bạn hoặc thành viên khác nhập sẽ tự động đồng bộ tức thì trên tất cả các máy cùng tham gia mã này.
-            </p>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.4;">Mọi giao dịch bạn hoặc thành viên khác nhập sẽ tự động đồng bộ tức thì trên tất cả các máy cùng tham gia mã này.</p>
             <button type="button" onclick="leaveSharedLedger()" class="btn-clear-filter" style="width: 100%; border: 1px solid var(--danger); color: var(--danger); justify-content: center; height: 48px;">Rời khỏi sổ chung (Trở về sổ cá nhân)</button>
         </div>
-
     </div>
 </div>
+
 <!-- SCRIPTS -->
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
+
 <!-- POPUP MỞ KHÓA HUY HIỆU MỚI -->
-    <div class="overlay hide" id="badgePopupOverlay" style="z-index: 9999;"></div>
-    <div class="modal hide" id="badgePopupModal" style="z-index: 10000; text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #1e1b4b, #4338ca); color: white; border: 2px solid #ffd700; box-shadow: 0 10px 40px rgba(79, 70, 229, 0.5);">
-        <div id="badgePopupConfetti" style="font-size: 64px; animation: bounceIn 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);">🎉</div>
-        <div id="badgePopupIcon" style="font-size: 72px; margin: 16px 0; filter: drop-shadow(0 0 20px rgba(255,215,0,0.8));">🏆</div>
-        <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 8px; color: #ffd700; text-transform: uppercase; letter-spacing: 1px;">Mở khóa thành tựu!</h2>
-        <h3 id="badgePopupName" style="font-size: 20px; font-weight: 700; margin-bottom: 12px;">Tên Huy Hiệu</h3>
-        <p id="badgePopupDesc" style="font-size: 14px; color: #e0e7ff; margin-bottom: 24px; opacity: 0.9;">Mô tả cách đạt được</p>
-        <button onclick="closeBadgePopup()" class="btn-primary" style="background: #ffd700; color: #1e1b4b; box-shadow: 0 4px 15px rgba(255,215,0,0.4);">Tuyệt vời!</button>
-    </div>
+<div class="overlay hide" id="badgePopupOverlay" style="z-index: 9999;"></div>
+<div class="modal hide" id="badgePopupModal" style="z-index: 10000; text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #1e1b4b, #4338ca); color: white; border: 2px solid #ffd700; box-shadow: 0 10px 40px rgba(79, 70, 229, 0.5);">
+    <div id="badgePopupConfetti" style="font-size: 64px; animation: bounceIn 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);">🎉</div>
+    <div id="badgePopupIcon" style="font-size: 72px; margin: 16px 0; filter: drop-shadow(0 0 20px rgba(255,215,0,0.8));">🏆</div>
+    <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 8px; color: #ffd700; text-transform: uppercase; letter-spacing: 1px;">Mở khóa thành tựu!</h2>
+    <h3 id="badgePopupName" style="font-size: 20px; font-weight: 700; margin-bottom: 12px;">Tên Huy Hiệu</h3>
+    <p id="badgePopupDesc" style="font-size: 14px; color: #e0e7ff; margin-bottom: 24px; opacity: 0.9;">Mô tả cách đạt được</p>
+    <button onclick="closeBadgePopup()" class="btn-primary" style="background: #ffd700; color: #1e1b4b; box-shadow: 0 4px 15px rgba(255,215,0,0.4);">Tuyệt vời!</button>
+</div>
+
 <!-- POPUP THÔNG TIN CHI TIẾT HUY HIỆU (ĐÃ FIX LỖI HIỂN THỊ) -->
-    <div class="overlay" id="badgeInfoOverlay" style="display: none; z-index: 9999;" onclick="closeBadgeInfo()"></div>
-    <div class="modal" id="badgeInfoModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; text-align: center; padding: 32px 20px; background: var(--bg-color); border: 1px solid #e2e8f0; border-radius: 24px; width: 300px; max-width: 90vw; box-shadow: 0 15px 50px rgba(0,0,0,0.15);">
-        <div id="biIcon" style="font-size: 72px; margin-bottom: 12px; transition: 0.3s;">🏆</div>
-        <h3 id="biName" style="font-size: 22px; font-weight: 900; margin-bottom: 12px; color: var(--text-main);">Tên Huy Hiệu</h3>
-        
-        <div id="biStatus" style="display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; margin-bottom: 16px; letter-spacing: 0.5px;">Trạng thái</div>
-        
-        <p id="biDesc" style="font-size: 14px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; padding: 0 10px;">Cách đạt được</p>
-        
-        <button onclick="closeBadgeInfo()" class="btn-primary" style="width: 100%; border-radius: 14px; padding: 14px; font-size: 15px; background: #e2e8f0; color: #475569; border: none; box-shadow: none;">Đóng</button>
-    </div>
+<div class="overlay" id="badgeInfoOverlay" style="display: none; z-index: 9999;" onclick="closeBadgeInfo()"></div>
+<div class="modal" id="badgeInfoModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; text-align: center; padding: 32px 20px; background: var(--bg-color); border: 1px solid #e2e8f0; border-radius: 24px; width: 300px; max-width: 90vw; box-shadow: 0 15px 50px rgba(0,0,0,0.15);">
+    <div id="biIcon" style="font-size: 72px; margin-bottom: 12px; transition: 0.3s;">🏆</div>
+    <h3 id="biName" style="font-size: 22px; font-weight: 900; margin-bottom: 12px; color: var(--text-main);">Tên Huy Hiệu</h3>
+    
+    <div id="biStatus" style="display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; margin-bottom: 16px; letter-spacing: 0.5px;">Trạng thái</div>
+    
+    <p id="biDesc" style="font-size: 14px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; padding: 0 10px;">Cách đạt được</p>
+    
+    <button onclick="closeBadgeInfo()" class="btn-primary" style="width: 100%; border-radius: 14px; padding: 14px; font-size: 15px; background: #e2e8f0; color: #475569; border: none; box-shadow: none;">Đóng</button>
+</div>
+
 </body>
 </html>

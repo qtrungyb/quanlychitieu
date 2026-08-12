@@ -171,7 +171,8 @@
         .budget-bar-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; position: relative; }
         .budget-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease-out, background-color 0.5s; }
         .budget-stats { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--text-muted); font-weight: 500;}
-		/* ========================================== */
+        
+        /* ========================================== */
         /* THIẾT KẾ FLAT SECTION (CHO TAB THỐNG KÊ)   */
         /* ========================================== */
         .flat-section {
@@ -199,6 +200,14 @@
             height: 18px;
             background: var(--primary);
             border-radius: 6px;
+        }
+
+        /* FIX: Xóa màu nền của phụ đề (ngày tháng) để đồng nhất với tiêu đề */
+        .flat-section .chart-subtitle {
+            background: transparent !important;
+            padding: 0 0 0 15px !important; /* Căn thẳng hàng với chữ của tiêu đề (5px line + 10px gap) */
+            margin-top: 2px !important;
+            border-radius: 0 !important;
         }
         
         /* Chỉnh lại list Top 5 cho trong trẻo, bám sát nền */
@@ -511,14 +520,14 @@
         <!-- BIỂU ĐỒ CỘT -->
         <div class="flat-section">
             <h3 class="chart-title">So sánh Thu / Chi</h3>
-            <p class="chart-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px; padding-left: 15px;"></p>
+            <p class="chart-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;"></p>
             <div style="position: relative; height: 230px; width: 100%;"><canvas id="barChart"></canvas></div>
         </div>
 
         <!-- BIỂU ĐỒ ĐƯỜNG -->
         <div class="flat-section">
             <h3 class="chart-title">Biến động Số dư</h3>
-            <p class="chart-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px; padding-left: 15px;"></p>
+            <p class="chart-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;"></p>
             <div style="position: relative; height: 200px; width: 100%;"><canvas id="lineChart"></canvas></div>
         </div>
 
@@ -527,7 +536,7 @@
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
                 <div>
                     <h3 class="chart-title" style="margin-bottom: 4px;">Cơ cấu Tỷ trọng</h3>
-                    <p class="chart-subtitle" style="font-size: 13px; color: var(--text-muted); margin: 0; padding-left: 15px;"></p>
+                    <p class="chart-subtitle" style="font-size: 13px; color: var(--text-muted); margin: 0;"></p>
                 </div>
                 <div style="display: flex; gap: 4px; background: rgba(0,0,0,0.04); padding: 4px; border-radius: 12px;">
                     <button id="btnPieExp" class="btn-toggle active expense" style="padding: 6px 16px; font-size: 13px; border-radius: 8px; border: none; font-weight: 700;">Chi</button>
@@ -552,7 +561,7 @@
         <!-- HUY HIỆU -->
         <div class="flat-section">
             <h3 class="chart-title">Vũ trụ Huy hiệu</h3>
-            <p class="chart-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px; padding-left: 15px;">Mở khóa các thành tựu của bạn</p>
+            <p class="chart-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Mở khóa các thành tựu của bạn</p>
             <div id="badgeCabinet"></div>
         </div>
         

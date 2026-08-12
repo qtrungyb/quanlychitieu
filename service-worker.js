@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chitieu-v5.7'; 
+const CACHE_NAME = 'chitieu-v5.8'; 
 
 const ASSETS_TO_CACHE = [
     './',

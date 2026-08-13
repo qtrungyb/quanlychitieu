@@ -606,6 +606,20 @@
                 <div class="settings-item-left"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Đăng xuất</div><div class="settings-item-right"></div>
             </div>
         </div>
+		<!-- CỤM CÀI ĐẶT HỆ THỐNG MỚI -->
+        <div class="settings-header" style="margin-top: 10px;">Hệ thống & Dữ liệu</div>
+        <div class="settings-card">
+            <div class="settings-item" id="btnSettingsClearCache">
+                <div class="settings-item-left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+                        <polyline points="21 3 21 8 16 8"></polyline>
+                    </svg> 
+                    Xóa bộ nhớ đệm (Clear Cache)
+                </div>
+                <div class="settings-item-right">›</div>
+            </div>
+        </div>
     </div>
 </div> 
 
@@ -894,6 +908,34 @@
     <p id="biDesc" style="font-size: 14px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; padding: 0 10px;">Cách đạt được</p>
     <button onclick="closeBadgeInfo()" class="btn-primary" style="width: 100%; border-radius: 14px; padding: 14px; font-size: 15px; background: #e2e8f0; color: #475569; border: none; box-shadow: none;">Đóng</button>
 </div>
+<!-- SCRIPT XÓA BỘ NHỚ ĐỆM (CACHE) -->
+<script>
+    document.getElementById('btnSettingsClearCache')?.addEventListener('click', () => {
+        // Hiện cảnh báo xác nhận để tránh người dùng bấm nhầm
+        const isConfirm = confirm(
+            'Bạn có chắc chắn muốn làm sạch bộ nhớ đệm?\n\n' +
+            'Thao tác này sẽ xóa các cài đặt giao diện (màu thẻ, chế độ tối) và tài khoản đã lưu tạm trên máy. ' +
+            'Lưu ý: Dữ liệu giao dịch của bạn trên máy chủ vẫn an toàn 100%.'
+        );
 
+        if (isConfirm) {
+            // 1. Dọn dẹp sạch sẽ LocalStorage
+            localStorage.clear();
+            
+            // 2. Bắn thông báo UI
+            const toast = document.getElementById('toastMsg');
+            if (toast) {
+                toast.innerHTML = '✓ Đã dọn sạch bộ nhớ đệm!';
+                toast.className = 'toast show success';
+            }
+            
+            // 3. Tự động tải lại trang sau 1 giây (để ép trình duyệt nạp lại code sạch)
+            setTimeout(() => {
+                // Tham số true giúp trình duyệt ép tải lại (Hard Reload) bỏ qua cache
+                window.location.reload(true); 
+            }, 1000);
+        }
+    });
+</script>
 </body>
 </html>

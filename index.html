@@ -231,7 +231,16 @@
         body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:active .t-chevron {
             color: #829fff !important;
         }
-    </style>
+		
+		/* =========================================================
+           17. TỐI ƯU VÙNG CHẠM (TOUCH TARGET) CHO MŨI TÊN
+           ========================================================= */
+        .timeline-wrapper-seamless .t-chevron {
+            padding: 15px 5px 15px 20px !important; /* Nới rộng vùng bấm trong suốt ra xung quanh */
+            margin-right: -5px !important; /* Cân bằng lại layout để không bị xô lệch */
+            cursor: pointer;
+            z-index: 10;
+        }
     </style>
 
     <!-- SDK FIREBASE -->
@@ -944,6 +953,23 @@
 
 <!-- SCRIPTS -->
 <script src="js/config.js"></script>
+<!-- PATCH FIX: Mở khóa click cho nút Sửa/Xóa khi vuốt lịch sử -->
+    <script>
+        const originalAddEventListener = EventTarget.prototype.addEventListener;
+        EventTarget.prototype.addEventListener = function(type, listener, options) {
+            if (type === 'click' && this.id === 'transactionList') {
+                const wrappedListener = function(e) {
+                    // Nếu bấm vào cụm nút Sửa/Xóa, bỏ qua bộ chặn click của app
+                    if (e.target.closest('.swipe-actions')) {
+                        return; 
+                    }
+                    return listener.apply(this, arguments);
+                };
+                return originalAddEventListener.call(this, type, wrappedListener, options);
+            }
+            return originalAddEventListener.call(this, type, listener, options);
+        };
+    </script>
 <script src="js/app.js"></script>
 
 <!-- POPUP MỞ KHÓA HUY HIỆU MỚI -->
@@ -1025,6 +1051,132 @@
             }
         }
     }, true);
+</script>
+<!-- SCRIPT TÍNH TOÁN VÀ HIỂN THỊ HẠN MỨC NGÂN SÁCH (BUDGET LIMIT) -->
+<script>
+    window.renderBudgets = function() {
+        const budgetCard = document.getElementById('budgetCard');
+        const budgetList = document.getElementById('budgetList');
+        if (!budgetCard || !budgetList) return;
+
+        // 1. Lọc ra các danh mục có cài đặt hạn mức (> 0)
+        const budgetCats = categories.filter(c => c.type === 'expense' && c.budgetLimit > 0);
+
+        // Nếu không có danh mục nào cài hạn mức, ẩn thẻ Ngân sách ở trang chủ đi
+        if (budgetCats.length === 0) {
+            budgetCard.classList.add('hide');
+            return;
+        }
+
+        // Hiện thẻ Ngân sách
+        budgetCard.classList.remove('hide');
+
+        // 2. Lấy mốc thời gian: Ngày đầu tháng và cuối tháng hiện tại
+        const today = new Date();
+        const startOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+        const endOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-31`;
+
+        // 3. Tính tổng tiền đã chi của từng danh mục TRONG THÁNG NÀY
+        const thisMonthTxs = transactions.filter(t => t.type === 'expense' && t.date >= startOfMonth && t.date <= endOfMonth);
+        const spentByCat = {};
+        thisMonthTxs.forEach(t => {
+            spentByCat[t.categoryId] = (spentByCat[t.categoryId] || 0) + t.amount;
+        });
+
+        // 4. Vẽ giao diện cho từng thanh tiến trình
+        let html = '';
+        budgetCats.forEach(c => {
+            const limit = c.budgetLimit;
+            const spent = spentByCat[c.id] || 0;
+            const remain = limit - spent;
+            const percent = (spent / limit) * 100;
+            const overspent = percent > 100;
+            
+            // Giới hạn thanh fill tối đa là 100% để không bị tràn thanh UI
+            const fillWidth = Math.min(percent, 100);
+
+            // Đổi màu cảnh báo theo tỷ lệ chi tiêu
+            let barColor = 'var(--success)';
+            if (percent > 90) barColor = 'var(--danger)'; // Báo động đỏ khi vượt quá 90%
+            else if (percent > 75) barColor = '#f39c12';  // Báo động vàng (Cam) khi trên 75%
+
+            const theme = THEMES[c.color] || THEMES['theme-gray'];
+            const iconSvg = SVG_LIB[c.icon] || SVG_LIB['other'];
+            // Cắt bỏ thẻ <svg> bao ngoài để nhúng vào thẻ tùy chỉnh
+            const innerSvg = iconSvg.replace(/<svg[^>]*>|<\/svg>/g, '');
+
+            html += `
+                <div class="budget-item">
+                    <div class="budget-header">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 24px; height: 24px; border-radius: 6px; background: ${theme.bg}; color: ${theme.color}; display: flex; align-items: center; justify-content: center;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${innerSvg}</svg>
+                            </div>
+                            <span style="font-weight: 700; font-size: 14px;">${c.name}</span>
+                        </div>
+                        <span style="color: ${overspent ? 'var(--danger)' : 'var(--text-main)'}; font-weight: 800; font-size: 14px;">
+                            ${formatter.format(spent)} / ${formatter.format(limit)}đ
+                        </span>
+                    </div>
+                    <div class="budget-bar-bg" style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 8px;">
+                        <div class="budget-bar-fill" style="width: ${fillWidth}%; height: 100%; background-color: ${barColor}; transition: 0.5s ease-out;"></div>
+                    </div>
+                    <div class="budget-stats" style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; font-weight: 600;">
+                        <span style="color: ${overspent ? 'var(--danger)' : 'var(--text-muted)'}">
+                            ${overspent ? 'Vượt hạn mức: ' + formatter.format(Math.abs(remain)) + 'đ' : 'Còn lại: ' + formatter.format(remain) + 'đ'}
+                        </span>
+                        <span style="color: ${barColor}">${percent.toFixed(1)}%</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        budgetList.innerHTML = html;
+    };
+
+    // Kích hoạt tính toán ngay khi web vừa tải dữ liệu xong
+    setTimeout(() => { if (typeof renderBudgets === 'function') renderBudgets(); }, 500);
+</script>
+<!-- SCRIPT: TẮT POPUP CŨ VÀ BIẾN MŨI TÊN THÀNH CÔNG TẮC TRƯỢT -->
+<script>
+    document.addEventListener('click', function(e) {
+        // Tìm xem ngón tay có chạm vào bề mặt thẻ giao dịch không
+        const swipeFront = e.target.closest('.swipe-front');
+        const swipeActions = e.target.closest('.swipe-actions');
+        
+        // 1. Nếu chạm ra ngoài thẻ hoặc chạm sang thẻ khác -> Tự động trượt đóng các thẻ đang mở
+        document.querySelectorAll('.swipe-front.swiped').forEach(el => {
+            if (el !== swipeFront && !swipeActions) {
+                el.style.transform = 'translateX(0)';
+                el.classList.remove('swiped');
+            }
+        });
+
+        if (swipeFront) {
+            // 2. KHÓA POPUP CŨ: Chặn lệnh onclick="openActionSheet" truyền thống
+            e.stopPropagation();
+            
+            // 3. Kiểm tra xem người dùng có bấm trúng mũi tên không
+            const chevron = e.target.closest('.t-chevron');
+            
+            if (chevron) {
+                // Nếu bấm trúng mũi tên -> Trượt thẻ sang trái 120px để lộ nút Sửa/Xóa
+                if (swipeFront.classList.contains('swiped')) {
+                    swipeFront.style.transform = 'translateX(0)';
+                    swipeFront.classList.remove('swiped');
+                } else {
+                    swipeFront.style.transform = 'translateX(-120px)';
+                    swipeFront.classList.add('swiped');
+                }
+            } else {
+                // Nếu bấm vào vùng chữ/icon của thẻ -> Trượt đóng lại nếu nó đang mở
+                if (swipeFront.classList.contains('swiped')) {
+                    swipeFront.style.transform = 'translateX(0)';
+                    swipeFront.classList.remove('swiped');
+                }
+            }
+        }
+    }, true); // Dùng true (Capture Phase) để cướp quyền ưu tiên tuyệt đối
 </script>
 </body>
 </html>

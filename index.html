@@ -1137,7 +1137,41 @@
         </div>
     </div>
 </div>
+<!-- BÀN PHÍM MÁY TÍNH TÍCH HỢP (CUSTOM NUMPAD) -->
+<div class="sheet-overlay" id="numpadOverlay" style="z-index: 10050;"></div>
+<div class="bottom-sheet" id="numpadSheet" style="z-index: 10051; padding: 20px 16px 30px 16px; background: var(--bg-color);">
+    <div class="sheet-indicator"></div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+        <div style="font-size: 13px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Máy tính</div>
+        <!-- Ô hiển thị phép tính đang gõ -->
+        <div id="numpadExpression" style="font-size: 20px; font-weight: 600; color: var(--text-muted); font-family: monospace; letter-spacing: 1px; min-height: 24px;"></div>
+    </div>
+    <div class="numpad-grid" id="numpadGrid">
+        <button class="np-btn np-op" data-val="C">C</button>
+        <button class="np-btn np-op" data-val="/">÷</button>
+        <button class="np-btn np-op" data-val="*">×</button>
+        <button class="np-btn np-op np-back" data-val="back">⌫</button>
 
+        <button class="np-btn" data-val="7">7</button>
+        <button class="np-btn" data-val="8">8</button>
+        <button class="np-btn" data-val="9">9</button>
+        <button class="np-btn np-op" data-val="-">−</button>
+
+        <button class="np-btn" data-val="4">4</button>
+        <button class="np-btn" data-val="5">5</button>
+        <button class="np-btn" data-val="6">6</button>
+        <button class="np-btn np-op" data-val="+">+</button>
+
+        <button class="np-btn" data-val="1">1</button>
+        <button class="np-btn" data-val="2">2</button>
+        <button class="np-btn" data-val="3">3</button>
+        <button class="np-btn np-done" rowspan="2" id="btnNumpadDone">Xong</button>
+
+        <button class="np-btn" data-val="000" style="font-size: 18px;">000</button>
+        <button class="np-btn" data-val="0">0</button>
+        <button class="np-btn" data-val=".">.</button>
+    </div>
+</div>
 <!-- SCRIPTS -->
 <script src="js/config.js"></script>
 <!-- PATCH FIX: Mở khóa click cho nút Sửa/Xóa khi vuốt lịch sử -->
@@ -1365,40 +1399,5 @@
         }
     }, true); // Dùng true (Capture Phase) để cướp quyền ưu tiên tuyệt đối
 </script>
-<!-- BÀN PHÍM MÁY TÍNH TÍCH HỢP (CUSTOM NUMPAD) -->
-<div class="sheet-overlay" id="numpadOverlay" style="z-index: 10050;"></div>
-<div class="bottom-sheet" id="numpadSheet" style="z-index: 10051; padding: 20px 16px 30px 16px; background: var(--bg-color);">
-    <div class="sheet-indicator"></div>
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
-        <div style="font-size: 13px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Máy tính</div>
-        <!-- Ô hiển thị phép tính đang gõ -->
-        <div id="numpadExpression" style="font-size: 20px; font-weight: 600; color: var(--text-muted); font-family: monospace; letter-spacing: 1px; min-height: 24px;"></div>
-    </div>
-    <div class="numpad-grid" id="numpadGrid">
-        <button class="np-btn np-op" data-val="C">C</button>
-        <button class="np-btn np-op" data-val="/">÷</button>
-        <button class="np-btn np-op" data-val="*">×</button>
-        <button class="np-btn np-op np-back" data-val="back">⌫</button>
-
-        <button class="np-btn" data-val="7">7</button>
-        <button class="np-btn" data-val="8">8</button>
-        <button class="np-btn" data-val="9">9</button>
-        <button class="np-btn np-op" data-val="-">−</button>
-
-        <button class="np-btn" data-val="4">4</button>
-        <button class="np-btn" data-val="5">5</button>
-        <button class="np-btn" data-val="6">6</button>
-        <button class="np-btn np-op" data-val="+">+</button>
-
-        <button class="np-btn" data-val="1">1</button>
-        <button class="np-btn" data-val="2">2</button>
-        <button class="np-btn" data-val="3">3</button>
-        <button class="np-btn np-done" rowspan="2" id="btnNumpadDone">Xong</button>
-
-        <button class="np-btn" data-val="000" style="font-size: 18px;">000</button>
-        <button class="np-btn" data-val="0">0</button>
-        <button class="np-btn" data-val=".">.</button>
-    </div>
-</div>
 </body>
 </html>

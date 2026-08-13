@@ -16,194 +16,84 @@
     
     <!-- LIÊN KẾT FILE CSS CHÍNH -->
     <link rel="stylesheet" href="css/style.css">
-
-    <!-- CSS GIAO DIỆN TÙY CHỈNH -->
     <style>
         /* 1. THIẾT KẾ THẺ CARD (FLAT DESIGN) CHO TAB 2 & 3 */
-        #historyView, #analyticsView {
-            background-color: #f4f7f9 !important; 
-            padding: 12px 12px 100px 12px !important; 
-            min-height: 100vh;
-        }
-        body.dark-theme #historyView, body.dark-theme #analyticsView {
-            background-color: #0f172a !important; 
-        }
-
-        .modern-card {
-            background: var(--card-bg, #ffffff);
-            border-radius: 20px;
-            padding: 20px 16px;
-            margin-bottom: 16px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
-            border: 1px solid rgba(0,0,0,0.04);
-        }
-        body.dark-theme .modern-card {
-            background: var(--card-bg, #1e293b);
-            border-color: rgba(255,255,255,0.05);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-        }
+        #historyView, #analyticsView { background-color: #f4f7f9 !important; padding: 12px 12px 100px 12px !important; min-height: 100vh; }
+        body.dark-theme #historyView, body.dark-theme #analyticsView { background-color: #0f172a !important; }
+        .modern-card { background: var(--card-bg, #ffffff); border-radius: 20px; padding: 20px 16px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.04); }
+        body.dark-theme .modern-card { background: var(--card-bg, #1e293b); border-color: rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
         .modern-card.p-0 { padding: 16px 0; } 
         .modern-card.text-center { text-align: center; }
 
-        /* 2. CẢI TIẾN DANH SÁCH GIAO DỊCH (LỊCH SỬ) - FINTECH FLOATING CARDS */
-        #transactionList { overflow: visible !important; padding-left: 0; margin-top: 12px; }
-        .timeline-wrapper-seamless { position: relative; padding-bottom: 24px; }
+        /* 2. LỊCH SỬ GIAO DỊCH: BỘ LỌC & TÌM KIẾM */
+        #histListViewFilters .search-box input { border-radius: 24px; background: #f1f5f9; border: 1px solid transparent; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); transition: all 0.3s ease; }
+        #histListViewFilters .search-box input:focus { background: #ffffff; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1); }
+        .quick-filters-scroll { padding: 8px 0 12px 0; mask-image: linear-gradient(to right, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%); }
+        .btn-quick-filter { border-radius: 20px; padding: 8px 18px; background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.02); color: var(--text-muted); font-weight: 600; }
+        .btn-quick-filter.active { background: var(--primary); color: #ffffff; border-color: var(--primary); box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3); transform: translateY(-1px); }
         
-        /* Chỉ ẩn đường kẻ dọc, GIỮ LẠI CHẤM TRÒN */
-        .timeline-wrapper-seamless::before,
-        .timeline-wrapper-seamless .timeline-group-marker { display: none !important; }
-
-        /* Tiêu đề ngày tháng (Floating Glassmorphism Pill) */
-        .timeline-wrapper-seamless .date-group-header {
-            position: sticky; top: 75px; z-index: 10;
-            background: rgba(255, 255, 255, 0.85) !important;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            padding: 8px 20px !important; 
-            border-radius: 30px;
-            margin: 20px auto 16px auto !important;
-            width: fit-content;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06) !important;
-            border: 1px solid rgba(255,255,255,0.6) !important;
-            display: flex; gap: 12px; align-items: center; justify-content: center;
-        }
-        .timeline-wrapper-seamless .date-title { font-size: 13px !important; color: var(--primary) !important; }
-        .timeline-wrapper-seamless .date-summary { font-size: 12px !important; opacity: 0.9; }
-
-        /* Khung chứa các giao dịch trong ngày */
-        .timeline-wrapper-seamless .date-group-items {
-            padding: 0 !important; position: relative; z-index: 2;
-            background: transparent !important; border: none !important; box-shadow: none !important;
-        }
-
-        .swipe-container {
-            position: relative; overflow: hidden;
-            background: transparent !important;
-            margin-bottom: 12px; /* Tách rời các thẻ giao dịch */
-        }
-
-        /* Thẻ Giao Dịch Độc Lập (Floating Card) */
-        .timeline-wrapper-seamless .transaction-item.swipe-front {
-            position: relative; z-index: 2; width: 100%; 
-            transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s ease;
-            background: #ffffff !important; 
-            padding: 16px !important;
-            border-radius: 16px !important;
-            border: 1px solid #f1f5f9 !important; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important; 
-            margin-bottom: 0 !important;
-        }
-        /* Nút vuốt chức năng phía sau thẻ */
-        .swipe-actions {
-            position: absolute; right: 0; top: 0; bottom: 0;
-            display: flex; z-index: 1; border-radius: 16px; overflow: hidden;
-        }
-        .swipe-actions button {
-            border: none; color: white; width: 65px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.2s;
-        }
-        .swipe-actions button:hover { opacity: 0.9; }
-        .swipe-actions .btn-edit { background: var(--warning); }
-        .swipe-actions .btn-delete { background: var(--danger); }
-
-        /* Cải tiến Khung Tổng Kết (Gradient Box) */
         #filteredSummary .summary-cards-grid { gap: 12px; margin-top: 8px; }
-        #filteredSummary .summary-card {
-            border-radius: 16px; padding: 16px; border: none;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.03); transition: transform 0.2s ease;
-        }
+        #filteredSummary .summary-card { border-radius: 16px; padding: 16px; border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.03); }
         #filteredSummary .box-in { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); }
         #filteredSummary .box-in .sc-label, #filteredSummary .box-in .sc-val { color: #166534; }
         #filteredSummary .box-out { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); }
         #filteredSummary .box-out .sc-label, #filteredSummary .box-out .sc-val { color: #991b1b; }
         #filteredSummary .box-bal { background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); }
 
-        /* TƯƠNG THÍCH CHẾ ĐỘ TỐI (DARK MODE) CHO GIAO DIỆN MỚI */
-        body.dark-theme .timeline-wrapper-seamless .date-group-header {
-            background: rgba(30, 41, 59, 0.85) !important;
-            border-color: rgba(255,255,255,0.05) !important;
-        }
-        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front { 
-            background: var(--card-bg) !important;
-            border-color: #2d3748 !important;
-        }
+        body.dark-theme #histListViewFilters .search-box input { background: #1e293b; color: var(--text-main); }
+        body.dark-theme #histListViewFilters .search-box input:focus { background: #0f172a; }
+        body.dark-theme .btn-quick-filter { background: var(--card-bg); border-color: #2d3748; }
+        body.dark-theme .btn-quick-filter.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
         body.dark-theme #filteredSummary .box-in { background: rgba(46, 204, 113, 0.15); }
         body.dark-theme #filteredSummary .box-in .sc-label, body.dark-theme #filteredSummary .box-in .sc-val { color: var(--success); }
         body.dark-theme #filteredSummary .box-out { background: rgba(231, 76, 60, 0.15); }
         body.dark-theme #filteredSummary .box-out .sc-label, body.dark-theme #filteredSummary .box-out .sc-val { color: var(--danger); }
         body.dark-theme #filteredSummary .box-bal { background: #2d3748; }
-		/* =========================================================
-           3. CẢI TIẾN BỘ LỌC, TÌM KIẾM & HIỆU ỨNG TAB LỊCH SỬ
-           ========================================================= */
-        
-        /* THANH TÌM KIẾM BO TRÒN SÂU (PILL SEARCH) */
-        #histListViewFilters .search-box input {
-            border-radius: 24px;
-            background: #f1f5f9;
-            border: 1px solid transparent;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-            transition: all 0.3s ease;
-        }
-        #histListViewFilters .search-box input:focus {
-            background: #ffffff;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
-        }
 
-        /* BỘ LỌC NHANH (QUICK FILTERS) - HIỆU ỨNG FADE LỀ PHẢI */
-        .quick-filters-scroll {
-            padding: 8px 0 12px 0;
-            /* Tạo hiệu ứng mờ dần ở mép phải báo hiệu có thể cuộn */
-            mask-image: linear-gradient(to right, black 85%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
-        }
-        .btn-quick-filter {
-            border-radius: 20px;
-            padding: 8px 18px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-        .btn-quick-filter.active {
-            background: var(--primary);
-            color: #ffffff;
-            border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
-            transform: translateY(-1px);
-        }
+        /* 3. LỊCH SỬ GIAO DỊCH: DANH SÁCH (CARD GỘP LIỀN MẠCH) */
+        #transactionList { overflow: visible !important; padding-left: 0; margin-top: 12px; }
+        .timeline-wrapper-seamless { position: relative; padding-bottom: 24px; }
+        .timeline-wrapper-seamless::before, .timeline-wrapper-seamless .timeline-group-marker, .timeline-wrapper-seamless .timeline-dot, .timeline-wrapper-seamless .t-chevron { display: none !important; }
 
-        /* NÚT TẢI THÊM (GHOST BUTTON) */
-        .btn-load-more {
-            background: transparent !important;
-            border: 2px dashed #cbd5e1 !important;
-            color: var(--text-muted) !important;
-            border-radius: 20px !important;
-            font-weight: 700 !important;
-            transition: all 0.3s ease !important;
-            height: 52px !important;
-            margin-top: 16px !important;
-        }
-        .btn-load-more:hover, .btn-load-more:active {
-            background: #f8f9fa !important;
-            border-color: var(--primary) !important;
-            color: var(--primary) !important;
-        }
+        .timeline-wrapper-seamless .date-group { margin-bottom: 40px !important; position: relative; }
+        .timeline-wrapper-seamless .date-group-header { position: sticky; top: 75px; z-index: 10; background: rgba(255, 255, 255, 0.85) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 8px 20px !important; border-radius: 30px; margin: 10px auto 20px auto !important; width: fit-content; box-shadow: 0 4px 15px rgba(0,0,0,0.06) !important; border: 1px solid rgba(255,255,255,0.6) !important; display: flex; gap: 12px; align-items: center; justify-content: center; }
+        .timeline-wrapper-seamless .date-title { font-size: 13px !important; color: var(--primary) !important; }
+        .timeline-wrapper-seamless .date-summary { font-size: 12px !important; opacity: 0.9; }
+        
+        .timeline-wrapper-seamless .date-group-header::after { content: ''; position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); width: 2px; height: 12px; background: linear-gradient(to bottom, var(--primary), transparent); opacity: 0.5; border-radius: 2px; }
+        .timeline-wrapper-seamless .date-group:not(:last-child)::after { content: ''; display: block; width: 120px; height: 3px; background: linear-gradient(90deg, transparent, rgba(67, 97, 238, 0.15), transparent); margin: 36px auto -10px auto; border-radius: 4px; }
 
-        /* HIỆU ỨNG XUẤT HIỆN LƯỢN SÓNG (STAGGERED FADE-IN) CHO THẺ GIAO DỊCH */
-        @keyframes slideUpFade {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .timeline-wrapper-seamless .date-group-items { background: #ffffff !important; border-radius: 20px !important; box-shadow: 0 2px 15px rgba(0,0,0,0.04) !important; border: 1px solid #f1f5f9 !important; padding: 0 !important; overflow: hidden !important; margin-left: -12px !important; margin-right: -12px !important; }
         
-        .timeline-wrapper-seamless .swipe-container {
-            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0; /* Bắt đầu với trạng thái ẩn */
-        }
+        .timeline-wrapper-seamless .swipe-container { position: relative; overflow: hidden; background: transparent !important; margin-bottom: 0 !important; touch-action: pan-y !important; animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .timeline-wrapper-seamless .swipe-container:not(:last-child)::after { content: ''; position: absolute; bottom: 0; left: 68px !important; right: 0 !important; height: 1px !important; background: #f1f5f9 !important; z-index: 5; }
         
-        /* Tạo độ trễ (delay) cho 5 thẻ đầu tiên để hiệu ứng nối đuôi nhau */
+        .timeline-wrapper-seamless .transaction-item.swipe-front { position: relative; z-index: 2; width: 100%; transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); background: #ffffff !important; padding: 14px 16px 14px 28px !important; border-radius: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; }
+        
+        .timeline-wrapper-seamless .t-icon { width: 40px !important; height: 40px !important; border-radius: 50% !important; z-index: 1; box-shadow: none !important; }
+        .timeline-wrapper-seamless .t-icon::after { display: none !important; }
+
+        .timeline-wrapper-seamless .t-left { min-width: 0 !important; gap: 12px !important; }
+        .timeline-wrapper-seamless .t-info { min-width: 0 !important; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 2px !important; }
+        .timeline-wrapper-seamless .t-title { font-size: 15px !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; color: #1e293b !important; display: block !important; line-height: 1.4 !important;}
+        .timeline-wrapper-seamless .t-note { display: block !important; font-size: 13px !important; color: #8c98a9 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; margin-top: 0 !important; font-weight: 400 !important; }
+        .timeline-wrapper-seamless .t-note::before { display: none !important; }
+
+        .timeline-wrapper-seamless .t-action { flex-shrink: 0 !important; display: flex; align-items: center; }
+        .timeline-wrapper-seamless .t-amount { background: transparent !important; padding: 0 !important; font-size: 16px !important; font-weight: 700 !important; letter-spacing: -0.2px !important; }
+        .timeline-wrapper-seamless .t-amount.text-danger { color: #e74c3c !important; }
+        .timeline-wrapper-seamless .t-amount.text-success { color: #2ecc71 !important; }
+
+        .swipe-actions { position: absolute; right: 12px; top: 0; bottom: 0; display: flex; gap: 10px; align-items: center; z-index: 1; background: transparent !important; }
+        .swipe-actions button { border: none; color: white; width: 44px !important; height: 44px !important; border-radius: 14px !important; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; cursor: pointer; transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important; }
+        .swipe-actions button:active { transform: scale(0.85) !important; }
+        .swipe-actions .btn-edit { background: var(--warning); }
+        .swipe-actions .btn-delete { background: var(--danger); }
+
+        .btn-load-more { background: transparent !important; border: 2px dashed #cbd5e1 !important; color: var(--text-muted) !important; border-radius: 20px !important; font-weight: 700 !important; transition: all 0.3s ease !important; height: 52px !important; margin-top: 16px !important; position: relative !important; z-index: 999 !important; pointer-events: auto !important; user-select: none; }
+        .btn-load-more:hover, .btn-load-more:active { background: #f8f9fa !important; border-color: var(--primary) !important; color: var(--primary) !important; }
+
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .timeline-wrapper-seamless .swipe-container:nth-child(1) { animation-delay: 0.05s; }
         .timeline-wrapper-seamless .swipe-container:nth-child(2) { animation-delay: 0.10s; }
         .timeline-wrapper-seamless .swipe-container:nth-child(3) { animation-delay: 0.15s; }
@@ -211,14 +101,20 @@
         .timeline-wrapper-seamless .swipe-container:nth-child(5) { animation-delay: 0.25s; }
         .timeline-wrapper-seamless .swipe-container:nth-child(n+6) { animation-delay: 0.30s; }
 
-        /* TƯƠNG THÍCH CHẾ ĐỘ TỐI (DARK MODE) */
-        body.dark-theme #histListViewFilters .search-box input { background: #1e293b; color: var(--text-main); }
-        body.dark-theme #histListViewFilters .search-box input:focus { background: #0f172a; }
-        body.dark-theme .btn-quick-filter { background: var(--card-bg); border-color: #2d3748; }
-        body.dark-theme .btn-quick-filter.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
+        /* DARK MODE CHO LỊCH SỬ */
+        body.dark-theme .timeline-wrapper-seamless .date-group-header { background: rgba(30, 41, 59, 0.85) !important; border-color: rgba(255,255,255,0.05) !important; }
+        body.dark-theme .timeline-wrapper-seamless .date-group-header::after { background: linear-gradient(to bottom, #829fff, transparent); }
+        body.dark-theme .timeline-wrapper-seamless .date-group:not(:last-child)::after { background: linear-gradient(90deg, transparent, rgba(130, 159, 255, 0.15), transparent); }
+        body.dark-theme .timeline-wrapper-seamless .date-group-items { background: var(--card-bg) !important; border-color: #2d3748 !important; box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important; }
+        body.dark-theme .timeline-wrapper-seamless .swipe-container:not(:last-child)::after { background: #1e293b !important; }
+        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front { background: var(--card-bg) !important; }
+        body.dark-theme .timeline-wrapper-seamless .t-title { color: #f1f5f9 !important; }
+        body.dark-theme .timeline-wrapper-seamless .t-note { color: #94a3b8 !important; }
+        body.dark-theme .swipe-actions button { box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important; }
         body.dark-theme .btn-load-more { border-color: #4a5568 !important; }
-        body.dark-theme .btn-load-more:hover { background: #1e293b !important; }
-        /* 3. LỊCH LƯỚI */
+        body.dark-theme .btn-load-more:hover, body.dark-theme .btn-load-more:active { background: #1e293b !important; }
+
+        /* 4. LỊCH LƯỚI */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
         .cal-day-header { font-size: 11px; font-weight: 800; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
         .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: 1px solid transparent; position: relative; background: var(--bg-color); color: var(--text-main); transition: 0.2s; }
@@ -232,619 +128,52 @@
         .cal-dot.out { background: var(--danger); }
         .flatpickr-calendar { font-family: inherit; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: none; }
 
-        /* 4. NÚT THÊM NHANH (FAB) */
-        .fab-button {
-            position: fixed; bottom: 85px; right: 20px; width: 56px; height: 56px;
-            background: var(--primary); color: white; border: none; border-radius: 50%;
-            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4); display: flex; align-items: center;
-            justify-content: center; cursor: pointer; z-index: 999; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
+        /* 5. NÚT THÊM NHANH (FAB) */
+        .fab-button { position: fixed; bottom: 85px; right: 20px; width: 56px; height: 56px; background: var(--primary); color: white; border: none; border-radius: 50%; box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 999; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .fab-button:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 8px 25px rgba(67, 97, 238, 0.5); }
         .fab-button:active { transform: translateY(2px) scale(0.95); }
         .fab-button.hide { transform: scale(0) rotate(-90deg); opacity: 0; pointer-events: none; }
         .fab-button svg { width: 26px; height: 26px; transition: transform 0.3s ease; }
         .fab-button.spin svg { transform: rotate(90deg); }
 
-        /* 5. THANH TIẾN TRÌNH NGÂN SÁCH */
+        /* 6. THANH TIẾN TRÌNH NGÂN SÁCH */
         .budget-item { width: 100%; }
         .budget-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); }
         .budget-bar-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; position: relative; }
         .budget-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease-out, background-color 0.5s; }
         .budget-stats { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--text-muted); font-weight: 500;}
         
-        /* 6. NÚT CÔNG TẮC (SWITCH) DÀNH CHO BIỂU ĐỒ TRÒN */
-        .pie-switch {
-            display: inline-flex;
-            background: rgba(0,0,0,0.05);
-            border-radius: 30px;
-            padding: 4px;
-            position: relative;
-        }
+        /* 7. NÚT CÔNG TẮC (SWITCH) DÀNH CHO BIỂU ĐỒ TRÒN */
+        .pie-switch { display: inline-flex; background: rgba(0,0,0,0.05); border-radius: 30px; padding: 4px; position: relative; }
         body.dark-theme .pie-switch { background: rgba(255,255,255,0.08); }
-        
-        .pie-switch button {
-            background: transparent;
-            border: none;
-            border-radius: 26px;
-            padding: 6px 20px;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
+        .pie-switch button { background: transparent; border: none; border-radius: 26px; padding: 6px 20px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .pie-switch button.active.expense { background: #fff; color: var(--danger); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .pie-switch button.active.income { background: #fff; color: var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        body.dark-theme .pie-switch button.active.expense,
-        body.dark-theme .pie-switch button.active.income { background: var(--card-bg); }
-		/* =========================================================
-           4. HOÀN THIỆN CHI TIẾT BÊN TRONG THẺ (MICRO-UI & TYPOGRAPHY)
-           ========================================================= */
-        
-        /* 1. Icon Danh mục - Chuyển sang phong cách Squircle (Bo góc hiện đại Apple) */
-        .timeline-wrapper-seamless .t-icon {
-            border-radius: 14px !important; /* Bo góc 14px thay vì tròn 50% */
-            width: 46px !important; 
-            height: 46px !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
-            position: relative;
-            z-index: 1;
-        }
-        
-        /* Tạo hiệu ứng phát sáng nhẹ (Soft Glow) phía sau icon hòa quyện với màu danh mục */
-        .timeline-wrapper-seamless .t-icon::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            border-radius: 14px;
-            background: inherit;
-            filter: blur(8px);
-            opacity: 0.35;
-            z-index: -1;
-            transform: translateY(2px);
-        }
+        body.dark-theme .pie-switch button.active.expense, body.dark-theme .pie-switch button.active.income { background: var(--card-bg); }
 
-        /* 2. Cấu trúc thông tin chữ (Title & Note) */
-        .timeline-wrapper-seamless .t-info {
-            gap: 4px; /* Tách biệt tên và ghi chú đều hơn */
-        }
-        .timeline-wrapper-seamless .t-title {
-            font-size: 15.5px !important; 
-            font-weight: 700 !important;
-            letter-spacing: -0.2px;
-            color: #1e293b !important;
-        }
-        .timeline-wrapper-seamless .t-note {
-            font-size: 12.5px !important;
-            color: #64748b !important;
-            font-weight: 500 !important;
-        }
-
-        /* 3. Số tiền (Amount) - Làm nổi bật bằng nền Pill (Nhãn) */
-        .timeline-wrapper-seamless .t-action {
-            display: flex;
-            align-items: center;
-            gap: 8px !important;
-        }
-        .timeline-wrapper-seamless .t-amount {
-            font-size: 14.5px !important;
-            font-weight: 800 !important;
-            padding: 6px 10px !important;
-            border-radius: 10px !important;
-            letter-spacing: -0.3px;
-        }
-        
-        /* Đổ màu nền riêng biệt cho Thu / Chi */
-        .timeline-wrapper-seamless .t-amount.text-success {
-            background: rgba(46, 204, 113, 0.12) !important;
-            color: #16a34a !important; /* Xanh lá thẫm, sang hơn */
-        }
-        .timeline-wrapper-seamless .t-amount.text-danger {
-            background: rgba(231, 76, 60, 0.12) !important;
-            color: #dc2626 !important; /* Đỏ thẫm */
-        }
-
-        /* 4. Mũi tên (Chevron) - Hiệu ứng trượt khi tương tác */
-        .timeline-wrapper-seamless .t-chevron {
-            font-size: 20px !important;
-            color: #cbd5e1 !important;
-            transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), color 0.2s ease !important;
-        }
-        .timeline-wrapper-seamless .transaction-item.swipe-front:hover .t-chevron,
-        .timeline-wrapper-seamless .transaction-item.swipe-front:active .t-chevron {
-            transform: translateX(4px); /* Trượt nhẹ mũi tên sang phải báo hiệu click */
-            color: var(--primary) !important;
-        }
-        
-        /* TƯƠNG THÍCH DARK MODE (CHẾ ĐỘ TỐI) CHO MICRO-UI */
-        body.dark-theme .timeline-wrapper-seamless .t-title { color: #f1f5f9 !important; }
-        body.dark-theme .timeline-wrapper-seamless .t-note { color: #94a3b8 !important; }
-        body.dark-theme .timeline-wrapper-seamless .t-amount.text-success { background: rgba(46, 204, 113, 0.15) !important; color: #4ade80 !important; }
-        body.dark-theme .timeline-wrapper-seamless .t-amount.text-danger { background: rgba(231, 76, 60, 0.15) !important; color: #f87171 !important; }
-        body.dark-theme .timeline-wrapper-seamless .t-chevron { color: #475569 !important; }
-		/* =========================================================
-           5. TÁCH BẠCH KHÔNG GIAN TỪNG NGÀY (GROUPING & PROXIMITY)
-           ========================================================= */
-        
-        /* 1. Gia tăng khoảng cách giữa các nhóm ngày (Macro-whitespace) */
-        .timeline-wrapper-seamless .date-group {
-            margin-bottom: 40px !important; /* Nới rộng khoảng cách giữa các ngày */
-            position: relative;
-        }
-
-        /* 2. Ép sát các thẻ trong cùng 1 ngày (Micro-whitespace) */
-        .timeline-wrapper-seamless .swipe-container {
-            margin-bottom: 10px !important; /* Thu hẹp lại để tạo cảm giác cùng 1 nhóm */
-        }
-        .timeline-wrapper-seamless .swipe-container:last-child {
-            margin-bottom: 0 !important; /* Thẻ cuối cùng của ngày không có lề dưới */
-        }
-
-        /* 3. Đường kẻ phân cách Gradient mượt mà ở cuối mỗi ngày */
-        .timeline-wrapper-seamless .date-group:not(:last-child)::after {
-            content: '';
-            display: block;
-            width: 120px;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, rgba(67, 97, 238, 0.15), transparent);
-            margin: 36px auto -10px auto;
-            border-radius: 4px;
-        }
-
-        /* 4. Tinh chỉnh lại viên thuốc Ngày tháng để gắn "Tia sáng" */
-        .timeline-wrapper-seamless .date-group-header {
-            /* Ghi đè lại margin cho cân đối với tia sáng */
-            margin: 10px auto 20px auto !important; 
-        }
-        
-        /* Tia sáng (Anchor) kết nối từ Viên thuốc xuống các Thẻ giao dịch */
-        .timeline-wrapper-seamless .date-group-header::after {
-            content: '';
-            position: absolute;
-            bottom: -16px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: 12px;
-            background: linear-gradient(to bottom, var(--primary), transparent);
-            opacity: 0.5;
-            border-radius: 2px;
-        }
-
-        .timeline-wrapper-seamless .date-group-items {
-            padding-top: 4px !important; 
-        }
-
-        /* 5. TƯƠNG THÍCH DARK MODE (CHẾ ĐỘ TỐI) */
-        body.dark-theme .timeline-wrapper-seamless .date-group:not(:last-child)::after {
-            background: linear-gradient(90deg, transparent, rgba(130, 159, 255, 0.15), transparent);
-        }
-        body.dark-theme .timeline-wrapper-seamless .date-group-header::after {
-            background: linear-gradient(to bottom, #829fff, transparent);
-        }
-		/* =========================================================
-           6. KHÔI PHỤC VÀ LÀM ĐẸP CHẤM XANH/ĐỎ (FIX LỖI HIỂN THỊ)
-           ========================================================= */
-        
-        .timeline-wrapper-seamless .timeline-dot { 
-            display: block !important; 
-            position: absolute !important;
-            left: 20px !important; /* Dịch hẳn vào trong thẻ 20px */
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-            width: 12px !important; /* To hơn một chút cho dễ nhìn */
-            height: 12px !important;
-            border-radius: 50% !important;
-            z-index: 99 !important; /* Ép nổi lên trên cùng mọi lớp */
-            border: 2px solid #ffffff !important; 
-        }
-
-        /* Style chấm Thu (Xanh lá) */
-        .timeline-wrapper-seamless .timeline-dot.in { 
-            background-color: var(--success) !important; 
-            box-shadow: 0 0 10px rgba(46, 204, 113, 0.8) !important;
-        }
-
-        /* Style chấm Chi (Đỏ) */
-        .timeline-wrapper-seamless .timeline-dot.out { 
-            background-color: var(--danger) !important; 
-            box-shadow: 0 0 10px rgba(231, 76, 60, 0.8) !important;
-        }
-
-        /* Lùi nội dung thẻ sang phải để nhường chỗ cho chấm */
-        .timeline-wrapper-seamless .transaction-item.swipe-front {
-            padding-left: 40px !important; 
-        }
-		/* =========================================================
-           7. TRẢI NGHIỆM CHẠM, VUỐT VÀ XỬ LÝ VĂN BẢN (MICRO-INTERACTIONS)
-           ========================================================= */
-           
-        
-        /* 2. Cải tiến cụm Ghi chú (Note) - Tránh tràn chữ đè vào số tiền */
-        .timeline-wrapper-seamless .t-note {
-            display: -webkit-box;
-            -webkit-line-clamp: 1; /* Bắt buộc ngắt dòng và thêm ... nếu quá dài */
-            -webkit-box-orient: vertical;
-            line-height: 1.4;
-            max-width: 160px; /* Giới hạn chiều rộng an toàn */
-        }
-        /* Thêm dấu gạch ngang mờ trước ghi chú để phân tách thị giác */
-        .timeline-wrapper-seamless .t-note:not(:empty)::before {
-            content: '— ';
-            opacity: 0.6;
-        }
-
-        /* 3. Nâng cấp các nút Ẩn phía sau (Swipe Actions) thành phong cách iOS */
-        .swipe-container {
-            background: transparent !important; /* Đảm bảo không có viền thừa */
-        }
-        .swipe-actions {
-            right: 12px; /* Dịch các nút ẩn vào trong lề phải một chút */
-            gap: 10px; /* Tạo khoảng trống giữa nút Sửa và Xóa */
-            align-items: center;
-            background: transparent !important; 
-        }
-        .swipe-actions button {
-            width: 44px !important;
-            height: 44px !important;
-            border-radius: 14px !important; /* Bo góc đồng bộ với Icon danh mục */
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-        }
-        /* Nút vuốt cũng lún khi bấm */
-        .swipe-actions button:active {
-            transform: scale(0.85) !important; 
-        }
-
-        /* 4. TƯƠNG THÍCH CHẾ ĐỘ TỐI (DARK MODE) */
-        body.dark-theme .swipe-actions button {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
-        }
-		/* =========================================================
-           8. GIAO DIỆN LIỀN MẠCH (GROUPED LIST) - PHONG CÁCH APPLE CARD
-           ========================================================= */
-           
-        /* 1. Biến khung chứa các giao dịch trong ngày thành một Thẻ chung (Group Card) */
-        .timeline-wrapper-seamless .date-group-items {
-            background: #ffffff !important;
-            border-radius: 20px !important;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.04) !important;
-            border: 1px solid #f1f5f9 !important;
-            padding: 0 !important;
-            overflow: hidden !important; /* Ép các giao dịch con không bị tràn góc bo */
-        }
-
-        /* 2. Ép sát các giao dịch lại với nhau (Hủy bỏ margin rời rạc) */
-        .timeline-wrapper-seamless .swipe-container {
-            margin-bottom: 0 !important; /* Liền mạch hoàn toàn */
-            position: relative;
-        }
-
-        /* 3. Đường phân cách mỏng (Inset Separator) giữa các giao dịch */
-        /* Đường này bắt đầu từ vị trí Icon, chừa lại không gian cho các chấm xanh/đỏ */
-        .timeline-wrapper-seamless .swipe-container:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 40px; /* Canh lề vừa qua khỏi dấu chấm xanh đỏ */
-            right: 16px; /* Cách lề phải 16px */
-            height: 1px;
-            background: #f1f5f9;
-            z-index: 5;
-        }
-
-        /* 4. Xóa viền/bóng của từng thẻ con để nó "hòa làm một" với thẻ cha */
-        .timeline-wrapper-seamless .transaction-item.swipe-front {
-            background: transparent !important; /* Trong suốt để ăn theo nền của thẻ chung */
-            border-radius: 0 !important; /* Bỏ bo góc thẻ lẻ */
-            border: none !important; /* Bỏ viền thẻ lẻ */
-            box-shadow: none !important; /* Bỏ bóng đổ thẻ lẻ */
-            margin-bottom: 0 !important;
-        }
-
-        
-        /* 6. TƯƠNG THÍCH CHẾ ĐỘ TỐI (DARK MODE) */
-        body.dark-theme .timeline-wrapper-seamless .date-group-items {
-            background: var(--card-bg) !important;
-            border-color: #2d3748 !important;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important;
-        }
-        body.dark-theme .timeline-wrapper-seamless .swipe-container:not(:last-child)::after {
-            background: #1e293b; /* Màu kẻ chỉ tối */
-        }
-
-		/* =========================================================
-           9. FIX LỖI NÚT TẢI THÊM (Z-INDEX & POINTER)
-           ========================================================= */
-        .btn-load-more {
-            position: relative !important;
-            z-index: 999 !important; /* Đẩy nút lên tầng cao nhất, không ai được che */
-            pointer-events: auto !important; /* Bắt buộc nhận tương tác chuột/chạm */
-            user-select: none; /* Tránh bôi đen text khi bấm liên tục */
-        }
-		/* =========================================================
-           10. VÁ LỖI GIAO DIỆN (LỖI HIỆN NÚT & TRÀN CHỮ)
-           ========================================================= */
-           
-        /* 1. SỬA LỖI LỘ NÚT VUỐT: Trả lại màu nền đặc cho thẻ để che nút phía sau */
-        .timeline-wrapper-seamless .transaction-item.swipe-front {
-            background: #ffffff !important; 
-        }
-        
-        /* Chế độ tối cho thẻ nền đặc */
-        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front {
-            background: var(--card-bg) !important; 
-        }
-
-        /* 2. SỬA LỖI TÊN DANH MỤC: Ép 1 dòng, thu nhỏ và dùng dấu ... */
-        .timeline-wrapper-seamless .t-left {
-            min-width: 0; /* Quan trọng: Cho phép khung trái co lại khi thiếu chỗ */
-        }
-        
-        .timeline-wrapper-seamless .t-info {
-            min-width: 0; /* Bắt buộc để text-overflow hoạt động trong Flexbox */
-            flex: 1; 
-        }
-        
-        .timeline-wrapper-seamless .t-title {
-            font-size: 14px !important; /* Thu nhỏ chữ lại cho gọn gàng */
-            white-space: nowrap !important; /* Cấm rớt dòng */
-            overflow: hidden !important; /* Giấu phần chữ bị tràn */
-            text-overflow: ellipsis !important; /* Biến phần bị giấu thành dấu ... */
-        }
-
-        /* 3. BẢO VỆ SỐ TIỀN: Không để số tiền bị bóp méo nếu tên danh mục quá dài */
-        .timeline-wrapper-seamless .t-action {
-            flex-shrink: 0 !important; 
-        }
-		/* =========================================================
-           11. LÀM NHẸ GIAO DIỆN, NỚI RỘNG KHUNG & HIỂN THỊ RÕ CHỮ
-           ========================================================= */
-           
-        /* 1. Mở rộng nền trắng bo góc, tràn ra lề để không gian rộng rãi hơn */
-        .timeline-wrapper-seamless .date-group-items {
-            border-radius: 20px !important;
-            margin-left: -6px !important;  /* Nới rộng sang trái */
-            margin-right: -6px !important; /* Nới rộng sang phải */
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06) !important;
-        }
-
-        /* 2. Tối ưu cảm biến vuốt (Hardware Acceleration) */
-        .timeline-wrapper-seamless .swipe-container {
-            /* Báo cho trình duyệt: Chỉ nhận diện cuộn dọc, giải phóng thao tác vuốt ngang cho mượt */
-            touch-action: pan-y !important; 
-        }
-
-        /* 3. Phục hồi Tên giao dịch: Rõ ràng, tự rớt dòng nếu dài, không bị cắt dấu ... */
-        .timeline-wrapper-seamless .t-title {
-            white-space: normal !important; 
-            overflow: visible !important;
-            text-overflow: clip !important;
-            font-size: 15px !important;
-            line-height: 1.4 !important;
-        }
-        
-        /* 4. Phục hồi Ghi chú: Hiển thị đầy đủ dưới tên giống tab Quản trị */
-        .timeline-wrapper-seamless .t-note {
-            display: block !important;
-            white-space: normal !important;
-            -webkit-line-clamp: unset !important; /* Bỏ giới hạn cắt chữ */
-            max-width: 100% !important;
-            font-size: 13px !important;
-            margin-top: 4px !important; /* Khoảng cách hợp lý với tên */
-        }
-        
-        /* Xóa bỏ dấu gạch ngang (—) trang trí thừa thãi trước ghi chú */
-        .timeline-wrapper-seamless .t-note::before {
-            display: none !important;
-        }
-		/* =========================================================
-           12. GIAO DIỆN CHUẨN (GIỐNG ẢNH): TRÀN LỀ, GỌN GÀNG, 1 DÒNG
-           ========================================================= */
-           
-        /* 1. Kéo giãn nền trắng ra sát lề màn hình hơn */
-        .timeline-wrapper-seamless .date-group-items {
-            margin-left: -12px !important;
-            margin-right: -12px !important;
-            border-radius: 20px !important;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.04) !important;
-        }
-
-        /* 2. Căn chỉnh khoảng cách bên trong mỗi dòng giao dịch */
-        .timeline-wrapper-seamless .transaction-item.swipe-front {
-            padding: 14px 16px 14px 28px !important; /* Canh trái để nhường chỗ cho chấm tròn nếu có */
-        }
-
-        /* 3. Khu vực Icon: Hình tròn mềm mại giống ảnh */
-        .timeline-wrapper-seamless .t-icon {
-            width: 40px !important;
-            height: 40px !important;
-            border-radius: 50% !important; 
-        }
-        /* Tắt bóng glow phía sau icon cho nhẹ mắt */
-        .timeline-wrapper-seamless .t-icon::after {
-            display: none !important;
-        }
-
-        /* 4. Khu vực Khung Text: Ép flexbox để xử lý cắt chữ */
-        .timeline-wrapper-seamless .t-left {
-            min-width: 0 !important; /* Bắt buộc có để text-overflow hoạt động */
-            gap: 12px !important;
-        }
-        .timeline-wrapper-seamless .t-info {
-            min-width: 0 !important;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 2px !important; /* Khoảng cách siêu nhỏ giữa Tên và Ghi chú */
-        }
-
-        /* 5. TÊN DANH MỤC: Ép 1 dòng, font gọn, có dấu ... */
-        .timeline-wrapper-seamless .t-title {
-            font-size: 15px !important;
-            font-weight: 600 !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            color: #1e293b !important;
-            display: block !important;
-        }
-
-        /* 6. GHI CHÚ: Ép 1 dòng, có dấu ... */
-        .timeline-wrapper-seamless .t-note {
-            display: block !important;
-            font-size: 13px !important;
-            color: #8c98a9 !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            margin-top: 0 !important;
-            font-weight: 400 !important;
-        }
-
-        /* 7. SỐ TIỀN: Bỏ nền màu (Pill), canh phải, to và rõ */
-        .timeline-wrapper-seamless .t-action {
-            flex-shrink: 0 !important;
-        }
-        .timeline-wrapper-seamless .t-amount {
-            background: transparent !important; /* Xóa dải màu nền bao quanh số */
-            padding: 0 !important;
-            font-size: 16px !important;
-            font-weight: 700 !important;
-            letter-spacing: -0.2px !important;
-        }
-        /* Trả lại màu gốc cho số tiền */
-        .timeline-wrapper-seamless .t-amount.text-danger { color: #e74c3c !important; }
-        .timeline-wrapper-seamless .t-amount.text-success { color: #2ecc71 !important; }
-
-        /* 8. ẨN MŨI TÊN (CHEVRON) */
-        .timeline-wrapper-seamless .t-chevron {
-            display: none !important;
-        }
-
-        /* 9. Đường phân cách mỏng giữa các giao dịch */
-        .timeline-wrapper-seamless .swipe-container:not(:last-child)::after {
-            left: 68px !important; /* Đường kẻ thụt vào, canh thẳng hàng với chữ */
-            right: 0 !important;
-            background: #f1f5f9 !important;
-            height: 1px !important;
-        }
-        /* ======================================================== */
-        /* CẬP NHẬT CSS SỬA LỖI HIỂN THỊ HUY HIỆU VÀ % CHI          */
-        /* ======================================================== */
-        
-        /* Cho phép xu hướng (trend) và % tự rớt dòng nếu thiếu chỗ */
-        .kpi-trend-wrapper { 
-            display: flex; 
-            align-items: baseline; 
-            gap: 6px; 
-            flex-wrap: wrap; 
-        }
-        .trend-badge { 
-            white-space: nowrap; 
-            font-size: 13px; 
-        }
-
-        /* 
-           Tùy chỉnh Huy hiệu: 
-           1. Bỏ ép cứng cột để khung hiển thị đúng cấu trúc JS (4 cột/hàng).
-           2. Tự động co giãn chiều cao thẻ để chứa đủ tên huy hiệu dài.
-        */
+        /* 8. CẬP NHẬT CSS SỬA LỖI HIỂN THỊ HUY HIỆU VÀ % CHI */
+        .kpi-trend-wrapper { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+        .trend-badge { white-space: nowrap; font-size: 13px; }
         #badgeCabinet { display: block; }
-        
-        .badge-item {
-            height: auto !important;     /* Giải phóng chiều cao tự nhiên thay vì vuông góc 1:1 */
-            min-height: 95px;            /* Chiều cao tổi thiểu giữ form vững chắc */
-            border-radius: 20px; 
-            background: var(--card-bg); 
-            border: 1px solid #f1f5f9;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: flex-start; /* Nội dung dồn từ trên xuống, chữ thừa tự rớt dòng */
-            text-align: center; 
-            padding: 12px 4px;           /* Cắt giảm lề 2 bên để tối đa diện tích bề ngang cho chữ */
-            position: relative; 
-            overflow: hidden;            /* Giữ lại để bo viền hiệu ứng bóng lóa (shine) */
-            transition: all 0.3s ease; 
-            filter: grayscale(1); 
-            opacity: 0.5; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-        }
+        .badge-item { height: auto !important; min-height: 95px; border-radius: 20px; background: var(--card-bg); border: 1px solid #f1f5f9; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; padding: 12px 4px; position: relative; overflow: hidden; transition: all 0.3s ease; filter: grayscale(1); opacity: 0.5; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
         body.dark-theme .badge-item { border-color: #2d3748; }
-        
-        .badge-icon { 
-            font-size: 34px !important;  /* Nâng kích thước vừa tầm mắt */
-            margin-bottom: 6px; 
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); 
-        }
-        
-        .badge-name { 
-            font-size: 11px !important;  /* Cỡ chữ an toàn, rõ nét */
-            font-weight: 800; 
-            line-height: 1.3; 
-            width: 100%;
-            word-wrap: break-word;       /* Phép màu giúp ngắt dòng mượt mà */
-        }
-        
-        .badge-item.unlocked {
-            filter: grayscale(0); opacity: 1; border-color: #ffd700;
-            background: linear-gradient(135deg, #fffcf0, #fff7c2);
-            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.25); transform: translateY(-3px);
-        }
+        .badge-icon { font-size: 34px !important; margin-bottom: 6px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .badge-name { font-size: 11px !important; font-weight: 800; line-height: 1.3; width: 100%; word-wrap: break-word; }
+        .badge-item.unlocked { filter: grayscale(0); opacity: 1; border-color: #ffd700; background: linear-gradient(135deg, #fffcf0, #fff7c2); box-shadow: 0 6px 20px rgba(255, 215, 0, 0.25); transform: translateY(-3px); }
         body.dark-theme .badge-item.unlocked { background: linear-gradient(135deg, #3a3210, #544400); }
-        .badge-item.unlocked::after {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.8), transparent);
-            transform: rotate(45deg) translateY(-100%); animation: foilShine 4s infinite;
-        }
+        .badge-item.unlocked::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.8), transparent); transform: rotate(45deg) translateY(-100%); animation: foilShine 4s infinite; }
         
-        /* ========================================== */
-        /* THIẾT KẾ FLAT SECTION (CHO TAB THỐNG KÊ)   */
-        /* ========================================== */
-        .flat-section {
-            padding: 24px 8px 12px 8px; 
-            border-bottom: 1px solid rgba(0,0,0,0.06); 
-        }
+        /* 9. THIẾT KẾ FLAT SECTION (CHO TAB THỐNG KÊ) */
+        .flat-section { padding: 24px 8px 12px 8px; border-bottom: 1px solid rgba(0,0,0,0.06); }
         .flat-section:last-child { border-bottom: none; padding-bottom: 40px; }
         body.dark-theme .flat-section { border-bottom-color: rgba(255,255,255,0.05); }
-        
-        .flat-section .chart-title { 
-            font-size: 17px; 
-            font-weight: 800; 
-            color: var(--text-main); 
-            margin-bottom: 6px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            letter-spacing: -0.3px;
-        }
-        .flat-section .chart-title::before {
-            content: '';
-            display: block;
-            width: 5px;
-            height: 16px;
-            background: var(--primary);
-            border-radius: 6px;
-        }
-
-        .flat-section .chart-subtitle {
-            background: transparent !important;
-            padding: 0 0 0 13px !important; 
-            margin-bottom: 12px !important; 
-            border-radius: 0 !important;
-        }
-        
-        .flat-section .transaction-item { 
-            background: transparent !important; 
-            padding: 14px 8px !important; 
-            border: none !important;
-            border-bottom: 1px dashed rgba(0,0,0,0.06) !important; 
-            box-shadow: none !important;
-            border-radius: 0 !important;
-        }
+        .flat-section .chart-title { font-size: 17px; font-weight: 800; color: var(--text-main); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; letter-spacing: -0.3px; }
+        .flat-section .chart-title::before { content: ''; display: block; width: 5px; height: 16px; background: var(--primary); border-radius: 6px; }
+        .flat-section .chart-subtitle { background: transparent !important; padding: 0 0 0 13px !important; margin-bottom: 12px !important; border-radius: 0 !important; }
+        .flat-section .transaction-item { background: transparent !important; padding: 14px 8px !important; border: none !important; border-bottom: 1px dashed rgba(0,0,0,0.06) !important; box-shadow: none !important; border-radius: 0 !important; }
         body.dark-theme .flat-section .transaction-item { border-bottom-color: rgba(255,255,255,0.05) !important; }
         .flat-section .transaction-item:last-child { border-bottom: none !important; }
+    </style>
     </style>
 
     <!-- SDK FIREBASE -->

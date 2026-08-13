@@ -93,11 +93,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important; 
             margin-bottom: 0 !important;
         }
-        .timeline-wrapper-seamless .transaction-item.swipe-front:hover {
-            box-shadow: 0 6px 16px rgba(0,0,0,0.06) !important;
-            transform: translateY(-2px);
-        }
-
         /* Nút vuốt chức năng phía sau thẻ */
         .swipe-actions {
             position: absolute; right: 0; top: 0; bottom: 0;
@@ -464,13 +459,6 @@
            7. TRẢI NGHIỆM CHẠM, VUỐT VÀ XỬ LÝ VĂN BẢN (MICRO-INTERACTIONS)
            ========================================================= */
            
-        /* 1. Hiệu ứng nhún (Bouncy Press) khi chạm vào thẻ giao dịch */
-        .timeline-wrapper-seamless .transaction-item.swipe-front:active {
-            transform: scale(0.96) !important; /* Lún thẻ xuống 4% */
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important; /* Giảm bóng đổ */
-            background: #f8fafc !important; /* Đổi màu nền tối đi một chút */
-            transition: transform 0.1s ease, background 0.1s ease !important; /* Phản hồi tức thì */
-        }
         
         /* 2. Cải tiến cụm Ghi chú (Note) - Tránh tràn chữ đè vào số tiền */
         .timeline-wrapper-seamless .t-note {
@@ -509,9 +497,6 @@
         }
 
         /* 4. TƯƠNG THÍCH CHẾ ĐỘ TỐI (DARK MODE) */
-        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:active {
-            background: #0f172a !important; /* Nền lún tối hơn trong Dark Mode */
-        }
         body.dark-theme .swipe-actions button {
             box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
         }
@@ -557,17 +542,7 @@
             margin-bottom: 0 !important;
         }
 
-        /* 5. Tinh chỉnh hiệu ứng tương tác (Hover/Active) trên từng dòng */
-        .timeline-wrapper-seamless .transaction-item.swipe-front:hover {
-            transform: none !important; /* Không nảy lên nữa vì đang ở chung khối */
-            background: #f8fafc !important; /* Đổi màu nền mờ cho dòng đang trỏ chuột */
-        }
-        .timeline-wrapper-seamless .transaction-item.swipe-front:active {
-            transform: scale(0.98) !important; /* Nhún nhẹ 2% toàn bộ dòng chữ */
-            background: #f1f5f9 !important;
-            border-radius: 12px !important; /* Bo góc tạm thời khi bấm tạo cảm giác mềm mại */
-        }
-
+        
         /* 6. TƯƠNG THÍCH CHẾ ĐỘ TỐI (DARK MODE) */
         body.dark-theme .timeline-wrapper-seamless .date-group-items {
             background: var(--card-bg) !important;
@@ -577,12 +552,7 @@
         body.dark-theme .timeline-wrapper-seamless .swipe-container:not(:last-child)::after {
             background: #1e293b; /* Màu kẻ chỉ tối */
         }
-        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:hover {
-            background: rgba(255,255,255,0.02) !important;
-        }
-        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:active {
-            background: rgba(255,255,255,0.05) !important;
-        }
+
 		/* =========================================================
            9. FIX LỖI NÚT TẢI THÊM (Z-INDEX & POINTER)
            ========================================================= */
@@ -626,6 +596,47 @@
         /* 3. BẢO VỆ SỐ TIỀN: Không để số tiền bị bóp méo nếu tên danh mục quá dài */
         .timeline-wrapper-seamless .t-action {
             flex-shrink: 0 !important; 
+        }
+		/* =========================================================
+           11. LÀM NHẸ GIAO DIỆN, NỚI RỘNG KHUNG & HIỂN THỊ RÕ CHỮ
+           ========================================================= */
+           
+        /* 1. Mở rộng nền trắng bo góc, tràn ra lề để không gian rộng rãi hơn */
+        .timeline-wrapper-seamless .date-group-items {
+            border-radius: 20px !important;
+            margin-left: -6px !important;  /* Nới rộng sang trái */
+            margin-right: -6px !important; /* Nới rộng sang phải */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06) !important;
+        }
+
+        /* 2. Tối ưu cảm biến vuốt (Hardware Acceleration) */
+        .timeline-wrapper-seamless .swipe-container {
+            /* Báo cho trình duyệt: Chỉ nhận diện cuộn dọc, giải phóng thao tác vuốt ngang cho mượt */
+            touch-action: pan-y !important; 
+        }
+
+        /* 3. Phục hồi Tên giao dịch: Rõ ràng, tự rớt dòng nếu dài, không bị cắt dấu ... */
+        .timeline-wrapper-seamless .t-title {
+            white-space: normal !important; 
+            overflow: visible !important;
+            text-overflow: clip !important;
+            font-size: 15px !important;
+            line-height: 1.4 !important;
+        }
+        
+        /* 4. Phục hồi Ghi chú: Hiển thị đầy đủ dưới tên giống tab Quản trị */
+        .timeline-wrapper-seamless .t-note {
+            display: block !important;
+            white-space: normal !important;
+            -webkit-line-clamp: unset !important; /* Bỏ giới hạn cắt chữ */
+            max-width: 100% !important;
+            font-size: 13px !important;
+            margin-top: 4px !important; /* Khoảng cách hợp lý với tên */
+        }
+        
+        /* Xóa bỏ dấu gạch ngang (—) trang trí thừa thãi trước ghi chú */
+        .timeline-wrapper-seamless .t-note::before {
+            display: none !important;
         }
         /* ======================================================== */
         /* CẬP NHẬT CSS SỬA LỖI HIỂN THỊ HUY HIỆU VÀ % CHI          */

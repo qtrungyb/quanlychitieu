@@ -816,37 +816,60 @@ function renderCategoryUI() {
         scroll.appendChild(div);
     });
 
+    // === CẢI TIẾN MULTI-SELECT DANH MỤC LỊCH SỬ ===
     const histCatScroll = document.getElementById('historyCategoryFilter');
-    if (!histCatScroll) return;
-    const currentFilter = histCatScroll.querySelector('.cat-pill.active')?.getAttribute('data-filter') || '';
-    histCatScroll.innerHTML = '<div class="cat-pill active" data-filter="">Tất cả</div>';
-    
-    categories.forEach(c => {
-        const theme = THEMES[c.color] || THEMES['theme-gray'];
-        histCatScroll.innerHTML += `
-            <div class="cat-pill" data-filter="${c.name}">
-                <div class="pill-icon" style="color: ${theme.color}">${SVG_LIB[c.icon] || ''}</div> ${c.name}
-            </div>
-        `;
-    });
-    
-    let foundActive = false;
-    histCatScroll.querySelectorAll('.cat-pill').forEach(pill => {
-        if(pill.getAttribute('data-filter') === currentFilter) {
-            pill.classList.add('active');
-            foundActive = true;
-        } else {
-            pill.classList.remove('active');
-        }
+    if (histCatScroll) {
+        // 1. Lưu lại các danh mục đang được chọn (tránh bị reset khi update UI)
+        const activePills = Array.from(histCatScroll.querySelectorAll('.cat-pill.active'));
+        const currentFilters = activePills.map(p => p.getAttribute('data-filter')).filter(f => f !== '');
         
-        pill.addEventListener('click', () => {
-            histCatScroll.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-            currentDateLimit = DATES_PER_PAGE;
-            updateUI();
+        histCatScroll.innerHTML = '<div class="cat-pill" data-filter="">Tất cả</div>';
+        
+        categories.forEach(c => {
+            const theme = THEMES[c.color] || THEMES['theme-gray'];
+            histCatScroll.innerHTML += `
+                <div class="cat-pill" data-filter="${c.name}">
+                    <div class="pill-icon" style="color: ${theme.color}">${SVG_LIB[c.icon] || ''}</div> ${c.name}
+                </div>
+            `;
         });
-    });
-    if(!foundActive) histCatScroll.querySelector('.cat-pill[data-filter=""]')?.classList.add('active');
+        
+        // 2. Khôi phục trạng thái active
+        const allBtn = histCatScroll.querySelector('.cat-pill[data-filter=""]');
+        if (currentFilters.length === 0) {
+            allBtn.classList.add('active');
+        } else {
+            currentFilters.forEach(f => {
+                const p = histCatScroll.querySelector(`.cat-pill[data-filter="${f}"]`);
+                if(p) p.classList.add('active');
+            });
+        }
+
+        // 3. Xử lý logic Click chọn nhiều (Multi-select)
+        histCatScroll.querySelectorAll('.cat-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                const filterVal = pill.getAttribute('data-filter');
+                
+                if (filterVal === '') {
+                    // Nếu bấm "Tất cả" -> Xóa màu mọi nút khác, chỉ bôi màu "Tất cả"
+                    histCatScroll.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                } else {
+                    // Nếu bấm danh mục cụ thể -> Tắt "Tất cả", Đảo trạng thái nút hiện tại
+                    allBtn.classList.remove('active');
+                    pill.classList.toggle('active');
+                    
+                    // Nếu người dùng lỡ tắt hết mọi nút -> Tự động bật lại "Tất cả"
+                    const hasActive = histCatScroll.querySelector('.cat-pill.active');
+                    if (!hasActive) allBtn.classList.add('active');
+                }
+                
+                currentDateLimit = DATES_PER_PAGE;
+                updateUI();
+            });
+        });
+    }
+    // ==============================================
 
     const incList = document.getElementById('incomeCatList');
     const expList = document.getElementById('expenseCatList');
@@ -1234,8 +1257,9 @@ function updateUI() {
     const fStartDate = fStart ? fStart.value : '';
     const fEndDate = fEnd ? fEnd.value : '';
     const sText = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
-    const activeCatPill = document.querySelector('#historyCategoryFilter .cat-pill.active');
-    const fCat = activeCatPill ? activeCatPill.getAttribute('data-filter') : '';
+    // Lấy danh sách TẤT CẢ các danh mục đang được chọn
+    const activeCatPills = Array.from(document.querySelectorAll('#historyCategoryFilter .cat-pill.active'));
+    const fCats = activeCatPills.map(p => p.getAttribute('data-filter')).filter(f => f !== '');
     
     const activeQuickFilter = document.querySelector('.btn-quick-filter.active');
     const isQuickAll = activeQuickFilter ? activeQuickFilter.getAttribute('data-range') === 'all' : false;
@@ -1252,7 +1276,7 @@ function updateUI() {
     renderBalances();
 
     let displayData = [...transactions];
-    const isFiltering = (!isQuickAll && (fStartDate || fEndDate)) || sText || fCat;
+    const isFiltering = (!isQuickAll && (fStartDate || fEndDate)) || sText || fCats.length > 0;
 
     if (isFiltering) {
         displayData = transactions.filter(t => {
@@ -1261,7 +1285,8 @@ function updateUI() {
             else if (fStartDate) matchDate = t.date >= fStartDate;
             else if (fEndDate) matchDate = t.date <= fEndDate;
             
-            const matchCat = fCat ? t.categoryName === fCat || t.category === fCat : true;
+            // Nếu có lọc danh mục, kiểm tra xem giao dịch có nằm trong mảng fCats không
+            const matchCat = fCats.length > 0 ? (fCats.includes(t.categoryName) || fCats.includes(t.category)) : true;
             const amtString = t.amount.toString();
             const matchSearch = sText ? (
                 t.categoryName?.toLowerCase().includes(sText) || 
@@ -1322,22 +1347,35 @@ function updateUI() {
 
     const paginatedDates = sortedDates.slice(0, currentDateLimit);
 
+    let groupIndex = 0; // Thêm biến đếm để biết đâu là ngày đầu tiên
+    
     for (const rawDate of paginatedDates) {
         const data = grouped[rawDate];
         const displayDateText = formatNiceDate(rawDate).replace('Hôm nay, ', '');
+        
+        // Nhóm đầu tiên (mới nhất) sẽ mở, các nhóm cũ hơn sẽ bị gập (thêm class 'collapsed')
+        const collapsedClass = groupIndex === 0 ? '' : 'collapsed';
 
         listHTML += `
-        <div class="date-group">
-            <div class="date-group-header">
+        <div class="date-group ${collapsedClass}" id="date_group_${rawDate}">
+            <!-- Bổ sung sự kiện onclick để gập/mở -->
+            <div class="date-group-header" onclick="toggleDateGroup('${rawDate}')">
                 <div class="timeline-group-marker"></div>
-                <div class="date-title" style="font-size: 15px;">${displayDateText}</div>
+                <div class="date-title" style="font-size: 15px; display: flex; align-items: center;">
+                    ${displayDateText}
+                    <!-- Thêm mũi tên báo hiệu trạng thái -->
+                    <svg class="header-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
                 <div class="date-summary">
-                    <span class="text-success">+${formatter.format(data.in)}</span> &nbsp;|&nbsp; 
-                    <span class="text-danger">-${formatter.format(data.out)}</span>
+                    <span class="ds-in text-success">+${formatter.format(data.in)}</span>
+                    <span class="ds-sep">|</span> 
+                    <span class="ds-out text-danger">-${formatter.format(data.out)}</span>
                 </div>
             </div>
             <div class="date-group-items">
         `;
+        
+        groupIndex++; // Tăng biến đếm lên
 
         data.items.sort((a, b) => b.id - a.id);
 
@@ -4399,4 +4437,55 @@ const originalUpdateUIForBadges = updateUI;
 updateUI = function() {
     originalUpdateUIForBadges();
     setTimeout(() => { evaluateAchievements(); }, 600); // Đợi giao diện load xong mới chấm điểm
+};
+// ==========================================
+// TÍNH NĂNG: BỘ LỌC TÍCH HỢP (SMART FILTER TOGGLE)
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Đóng/Mở khung lọc
+    document.getElementById('btnToggleFilters')?.addEventListener('click', function() {
+        this.classList.toggle('active');
+        document.getElementById('advancedFiltersWrapper')?.classList.toggle('open');
+    });
+});
+
+// 2. Thuật toán kiểm tra và bật/tắt chấm đỏ báo hiệu
+function checkFilterStatus() {
+    const dot = document.getElementById('filterActiveDot');
+    if (!dot) return;
+
+    // Kiểm tra Danh mục (Nếu mảng chọn lớn hơn 0 -> Bật)
+    const activeCatPills = Array.from(document.querySelectorAll('#historyCategoryFilter .cat-pill.active'));
+    const hasCatFilter = activeCatPills.some(p => p.getAttribute('data-filter') !== '');
+
+    // Kiểm tra Thời gian (Tháng này là mặc định, nếu chọn mốc thời gian khác -> Bật)
+    const activeDatePill = document.querySelector('#quickDateFilters .btn-quick-filter.active');
+    const dateRange = activeDatePill ? activeDatePill.getAttribute('data-range') : '';
+    const hasDateFilter = dateRange !== 'this_month' && dateRange !== 'all';
+
+    // Nếu người dùng có áp dụng bộ lọc thì thắp sáng Chấm Đỏ
+    if (hasCatFilter || hasDateFilter) {
+        dot.classList.remove('hide');
+    } else {
+        dot.classList.add('hide');
+    }
+}
+
+// 3. Móc nối ngầm vào hàm updateUI hiện tại của bạn để tự động check chấm đỏ mỗi khi người dùng ấn lọc
+if (typeof updateUI === 'function') {
+    const originalUpdateUIForSmartFilter = updateUI;
+    updateUI = function() {
+        originalUpdateUIForSmartFilter(); // Chạy ruột hàm gốc
+        checkFilterStatus();              // Chạy thêm thuật toán chấm đỏ
+    };
+}
+// ==========================================
+// TÍNH NĂNG: GẬP/MỞ LỊCH SỬ (ACCORDION DATES)
+// ==========================================
+window.toggleDateGroup = function(dateStr) {
+    const groupEl = document.getElementById('date_group_' + dateStr);
+    if (groupEl) {
+        // Bật/tắt class 'collapsed' để thay đổi trạng thái
+        groupEl.classList.toggle('collapsed');
+    }
 };

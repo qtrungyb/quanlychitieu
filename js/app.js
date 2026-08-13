@@ -794,24 +794,47 @@ function renderCategoryUI() {
     const scroll = document.getElementById('categoryScroll');
     if (!scroll) return;
     scroll.innerHTML = '';
+
+    // --- THUẬT TOÁN SMART GRID: Đếm tần suất sử dụng ---
+    const catFreq = {};
+    // Phân tích các giao dịch để bắt đúng thói quen hiện tại
+    transactions.forEach(t => {
+        catFreq[t.categoryId] = (catFreq[t.categoryId] || 0) + 1;
+    });
+
+    // Tạo mảng clone và sắp xếp: Thằng nào dùng nhiều ngoi lên trước
+    let smartCategories = [...categories].sort((a, b) => {
+        const fA = catFreq[a.id] || 0;
+        const fB = catFreq[b.id] || 0;
+        if (fB !== fA) return fB - fA; // Ưu tiên tần suất
+        return (a.order || 0) - (b.order || 0); // Trùng tần suất thì dựa vào cài đặt gốc
+    });
     
-    categories.forEach(c => {
+    smartCategories.forEach(c => {
         const div = document.createElement('div');
         div.className = `cat-pill opt-${c.type} hide`;
         div.setAttribute('data-id', c.id);
         div.setAttribute('data-val', c.name);
         div.style.setProperty('--cat-color', THEMES[c.color]?.color || 'var(--primary)');
         div.style.setProperty('--cat-bg', THEMES[c.color]?.bg || '#eef2ff');
-        div.innerHTML = `<div class="pill-icon" style="color: var(--cat-color)">${SVG_LIB[c.icon] || ''}</div> ${c.name}`;
+        
+        // Render UI lưới: Icon nằm trên trong ô vuông, chữ nằm dưới
+        div.innerHTML = `
+            <div class="pill-icon" style="background: var(--cat-bg); color: var(--cat-color); width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px auto; transition: 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SVG_LIB[c.icon].match(/<svg[^>]*>([\s\S]*?)<\/svg>/)?.[1] || ''}</svg>
+            </div> 
+            <span style="display:block; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.name}</span>
+        `;
         
         div.onclick = () => {
+            // Rung phản hồi (nếu đt hỗ trợ)
+            if (navigator.vibrate) navigator.vibrate(10);
             document.querySelectorAll('#categoryScroll .cat-pill').forEach(p => p.classList.remove('active'));
             div.classList.add('active');
             const catIdInput = document.getElementById('categoryIdInput');
             const catNameInput = document.getElementById('categoryNameInput');
             if (catIdInput) catIdInput.value = c.id;
             if (catNameInput) catNameInput.value = c.name;
-            div.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         };
         scroll.appendChild(div);
     });

@@ -3979,15 +3979,10 @@ if (fabBtn) {
         // 3. Reset form trắng trẻo để nhập dữ liệu mới
         if (typeof resetFormState === 'function') resetFormState();
 
-        // 4. Cuộn mượt mà lên đầu trang và tự động nhấp nháy chuột vào ô Nhập Tiền
+        // 4. Cuộn mượt mà và gọi Bàn phím Máy tính tích hợp
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setTimeout(() => {
-            const amtInput = document.getElementById('amountInputDisplay');
-            if (amtInput) {
-                amtInput.focus();
-                // Kích hoạt bàn phím số trên điện thoại
-                amtInput.click();
-            }
+            document.getElementById('mainAmountWrapper')?.click();
         }, 300);
     });
 }

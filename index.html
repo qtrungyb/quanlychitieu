@@ -460,6 +460,138 @@
         .timeline-wrapper-seamless .transaction-item.swipe-front {
             padding-left: 40px !important; 
         }
+		/* =========================================================
+           7. TRẢI NGHIỆM CHẠM, VUỐT VÀ XỬ LÝ VĂN BẢN (MICRO-INTERACTIONS)
+           ========================================================= */
+           
+        /* 1. Hiệu ứng nhún (Bouncy Press) khi chạm vào thẻ giao dịch */
+        .timeline-wrapper-seamless .transaction-item.swipe-front:active {
+            transform: scale(0.96) !important; /* Lún thẻ xuống 4% */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important; /* Giảm bóng đổ */
+            background: #f8fafc !important; /* Đổi màu nền tối đi một chút */
+            transition: transform 0.1s ease, background 0.1s ease !important; /* Phản hồi tức thì */
+        }
+        
+        /* 2. Cải tiến cụm Ghi chú (Note) - Tránh tràn chữ đè vào số tiền */
+        .timeline-wrapper-seamless .t-note {
+            display: -webkit-box;
+            -webkit-line-clamp: 1; /* Bắt buộc ngắt dòng và thêm ... nếu quá dài */
+            -webkit-box-orient: vertical;
+            line-height: 1.4;
+            max-width: 160px; /* Giới hạn chiều rộng an toàn */
+        }
+        /* Thêm dấu gạch ngang mờ trước ghi chú để phân tách thị giác */
+        .timeline-wrapper-seamless .t-note:not(:empty)::before {
+            content: '— ';
+            opacity: 0.6;
+        }
+
+        /* 3. Nâng cấp các nút Ẩn phía sau (Swipe Actions) thành phong cách iOS */
+        .swipe-container {
+            background: transparent !important; /* Đảm bảo không có viền thừa */
+        }
+        .swipe-actions {
+            right: 12px; /* Dịch các nút ẩn vào trong lề phải một chút */
+            gap: 10px; /* Tạo khoảng trống giữa nút Sửa và Xóa */
+            align-items: center;
+            background: transparent !important; 
+        }
+        .swipe-actions button {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 14px !important; /* Bo góc đồng bộ với Icon danh mục */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        }
+        /* Nút vuốt cũng lún khi bấm */
+        .swipe-actions button:active {
+            transform: scale(0.85) !important; 
+        }
+
+        /* 4. TƯƠNG THÍCH CHẾ ĐỘ TỐI (DARK MODE) */
+        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:active {
+            background: #0f172a !important; /* Nền lún tối hơn trong Dark Mode */
+        }
+        body.dark-theme .swipe-actions button {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        }
+		/* =========================================================
+           8. GIAO DIỆN LIỀN MẠCH (GROUPED LIST) - PHONG CÁCH APPLE CARD
+           ========================================================= */
+           
+        /* 1. Biến khung chứa các giao dịch trong ngày thành một Thẻ chung (Group Card) */
+        .timeline-wrapper-seamless .date-group-items {
+            background: #ffffff !important;
+            border-radius: 20px !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.04) !important;
+            border: 1px solid #f1f5f9 !important;
+            padding: 0 !important;
+            overflow: hidden !important; /* Ép các giao dịch con không bị tràn góc bo */
+        }
+
+        /* 2. Ép sát các giao dịch lại với nhau (Hủy bỏ margin rời rạc) */
+        .timeline-wrapper-seamless .swipe-container {
+            margin-bottom: 0 !important; /* Liền mạch hoàn toàn */
+            position: relative;
+        }
+
+        /* 3. Đường phân cách mỏng (Inset Separator) giữa các giao dịch */
+        /* Đường này bắt đầu từ vị trí Icon, chừa lại không gian cho các chấm xanh/đỏ */
+        .timeline-wrapper-seamless .swipe-container:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 40px; /* Canh lề vừa qua khỏi dấu chấm xanh đỏ */
+            right: 16px; /* Cách lề phải 16px */
+            height: 1px;
+            background: #f1f5f9;
+            z-index: 5;
+        }
+
+        /* 4. Xóa viền/bóng của từng thẻ con để nó "hòa làm một" với thẻ cha */
+        .timeline-wrapper-seamless .transaction-item.swipe-front {
+            background: transparent !important; /* Trong suốt để ăn theo nền của thẻ chung */
+            border-radius: 0 !important; /* Bỏ bo góc thẻ lẻ */
+            border: none !important; /* Bỏ viền thẻ lẻ */
+            box-shadow: none !important; /* Bỏ bóng đổ thẻ lẻ */
+            margin-bottom: 0 !important;
+        }
+
+        /* 5. Tinh chỉnh hiệu ứng tương tác (Hover/Active) trên từng dòng */
+        .timeline-wrapper-seamless .transaction-item.swipe-front:hover {
+            transform: none !important; /* Không nảy lên nữa vì đang ở chung khối */
+            background: #f8fafc !important; /* Đổi màu nền mờ cho dòng đang trỏ chuột */
+        }
+        .timeline-wrapper-seamless .transaction-item.swipe-front:active {
+            transform: scale(0.98) !important; /* Nhún nhẹ 2% toàn bộ dòng chữ */
+            background: #f1f5f9 !important;
+            border-radius: 12px !important; /* Bo góc tạm thời khi bấm tạo cảm giác mềm mại */
+        }
+
+        /* 6. TƯƠNG THÍCH CHẾ ĐỘ TỐI (DARK MODE) */
+        body.dark-theme .timeline-wrapper-seamless .date-group-items {
+            background: var(--card-bg) !important;
+            border-color: #2d3748 !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important;
+        }
+        body.dark-theme .timeline-wrapper-seamless .swipe-container:not(:last-child)::after {
+            background: #1e293b; /* Màu kẻ chỉ tối */
+        }
+        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:hover {
+            background: rgba(255,255,255,0.02) !important;
+        }
+        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:active {
+            background: rgba(255,255,255,0.05) !important;
+        }
+		/* =========================================================
+           9. FIX LỖI NÚT TẢI THÊM (Z-INDEX & POINTER)
+           ========================================================= */
+        .btn-load-more {
+            position: relative !important;
+            z-index: 999 !important; /* Đẩy nút lên tầng cao nhất, không ai được che */
+            pointer-events: auto !important; /* Bắt buộc nhận tương tác chuột/chạm */
+            user-select: none; /* Tránh bôi đen text khi bấm liên tục */
+        }
         /* ======================================================== */
         /* CẬP NHẬT CSS SỬA LỖI HIỂN THỊ HUY HIỆU VÀ % CHI          */
         /* ======================================================== */

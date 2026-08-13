@@ -396,6 +396,39 @@
         body.dark-theme .numpad-grid .np-op { background: rgba(67, 97, 238, 0.15); color: #829fff; }
         body.dark-theme .numpad-grid .np-back { background: rgba(231, 76, 60, 0.15); color: #ff7668; }
         body.dark-theme .numpad-grid .np-done { background: var(--primary); color: #fff; }
+		/* =========================================================
+           23. LƯỚI DANH MỤC THÔNG MINH (SMART CATEGORY GRID)
+           ========================================================= */
+        /* Biến thanh cuộn thành Lưới 4 cột */
+        #categoryScroll {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr); /* Chia đều 4 cột */
+            gap: 12px 8px;
+            overflow-x: hidden;
+            padding: 8px 0;
+        }
+        
+        /* Ghi đè giao diện nút bấm (Icon nằm trên, Chữ nằm dưới) */
+        #categoryScroll .cat-pill {
+            display: flex; flex-direction: column; padding: 8px 4px;
+            border-radius: 16px; border: 2px solid transparent; background: transparent;
+            font-size: 11.5px; gap: 0; box-shadow: none; text-align: center;
+        }
+        
+        /* Hiệu ứng khi được chọn: Tạo khung viền và phóng to icon */
+        #categoryScroll .cat-pill.active {
+            background: rgba(0,0,0,0.02);
+            border-color: var(--cat-color, var(--primary));
+            color: var(--text-main);
+        }
+        #categoryScroll .cat-pill.active .pill-icon {
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        body.dark-theme #categoryScroll .cat-pill.active {
+            background: rgba(255,255,255,0.05);
+        }
     </style>
 
     <!-- SDK FIREBASE -->

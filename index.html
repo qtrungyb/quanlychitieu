@@ -173,6 +173,35 @@
         .flat-section .transaction-item { background: transparent !important; padding: 14px 8px !important; border: none !important; border-bottom: 1px dashed rgba(0,0,0,0.06) !important; box-shadow: none !important; border-radius: 0 !important; }
         body.dark-theme .flat-section .transaction-item { border-bottom-color: rgba(255,255,255,0.05) !important; }
         .flat-section .transaction-item:last-child { border-bottom: none !important; }
+		/* =========================================================
+           15. THU GỌN KHOẢNG CÁCH VÀ TỐI ƯU HIỂN THỊ (PRO FIX)
+           ========================================================= */
+           
+        /* 1. Giảm padding trên/dưới của thẻ giao dịch */
+        .timeline-wrapper-seamless .transaction-item.swipe-front {
+            padding: 10px 16px 10px 24px !important; 
+        }
+
+        /* 2. Thu nhỏ icon danh mục để cân đối với dòng chữ */
+        .timeline-wrapper-seamless .t-icon {
+            width: 36px !important;
+            height: 36px !important;
+        }
+
+        /* 3. Giảm khoảng cách thừa giữa các nhóm ngày */
+        .timeline-wrapper-seamless .date-group {
+            margin-bottom: 24px !important;
+        }
+
+        /* 4. Canh chỉnh lại đường phân cách mỏng cho khớp với icon đã thu nhỏ */
+        .timeline-wrapper-seamless .swipe-container:not(:last-child)::after {
+            left: 60px !important; 
+        }
+        
+        /* 5. Tinh chỉnh cỡ chữ nhỏ lại 1 chút cho tinh tế */
+        .timeline-wrapper-seamless .t-title { font-size: 14.5px !important; }
+        .timeline-wrapper-seamless .t-note { font-size: 12.5px !important; }
+        .timeline-wrapper-seamless .t-amount { font-size: 15.5px !important; }
     </style>
     </style>
 
@@ -936,6 +965,37 @@
             }, 1000);
         }
     });
+</script>
+<!-- SCRIPT CHUYÊN SÂU: MỞ KHÓA NÚT TẢI THÊM -->
+<script>
+    // Đăng ký sự kiện click ở mức Document với Capture Phase (true) 
+    // để chộp lấy cú click trước khi nó bị cảm biến vuốt chặn lại
+    document.addEventListener('click', function(e) {
+        const loadMoreBtn = e.target.closest('.btn-load-more');
+        
+        if (loadMoreBtn) {
+            // Dừng sự kiện truyền xuống các lớp dưới
+            e.preventDefault();
+            e.stopPropagation(); 
+            
+            // Xử lý logic tải thêm
+            if (typeof currentDateLimit !== 'undefined' && typeof updateUI === 'function') {
+                const oldLimit = currentDateLimit;
+                currentDateLimit += 3; // Nới rộng thêm 3 ngày
+                
+                // Thay đổi text để tạo phản hồi thị giác
+                loadMoreBtn.innerText = 'Đang tải...';
+                loadMoreBtn.style.opacity = '0.5';
+                
+                // Cập nhật lại UI sau 1 nhịp ngắn
+                setTimeout(() => {
+                    updateUI();
+                    // Cuộn nhẹ xuống để người dùng thấy dữ liệu mới
+                    window.scrollBy({ top: 100, behavior: 'smooth' });
+                }, 100);
+            }
+        }
+    }, true);
 </script>
 </body>
 </html>

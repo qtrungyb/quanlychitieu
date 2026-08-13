@@ -202,6 +202,35 @@
         .timeline-wrapper-seamless .t-title { font-size: 14.5px !important; }
         .timeline-wrapper-seamless .t-note { font-size: 12.5px !important; }
         .timeline-wrapper-seamless .t-amount { font-size: 15.5px !important; }
+		/* =========================================================
+           16. KHÔI PHỤC VÀ LÀM ĐẸP MŨI TÊN (CHEVRON)
+           ========================================================= */
+           
+        /* 1. Ghi đè lệnh ẩn trước đó, cho phép mũi tên hiển thị lại */
+        .timeline-wrapper-seamless .t-chevron {
+            display: block !important; 
+            font-size: 22px !important;
+            color: #cbd5e1 !important; /* Màu xám nhạt tinh tế */
+            margin-left: 6px !important; /* Canh khoảng cách với số tiền */
+            font-weight: 300 !important;
+            transition: transform 0.2s ease, color 0.2s ease !important;
+        }
+
+        /* 2. Hiệu ứng tương tác: Trượt nhẹ và đổi màu khi chạm vào dòng giao dịch */
+        .timeline-wrapper-seamless .transaction-item.swipe-front:hover .t-chevron,
+        .timeline-wrapper-seamless .transaction-item.swipe-front:active .t-chevron {
+            color: var(--primary) !important; /* Đổi sang màu xanh của app */
+            transform: translateX(4px) !important; /* Trượt mũi tên sang phải 4px */
+        }
+        
+        /* 3. Tương thích Dark Mode */
+        body.dark-theme .timeline-wrapper-seamless .t-chevron {
+            color: #475569 !important;
+        }
+        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:hover .t-chevron,
+        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:active .t-chevron {
+            color: #829fff !important;
+        }
     </style>
     </style>
 

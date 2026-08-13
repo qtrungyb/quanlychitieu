@@ -4489,3 +4489,92 @@ window.toggleDateGroup = function(dateStr) {
         groupEl.classList.toggle('collapsed');
     }
 };
+// ==========================================
+// TÍNH NĂNG: BÀN PHÍM MÁY TÍCH HỢP (CUSTOM NUMPAD)
+// ==========================================
+let npExpression = '';
+const npOverlay = document.getElementById('numpadOverlay');
+const npSheet = document.getElementById('numpadSheet');
+const npExprDisplay = document.getElementById('numpadExpression');
+const mainAmtDisp = document.getElementById('amountInputDisplay');
+const mainAmtRaw = document.getElementById('amountInputRaw');
+
+// 1. Mở Numpad khi click vào ô nhập tiền
+mainAmtDisp?.addEventListener('click', () => {
+    npOverlay?.classList.add('show');
+    npSheet?.classList.add('show');
+    npExpression = mainAmtRaw?.value || '';
+    updateNpDisplay();
+});
+
+// 2. Đóng Numpad
+function closeNumpad() {
+    npOverlay?.classList.remove('show');
+    npSheet?.classList.remove('show');
+}
+npOverlay?.addEventListener('click', closeNumpad);
+
+// 3. Xử lý logic khi bấm nút
+document.querySelectorAll('#numpadGrid .np-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate(15); // Rung phản hồi haptic
+        
+        const val = btn.getAttribute('data-val');
+        
+        if (val === 'C') {
+            npExpression = '';
+        } else if (val === 'back') {
+            npExpression = npExpression.slice(0, -1);
+        } else if (btn.id === 'btnNumpadDone') {
+            finalizeCalculation();
+            closeNumpad();
+            return; 
+        } else {
+            // Chống bấm 2 phép tính liên tiếp
+            const lastChar = npExpression.slice(-1);
+            const isOp = ['+', '-', '×', '÷'].includes(val);
+            const isLastOp = ['+', '-', '×', '÷'].includes(lastChar);
+            
+            if (isOp && isLastOp) {
+                npExpression = npExpression.slice(0, -1) + val; // Ghi đè phép tính cuối
+            } else if (val === '.' && lastChar === '.') {
+                return; // Tránh 2 dấu chấm liên tiếp
+            } else {
+                let displayVal = val;
+                if (val === '*') displayVal = '×';
+                if (val === '/') displayVal = '÷';
+                npExpression += displayVal;
+            }
+        }
+        updateNpDisplay();
+    });
+});
+
+// 4. Render chuỗi phép tính & Tính tổng thời gian thực
+function updateNpDisplay() {
+    if (npExprDisplay) npExprDisplay.innerText = npExpression || '0';
+    
+    // Tính toán mượt mà đẩy thẳng ra giao diện bên ngoài
+    try {
+        let tempExpr = npExpression.replace(/×/g, '*').replace(/÷/g, '/');
+        // Chỉ tính nếu kết thúc không phải là dấu phép tính
+        if (tempExpr && !['+', '-', '*', '/'].includes(tempExpr.slice(-1))) {
+            let tempResult = new Function('return ' + tempExpr)();
+            tempResult = Math.max(0, Math.round(tempResult)); // Không nhận số âm và số lẻ
+            
+            if (mainAmtDisp && !isNaN(tempResult)) mainAmtDisp.value = formatter.format(tempResult);
+            if (mainAmtRaw && !isNaN(tempResult)) mainAmtRaw.value = tempResult;
+        } else if (!tempExpr) {
+            if (mainAmtDisp) mainAmtDisp.value = '';
+            if (mainAmtRaw) mainAmtRaw.value = '';
+        }
+    } catch(e) {}
+}
+
+function finalizeCalculation() {
+    updateNpDisplay();
+    // Gắn cứng kết quả cuối cùng thành giá trị gốc (Xóa bỏ chuỗi phép tính)
+    if (mainAmtRaw && mainAmtRaw.value) {
+        npExpression = mainAmtRaw.value;
+    }
+}

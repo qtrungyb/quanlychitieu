@@ -366,6 +366,36 @@
             text-align: left;
             display: inline-block;
         }
+		/* =========================================================
+           22. BÀN PHÍM MÁY TÍNH TÍCH HỢP (CUSTOM NUMPAD)
+           ========================================================= */
+        .numpad-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+        }
+        .np-btn {
+            height: 60px; border-radius: 16px; border: none; background: #fff;
+            font-size: 24px; font-weight: 700; color: var(--text-main);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer;
+            transition: all 0.15s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .np-btn:active { transform: scale(0.92); background: #e2e8f0; }
+        .np-btn.np-op { background: #eef2ff; color: var(--primary); font-size: 22px; }
+        
+        /* Cột ngoài cùng bên phải: Nút xóa và Nút Xong */
+        .np-btn.np-back { color: var(--danger); background: #fceceb; }
+        .np-btn.np-done {
+            grid-row: span 2; height: 100%; background: var(--primary); color: #fff;
+            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3); font-size: 20px;
+        }
+        .np-btn.np-done:active { background: #324cdd; }
+
+        /* Hỗ trợ Dark Mode */
+        body.dark-theme .numpad-grid .np-btn { background: var(--card-bg); color: var(--text-main); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        body.dark-theme .numpad-grid .np-btn:active { background: #2d3748; }
+        body.dark-theme .numpad-grid .np-op { background: rgba(67, 97, 238, 0.15); color: #829fff; }
+        body.dark-theme .numpad-grid .np-back { background: rgba(231, 76, 60, 0.15); color: #ff7668; }
+        body.dark-theme .numpad-grid .np-done { background: var(--primary); color: #fff; }
     </style>
 
     <!-- SDK FIREBASE -->
@@ -507,7 +537,7 @@
                 </div>
 
                 <div class="form-group">
-                    <div class="amount-wrapper"><input type="text" id="amountInputDisplay" class="form-control input-amount" placeholder="0" inputmode="numeric" required><span class="amount-currency">đ</span></div>
+                    <div class="amount-wrapper"><input type="text" id="amountInputDisplay" class="form-control input-amount" placeholder="0" readonly required style="cursor: pointer;"><span class="amount-currency">đ</span></div>
                     <input type="hidden" id="amountInputRaw" required>
                     <div class="quick-amounts">
                         <button type="button" class="btn-quick" data-val="5000">+5K</button>
@@ -1331,5 +1361,40 @@
         }
     }, true); // Dùng true (Capture Phase) để cướp quyền ưu tiên tuyệt đối
 </script>
+<!-- BÀN PHÍM MÁY TÍNH TÍCH HỢP (CUSTOM NUMPAD) -->
+<div class="sheet-overlay" id="numpadOverlay" style="z-index: 10050;"></div>
+<div class="bottom-sheet" id="numpadSheet" style="z-index: 10051; padding: 20px 16px 30px 16px; background: var(--bg-color);">
+    <div class="sheet-indicator"></div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+        <div style="font-size: 13px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Máy tính</div>
+        <!-- Ô hiển thị phép tính đang gõ -->
+        <div id="numpadExpression" style="font-size: 20px; font-weight: 600; color: var(--text-muted); font-family: monospace; letter-spacing: 1px; min-height: 24px;"></div>
+    </div>
+    <div class="numpad-grid" id="numpadGrid">
+        <button class="np-btn np-op" data-val="C">C</button>
+        <button class="np-btn np-op" data-val="/">÷</button>
+        <button class="np-btn np-op" data-val="*">×</button>
+        <button class="np-btn np-op np-back" data-val="back">⌫</button>
+
+        <button class="np-btn" data-val="7">7</button>
+        <button class="np-btn" data-val="8">8</button>
+        <button class="np-btn" data-val="9">9</button>
+        <button class="np-btn np-op" data-val="-">−</button>
+
+        <button class="np-btn" data-val="4">4</button>
+        <button class="np-btn" data-val="5">5</button>
+        <button class="np-btn" data-val="6">6</button>
+        <button class="np-btn np-op" data-val="+">+</button>
+
+        <button class="np-btn" data-val="1">1</button>
+        <button class="np-btn" data-val="2">2</button>
+        <button class="np-btn" data-val="3">3</button>
+        <button class="np-btn np-done" rowspan="2" id="btnNumpadDone">Xong</button>
+
+        <button class="np-btn" data-val="000" style="font-size: 18px;">000</button>
+        <button class="np-btn" data-val="0">0</button>
+        <button class="np-btn" data-val=".">.</button>
+    </div>
+</div>
 </body>
 </html>

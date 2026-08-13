@@ -241,6 +241,131 @@
             cursor: pointer;
             z-index: 10;
         }
+		/* =========================================================
+           18. BỘ LỌC TÍCH HỢP (SMART FILTER TOGGLE)
+           ========================================================= */
+        /* Nút Lọc Giao diện Mới */
+        .btn-smart-filter {
+            width: 44px; height: 44px; border-radius: 12px; background: #f8f9fa;
+            border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; color: var(--text-muted); transition: all 0.3s ease; flex-shrink: 0;
+        }
+        .btn-smart-filter:active, .btn-smart-filter.active { 
+            background: #eef2ff; border-color: var(--primary); color: var(--primary); 
+        }
+        .btn-smart-filter svg { width: 18px; height: 18px; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .btn-smart-filter.active svg { transform: scale(1.1) translateY(-1px); }
+        
+        /* Chấm Đỏ báo hiệu có lọc */
+        .filter-dot {
+            position: absolute; top: 10px; right: 10px; width: 8px; height: 8px;
+            background: var(--danger); border-radius: 50%; border: 2px solid #f8f9fa;
+            transition: border-color 0.3s;
+        }
+        .btn-smart-filter.active .filter-dot { border-color: #eef2ff; }
+        .filter-dot.hide { display: none; }
+
+        /* Vùng chứa bộ lọc - Hiệu ứng trượt CSS Grid cực mượt */
+        .advanced-filters-wrapper {
+            display: grid;
+            grid-template-rows: 0fr; /* Đóng */
+            transition: grid-template-rows 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .advanced-filters-wrapper.open {
+            grid-template-rows: 1fr; /* Mở - tự động fit chiều cao */
+        }
+        .advanced-filters-inner {
+            overflow: hidden; /* Cắt phần dư khi đóng */
+            opacity: 0; transition: opacity 0.3s ease, padding-top 0.3s ease;
+        }
+        .advanced-filters-wrapper.open .advanced-filters-inner {
+            opacity: 1; padding-top: 12px; border-top: 1px dashed #e2e8f0; margin-top: 4px;
+        }
+
+        /* Chế độ Tối */
+        body.dark-theme .btn-smart-filter { background: #1e293b; border-color: #2d3748; color: var(--text-main); }
+        body.dark-theme .btn-smart-filter:active, body.dark-theme .btn-smart-filter.active { background: rgba(67, 97, 238, 0.2); color: #829fff; border-color: #829fff; }
+        body.dark-theme .filter-dot { border-color: #1e293b; }
+        body.dark-theme .btn-smart-filter.active .filter-dot { border-color: #1e293b; }
+        body.dark-theme .advanced-filters-wrapper.open .advanced-filters-inner { border-top-color: #2d3748; }
+		/* =========================================================
+           19. LỊCH SỬ GẬP/MỞ (ACCORDION DATES)
+           ========================================================= */
+        .date-group { transition: all 0.3s ease; margin-bottom: 24px; }
+        .date-group-header { cursor: pointer; user-select: none; transition: background 0.2s; }
+        .date-group-header:active { background: rgba(0,0,0,0.02) !important; }
+        
+        /* Icon mũi tên gập mở */
+        .header-chevron {
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            color: #94a3b8;
+            margin-left: 6px;
+        }
+        
+        /* Trạng thái gập (Collapsed) */
+        .date-group.collapsed .date-group-items { display: none; }
+        /* Xoay mũi tên hướng sang phải khi gập */
+        .date-group.collapsed .header-chevron { transform: rotate(-90deg); }
+        /* Thu gọn khoảng cách thừa khi đã gập */
+        .date-group.collapsed { margin-bottom: 16px !important; }
+        
+        body.dark-theme .date-group-header:active { background: rgba(255,255,255,0.02) !important; }
+		/* =========================================================
+           20. TỐI ƯU KHOẢNG CÁCH LỊCH SỬ GẬP/MỞ
+           ========================================================= */
+        /* 1. Xóa bỏ các đường nối và khoảng trống khổng lồ của thiết kế cũ */
+        .timeline-wrapper-seamless .date-group:not(:last-child)::after {
+            display: none !important;
+        }
+        .timeline-wrapper-seamless .date-group-header::after {
+            display: none !important;
+        }
+        .timeline-wrapper-seamless .timeline-group-marker {
+            display: none !important; /* Ẩn chấm tròn thừa */
+        }
+
+        /* 2. Thu hẹp triệt để khoảng cách giữa các nhóm ngày */
+        .timeline-wrapper-seamless .date-group {
+            margin-bottom: 12px !important; /* Khi đang xòe: Cách nhau 12px (Cũ là 40px) */
+        }
+        .timeline-wrapper-seamless .date-group.collapsed {
+            margin-bottom: 8px !important;  /* Khi đang gập: Ép sát lại chỉ còn 8px */
+        }
+
+        /* 3. Tối ưu thanh Tiêu đề Ngày: To ra để dễ bấm, nhưng gọn về lề */
+        .timeline-wrapper-seamless .date-group-header {
+            margin: 0 0 8px 0 !important; /* Cắt bỏ margin thừa xung quanh */
+            padding: 12px 16px !important; /* Nới rộng vùng bấm bên trong (Touch Target) */
+            width: 100% !important; /* Trải dài full màn hình */
+            border-radius: 14px !important;
+            justify-content: space-between !important; /* Đẩy tên ngày và tổng tiền ra 2 mép */
+        }
+		/* =========================================================
+           21. CĂN CHỈNH THẲNG HÀNG TỔNG THU/CHI NGÀY
+           ========================================================= */
+        .date-summary {
+            display: flex;
+            align-items: center;
+        }
+        /* Cột Thu: Chiều rộng cố định 80px, dồn chữ sang phải */
+        .date-summary .ds-in {
+            width: 80px; 
+            text-align: right;
+            display: inline-block;
+        }
+        /* Dấu chia ở giữa: Luôn đứng im một chỗ */
+        .date-summary .ds-sep {
+            margin: 0 8px;
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: 400;
+        }
+        /* Cột Chi: Chiều rộng cố định 80px, dồn chữ sang trái */
+        .date-summary .ds-out {
+            width: 80px; 
+            text-align: left;
+            display: inline-block;
+        }
     </style>
 
     <!-- SDK FIREBASE -->
@@ -413,21 +538,49 @@
             </div>
 
             <div id="histListViewFilters">
-                <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><input type="text" id="searchInput" placeholder="Tìm tên, ghi chú, số tiền..."></div>
-                <div class="category-scroll" id="historyCategoryFilter" style="margin-top: 12px; padding-bottom: 0;"><div class="cat-pill active" data-filter="">Tất cả</div></div>
-                <div class="quick-filters-scroll" id="quickDateFilters" style="margin-top: 12px; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
-                    <button class="btn-quick-filter active" data-range="this_month">Tháng này</button>
-                    <button class="btn-quick-filter" data-range="last_month">Tháng trước</button>
-                    <button class="btn-quick-filter" data-range="this_week">Tuần này</button>
-                    <button class="btn-quick-filter" data-range="all">Tất cả</button>
-                    <button class="btn-quick-filter" data-range="custom">Tùy chỉnh...</button>
-                </div>
-                <div class="filter-row hide" id="customDateContainer" style="margin-top: 12px;">
-                    <div style="width: 100%; display: flex; align-items: center; background: #f8f9fa; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary); margin-right: 12px; flex-shrink: 0;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        <input type="text" id="flatpickrRange" placeholder="Chọn ngày" style="border: none; outline: none; background: transparent; width: 100%; font-size: 14px; font-weight: 700; color: var(--text-main);" readonly>
+                <!-- DÒNG 1: THANH TÌM KIẾM & NÚT LỌC (CÙNG 1 HÀNG) -->
+                <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
+                    <div class="search-box" style="margin-bottom: 0; flex: 1;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="searchInput" placeholder="Tìm tên, ghi chú, số tiền...">
                     </div>
-                    <input type="hidden" id="filterStartDate"><input type="hidden" id="filterEndDate">
+                    <button id="btnToggleFilters" class="btn-smart-filter">
+                        <!-- Icon Lọc -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                        <!-- Chấm đỏ báo hiệu -->
+                        <span class="filter-dot hide" id="filterActiveDot"></span>
+                    </button>
+                </div>
+                
+                <!-- DÒNG 2: VÙNG BỘ LỌC (ẨN MỞ MƯỢT MÀ) -->
+                <div id="advancedFiltersWrapper" class="advanced-filters-wrapper">
+                    <!-- Dùng Flexbox và gap:10px để tự động tạo khoảng cách đều nhau không cần dùng margin -->
+                    <div class="advanced-filters-inner" style="display: flex; flex-direction: column; gap: 10px;">
+                        
+                        <!-- 1. Lọc Thời gian (Ưu tiên đưa lên trên) -->
+                        <div class="quick-filters-scroll" id="quickDateFilters" style="display: flex; gap: 8px; overflow-x: auto;">
+                            <button class="btn-quick-filter active" data-range="this_month">Tháng này</button>
+                            <button class="btn-quick-filter" data-range="last_month">Tháng trước</button>
+                            <button class="btn-quick-filter" data-range="this_week">Tuần này</button>
+                            <button class="btn-quick-filter" data-range="all">Tất cả</button>
+                            <button class="btn-quick-filter" data-range="custom">Tùy chỉnh...</button>
+                        </div>
+                        
+                        <!-- 2. Form chọn Ngày Tùy chỉnh (Sẽ tự động chèn vào giữa khi được gọi) -->
+                        <div class="filter-row hide" id="customDateContainer">
+                            <div style="width: 100%; display: flex; align-items: center; background: #f8f9fa; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary); margin-right: 12px; flex-shrink: 0;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                <input type="text" id="flatpickrRange" placeholder="Chọn khoảng ngày" style="border: none; outline: none; background: transparent; width: 100%; font-size: 14px; font-weight: 700; color: var(--text-main);" readonly>
+                            </div>
+                            <input type="hidden" id="filterStartDate"><input type="hidden" id="filterEndDate">
+                        </div>
+
+                        <!-- 3. Lọc Danh mục (Multi-select) -->
+                        <div class="category-scroll" id="historyCategoryFilter" style="padding-bottom: 0;">
+                            <div class="cat-pill active" data-filter="">Tất cả</div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>

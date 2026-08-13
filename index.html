@@ -638,6 +638,97 @@
         .timeline-wrapper-seamless .t-note::before {
             display: none !important;
         }
+		/* =========================================================
+           12. GIAO DIỆN CHUẨN (GIỐNG ẢNH): TRÀN LỀ, GỌN GÀNG, 1 DÒNG
+           ========================================================= */
+           
+        /* 1. Kéo giãn nền trắng ra sát lề màn hình hơn */
+        .timeline-wrapper-seamless .date-group-items {
+            margin-left: -12px !important;
+            margin-right: -12px !important;
+            border-radius: 20px !important;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.04) !important;
+        }
+
+        /* 2. Căn chỉnh khoảng cách bên trong mỗi dòng giao dịch */
+        .timeline-wrapper-seamless .transaction-item.swipe-front {
+            padding: 14px 16px 14px 28px !important; /* Canh trái để nhường chỗ cho chấm tròn nếu có */
+        }
+
+        /* 3. Khu vực Icon: Hình tròn mềm mại giống ảnh */
+        .timeline-wrapper-seamless .t-icon {
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 50% !important; 
+        }
+        /* Tắt bóng glow phía sau icon cho nhẹ mắt */
+        .timeline-wrapper-seamless .t-icon::after {
+            display: none !important;
+        }
+
+        /* 4. Khu vực Khung Text: Ép flexbox để xử lý cắt chữ */
+        .timeline-wrapper-seamless .t-left {
+            min-width: 0 !important; /* Bắt buộc có để text-overflow hoạt động */
+            gap: 12px !important;
+        }
+        .timeline-wrapper-seamless .t-info {
+            min-width: 0 !important;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px !important; /* Khoảng cách siêu nhỏ giữa Tên và Ghi chú */
+        }
+
+        /* 5. TÊN DANH MỤC: Ép 1 dòng, font gọn, có dấu ... */
+        .timeline-wrapper-seamless .t-title {
+            font-size: 15px !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            color: #1e293b !important;
+            display: block !important;
+        }
+
+        /* 6. GHI CHÚ: Ép 1 dòng, có dấu ... */
+        .timeline-wrapper-seamless .t-note {
+            display: block !important;
+            font-size: 13px !important;
+            color: #8c98a9 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            margin-top: 0 !important;
+            font-weight: 400 !important;
+        }
+
+        /* 7. SỐ TIỀN: Bỏ nền màu (Pill), canh phải, to và rõ */
+        .timeline-wrapper-seamless .t-action {
+            flex-shrink: 0 !important;
+        }
+        .timeline-wrapper-seamless .t-amount {
+            background: transparent !important; /* Xóa dải màu nền bao quanh số */
+            padding: 0 !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            letter-spacing: -0.2px !important;
+        }
+        /* Trả lại màu gốc cho số tiền */
+        .timeline-wrapper-seamless .t-amount.text-danger { color: #e74c3c !important; }
+        .timeline-wrapper-seamless .t-amount.text-success { color: #2ecc71 !important; }
+
+        /* 8. ẨN MŨI TÊN (CHEVRON) */
+        .timeline-wrapper-seamless .t-chevron {
+            display: none !important;
+        }
+
+        /* 9. Đường phân cách mỏng giữa các giao dịch */
+        .timeline-wrapper-seamless .swipe-container:not(:last-child)::after {
+            left: 68px !important; /* Đường kẻ thụt vào, canh thẳng hàng với chữ */
+            right: 0 !important;
+            background: #f1f5f9 !important;
+            height: 1px !important;
+        }
         /* ======================================================== */
         /* CẬP NHẬT CSS SỬA LỖI HIỂN THỊ HUY HIỆU VÀ % CHI          */
         /* ======================================================== */

@@ -429,6 +429,221 @@
         body.dark-theme #categoryScroll .cat-pill.active {
             background: rgba(255,255,255,0.05);
         }
+		/* =========================================================
+           24. GIAO DIỆN ĐỔI MÀU THEO NGỮ CẢNH (CONTEXTUAL THEME)
+           ========================================================= */
+        /* Bật hiệu ứng chuyển màu mượt mà cho các phần tử */
+        #formCard .modern-date-wrapper, 
+        #formCard .modern-date-wrapper svg,
+        #formCard .input-amount,
+        #formCard .amount-currency,
+        #formCard .btn-submit {
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* --- THEME: TIỀN CHI (MÀU ĐỎ) --- */
+        #formCard.theme-expense .modern-date-wrapper:focus-within { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1); }
+        #formCard.theme-expense .modern-date-wrapper svg { color: var(--danger); }
+        #formCard.theme-expense .input-amount { color: var(--danger); }
+        #formCard.theme-expense .amount-currency { color: rgba(231, 76, 60, 0.7); }
+        #formCard.theme-expense .btn-submit { background: var(--danger); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.25); }
+        #formCard.theme-expense .btn-submit:active { background: #c0392b; }
+
+        /* --- THEME: TIỀN THU (MÀU XANH LÁ) --- */
+        #formCard.theme-income .modern-date-wrapper:focus-within { border-color: var(--success); box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1); }
+        #formCard.theme-income .modern-date-wrapper svg { color: var(--success); }
+        #formCard.theme-income .input-amount { color: var(--success); }
+        #formCard.theme-income .amount-currency { color: rgba(46, 204, 113, 0.7); }
+        #formCard.theme-income .btn-submit { background: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.25); }
+        #formCard.theme-income .btn-submit:active { background: #27ae60; }
+		/* =========================================================
+           25. NÚT BẤM "HÒA TAN" (MICRO-INTERACTION SUBMIT)
+           ========================================================= */
+        /* Nền tảng: Thêm thuộc tính chuyển động (transition) cho chiều rộng */
+        #formCard .btn-submit {
+            width: 100%; display: flex; align-items: center; justify-content: center;
+            margin: 8px auto 0 auto; position: relative; overflow: hidden;
+            transition: width 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55), background-color 0.35s ease !important;
+        }
+
+        /* TRẠNG THÁI 1: Đang tải (Thu nhỏ thành hình tròn) */
+        #formCard .btn-submit.is-loading {
+            width: 48px !important; 
+            border-radius: 24px !important; 
+            color: transparent !important;
+            pointer-events: none; /* Khóa bấm đúp */
+        }
+        /* Vòng tròn xoay */
+        #formCard .btn-submit.is-loading::after {
+            content: ''; position: absolute;
+            width: 22px; height: 22px;
+            border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff;
+            border-radius: 50%;
+            animation: btnSpin 0.6s linear infinite;
+        }
+        @keyframes btnSpin { to { transform: rotate(360deg); } }
+
+        /* TRẠNG THÁI 2: Thành công (Bung rộng ra, màu Xanh, Dấu check) */
+        #formCard .btn-submit.is-success {
+            width: 100% !important; 
+            background: var(--success) !important;
+            color: transparent !important;
+            pointer-events: none;
+        }
+        /* Dấu Check mark bật nảy */
+        #formCard .btn-submit.is-success::after {
+            content: ''; position: absolute;
+            width: 10px; height: 20px;
+            border: solid white; border-width: 0 3px 3px 0;
+            transform: rotate(45deg) scale(0); margin-top: -4px;
+            animation: checkmarkPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes checkmarkPop { 
+            0% { transform: scale(0) rotate(45deg); } 
+            100% { transform: scale(1) rotate(45deg); } 
+        }
+		/* =========================================================
+           26. MINI-LIST "VỪA NHẬP XONG" (QUICK RECENTS)
+           ========================================================= */
+        .recent-tx-container {
+            margin-top: 20px; padding-top: 16px;
+            border-top: 1px dashed #e2e8f0;
+            animation: fadeIn 0.4s ease;
+        }
+        .recent-tx-header {
+            font-size: 11px; font-weight: 800; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 12px; text-align: center;
+        }
+        .recent-tx-list { display: flex; flex-direction: column; gap: 8px; }
+        
+        /* Thẻ giao dịch phiên bản thu nhỏ */
+        .mini-tx-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--bg-color); padding: 8px 12px;
+            border-radius: 12px; font-size: 13px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+        }
+        .mini-tx-left { display: flex; align-items: center; gap: 8px; }
+        .mini-tx-icon {
+            width: 24px; height: 24px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .mini-tx-icon svg { width: 14px; height: 14px; }
+        .mini-tx-name { font-weight: 700; color: var(--text-main); }
+        .mini-tx-time { font-size: 11px; color: var(--text-muted); margin-left: 4px; font-weight: 500;}
+
+        /* Hỗ trợ Dark Mode */
+        body.dark-theme .recent-tx-container { border-top-color: #2d3748; }
+        body.dark-theme .mini-tx-item { background: #1e293b; box-shadow: none;}
+		/* =========================================================
+           27. NÚT HOÀN TÁC GIAO DỊCH (QUICK UNDO)
+           ========================================================= */
+        .btn-undo-tx {
+            background: transparent; border: none; padding: 4px 8px;
+            color: var(--warning); cursor: pointer; display: flex;
+            align-items: center; justify-content: center; transition: 0.2s;
+            border-radius: 8px; margin-left: 8px;
+        }
+        .btn-undo-tx:active { background: rgba(243, 156, 18, 0.15); transform: scale(0.9); }
+        .btn-undo-tx svg { width: 18px; height: 18px; stroke-width: 2.5; }
+		/* =========================================================
+           29. BẢN ĐỒ NHIỆT (HEATMAP) CHO LỊCH LƯỚI
+           ========================================================= */
+        /* Mức 1: Chi tiêu nhẹ (Dưới 100k) - Đỏ nhạt */
+        .cal-day.heat-1 { background: rgba(231, 76, 60, 0.1); border-color: rgba(231, 76, 60, 0.2); }
+        /* Mức 2: Chi tiêu vừa (100k - 500k) - Đỏ cam */
+        .cal-day.heat-2 { background: rgba(231, 76, 60, 0.4); color: #fff; font-weight: 800; border-color: rgba(231, 76, 60, 0.5); }
+        /* Mức 3: Đốt tiền (Trên 500k) - Đỏ rực */
+        .cal-day.heat-3 { background: rgba(231, 76, 60, 0.85); color: #fff; font-weight: 800; border-color: rgba(231, 76, 60, 0.9); box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3); }
+        
+        /* Chế độ Tối (Dark Mode) cho Heatmap */
+        body.dark-theme .cal-day.heat-1 { background: rgba(231, 76, 60, 0.15); border-color: rgba(231, 76, 60, 0.3); }
+        body.dark-theme .cal-day.heat-2 { background: rgba(231, 76, 60, 0.4); color: #fff; }
+        body.dark-theme .cal-day.heat-3 { background: rgba(231, 76, 60, 0.8); color: #fff; }
+
+        /* =========================================================
+           30. RÚT GỌN KHOẢNG TRỐNG GIỮA BIỂU ĐỒ VÀ DANH SÁCH
+           ========================================================= */
+        #historyChartWrapper {
+            margin-bottom: 4px !important; /* Giảm mạnh margin dưới của Biểu đồ */
+        }
+        #transactionList {
+            margin-top: 0 !important; /* Xóa margin trên của Danh sách */
+        }
+        .timeline-wrapper-seamless {
+            padding-top: 4px !important; /* Cắt bớt padding thừa */
+        }
+        .timeline-wrapper-seamless .date-group-header {
+            margin-top: 0 !important; /* Kéo thanh tiêu đề ngày sát lên trên */
+        }
+		/* =========================================================
+           33. CUỘN VÔ TẬN (INFINITE SCROLL) & SPINNER
+           ========================================================= */
+        .scroll-sentinel {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 24px 0 40px 0; color: var(--text-muted); font-size: 13px; font-weight: 600;
+        }
+        .end-of-list-msg {
+            text-align: center; padding: 24px 0 40px 0;
+            color: #cbd5e1; font-size: 13px; font-weight: 600;
+        }
+        body.dark-theme .end-of-list-msg { color: #475569; }
+        
+        .loading-spinner {
+            width: 20px; height: 20px; animation: spin 1s linear infinite;
+            stroke: var(--primary); stroke-linecap: round;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+		/* =========================================================
+           34. THU GỌN KHOẢNG TRỐNG ĐÁY DANH SÁCH LỊCH SỬ
+           ========================================================= */
+        /* Giảm padding của khối bao bọc danh sách */
+        .timeline-wrapper-seamless {
+            padding-bottom: 4px !important;
+        }
+        
+        /* Ép xẹp lề của dòng chữ "Đã hiển thị toàn bộ..." và Vòng tròn nạp dữ liệu */
+        .scroll-sentinel, 
+        .end-of-list-msg {
+            padding: 12px 0 16px 0 !important; 
+            margin: 0 !important;
+        }
+        
+        /* Giảm khoảng cách của container bọc ngoài cùng */
+        #histListContainerCard {
+            padding-bottom: 0 !important;
+        }
+		/* =========================================================
+           35. BỘ NÚT CHUYỂN BIỂU ĐỒ CẢI TIẾN (SEGMENTED CONTROL)
+           ========================================================= */
+        .dashboard-tabs {
+            display: flex; background: #f1f5f9; padding: 4px; 
+            border-radius: 12px; margin-bottom: 20px;
+        }
+        .dash-tab-btn {
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 8px 0; border: none; background: transparent; color: var(--text-muted);
+            font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .dash-tab-btn svg { width: 16px; height: 16px; }
+        
+        /* Hiệu ứng khi Nút được bôi sáng */
+        .dash-tab-btn.active {
+            background: #ffffff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        /* Hỗ trợ Dark Mode */
+        body.dark-theme .dashboard-tabs { background: #1e293b; }
+        body.dark-theme .dash-tab-btn.active { background: var(--card-bg); color: #829fff; }
+        
+        /* Hiệu ứng Fade-in nảy nhẹ khi đổi biểu đồ */
+        .dash-view { animation: fadeInChart 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        @keyframes fadeInChart { 
+            from { opacity: 0; transform: translateY(8px) scale(0.98); } 
+            to { opacity: 1; transform: translateY(0) scale(1); } 
+        }
     </style>
 
     <!-- SDK FIREBASE -->
@@ -586,7 +801,12 @@
                 <div class="form-group" style="margin-bottom: 0;"><input type="text" id="noteInput" class="form-control" placeholder="Ghi chú (Không bắt buộc)"></div>
                 <button type="submit" class="btn-submit" id="submitBtn">Thêm giao dịch</button>
                 <button type="button" id="cancelEditBtn" class="btn-clear-filter hide" style="width: 100%; margin-top: 12px; justify-content: center; height: 48px;">Hủy chỉnh sửa</button>
-            </form>
+				<!-- BỔ SUNG: VÙNG HIỂN THỊ MINI-LIST VỪA NHẬP XONG -->
+                <div id="recentTxContainer" class="recent-tx-container hide">
+                    <div class="recent-tx-header">Vừa nhập xong</div>
+                    <div id="recentTxList" class="recent-tx-list"></div>
+                </div>
+			</form>
         </div>
 
         <!-- 2. NGÂN SÁCH THÁNG NÀY (Đẩy xuống dưới form nhập liệu) -->
@@ -750,29 +970,45 @@
             </div>
         </div>
 
-        <!-- KHỐI 2: TẤT CẢ BIỂU ĐỒ VÀ TOP 5 GỘP CHUNG 1 KHUNG -->
+        <!-- KHỐI 2: ALL-IN-ONE DASHBOARD (SÀN CHỨNG KHOÁN) -->
         <div class="modern-card" style="padding: 24px 16px;">
             
-            <!-- BIỂU ĐỒ CỘT -->
-            <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px dashed rgba(0,0,0,0.08);">
+            <!-- BỘ NÚT CHUYỂN ĐỔI BIỂU ĐỒ CẢI TIẾN -->
+            <div class="dashboard-tabs" id="dashboardTabs">
+                <button type="button" class="dash-tab-btn active" onclick="switchDashboardChart('bar', this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    Cột
+                </button>
+                <button type="button" class="dash-tab-btn" onclick="switchDashboardChart('line', this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    Đường
+                </button>
+                <button type="button" class="dash-tab-btn" onclick="switchDashboardChart('pie', this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                    Tròn
+                </button>
+            </div>
+
+            <!-- KHUNG 1: BIỂU ĐỒ CỘT (MẶC ĐỊNH HIỂN THỊ TRƯỚC) -->
+            <div id="dashViewBar" class="dash-view">
                 <div style="margin-bottom: 16px;">
                     <h3 class="chart-title" style="font-size: 16px; margin-bottom: 4px;">So sánh Thu / Chi</h3>
                     <span class="chart-subtitle" style="background: transparent; padding: 0; display: block;"></span>
                 </div>
-                <div class="chart-container" style="height: 220px;"><canvas id="barChart"></canvas></div>
+                <div class="chart-container" style="height: 260px; width: 100%;"><canvas id="barChart"></canvas></div>
             </div>
 
-            <!-- BIỂU ĐỒ ĐƯỜNG -->
-            <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px dashed rgba(0,0,0,0.08);">
+            <!-- KHUNG 2: BIỂU ĐỒ ĐƯỜNG (BỊ ẨN MẶC ĐỊNH) -->
+            <div id="dashViewLine" class="dash-view hide">
                 <div style="margin-bottom: 16px;">
                     <h3 class="chart-title" style="font-size: 16px; margin-bottom: 4px;">Biến động Số dư</h3>
                     <span class="chart-subtitle" style="background: transparent; padding: 0; display: block;"></span>
                 </div>
-                <div class="chart-container" style="height: 200px;"><canvas id="lineChart"></canvas></div>
+                <div class="chart-container" style="height: 260px; width: 100%;"><canvas id="lineChart"></canvas></div>
             </div>
 
-            <!-- BIỂU ĐỒ TRÒN -->
-            <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px dashed rgba(0,0,0,0.08);">
+            <!-- KHUNG 3: BIỂU ĐỒ TRÒN (BỊ ẨN MẶC ĐỊNH) -->
+            <div id="dashViewPie" class="dash-view hide">
                 <div style="margin-bottom: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 4px;">
                         <h3 class="chart-title" style="font-size: 16px; margin: 0;">Cơ cấu Tỷ trọng</h3>
@@ -783,7 +1019,6 @@
                     </div>
                     <span class="chart-subtitle" style="background: transparent; padding: 0; display: block;"></span>
                 </div>
-                <!-- Bỏ giới hạn độ rộng để biểu đồ tròn to rõ như cũ -->
                 <div class="chart-container" style="height: 260px; width: 100%; position: relative;">
                     <canvas id="pieChart"></canvas>
                     <div id="pieEmptyState" class="hide" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-muted);">
@@ -793,13 +1028,14 @@
                 </div>
             </div>
 
-            <!-- TOP 5 GIAO DỊCH -->
-            <div id="top5Container">
+            <!-- TOP 5 GIAO DỊCH (LUÔN LUÔN CỐ ĐỊNH Ở DƯỚI CÙNG) -->
+            <div id="top5Container" style="margin-top: 24px; padding-top: 24px; border-top: 1px dashed rgba(0,0,0,0.08);">
                 <div class="chart-header" style="margin-bottom: 16px;">
                     <h3 class="chart-title" id="top5Title" style="font-size: 16px;">Top 5 khoản chi lớn nhất</h3>
                 </div>
                 <div class="transaction-list" id="topExpenseList" style="gap: 12px;"></div>
             </div>
+            
         </div>
 
         <!-- KHỐI 3: VŨ TRỤ HUY HIỆU (BỎ KHUNG, PHÓNG TO, NẰM TRỰC TIẾP TRÊN NỀN) -->

@@ -4498,9 +4498,10 @@ const npSheet = document.getElementById('numpadSheet');
 const npExprDisplay = document.getElementById('numpadExpression');
 const mainAmtDisp = document.getElementById('amountInputDisplay');
 const mainAmtRaw = document.getElementById('amountInputRaw');
+const mainAmtWrapper = document.getElementById('mainAmountWrapper');
 
-// 1. Mở Numpad khi click vào ô nhập tiền
-mainAmtDisp?.addEventListener('click', () => {
+// 1. Mở Numpad khi click vào VÙNG KHUNG BAO NGOÀI
+mainAmtWrapper?.addEventListener('click', () => {
     npOverlay?.classList.add('show');
     npSheet?.classList.add('show');
     npExpression = mainAmtRaw?.value || '';

@@ -592,6 +592,41 @@
             pointer-events: auto !important; /* Bắt buộc nhận tương tác chuột/chạm */
             user-select: none; /* Tránh bôi đen text khi bấm liên tục */
         }
+		/* =========================================================
+           10. VÁ LỖI GIAO DIỆN (LỖI HIỆN NÚT & TRÀN CHỮ)
+           ========================================================= */
+           
+        /* 1. SỬA LỖI LỘ NÚT VUỐT: Trả lại màu nền đặc cho thẻ để che nút phía sau */
+        .timeline-wrapper-seamless .transaction-item.swipe-front {
+            background: #ffffff !important; 
+        }
+        
+        /* Chế độ tối cho thẻ nền đặc */
+        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front {
+            background: var(--card-bg) !important; 
+        }
+
+        /* 2. SỬA LỖI TÊN DANH MỤC: Ép 1 dòng, thu nhỏ và dùng dấu ... */
+        .timeline-wrapper-seamless .t-left {
+            min-width: 0; /* Quan trọng: Cho phép khung trái co lại khi thiếu chỗ */
+        }
+        
+        .timeline-wrapper-seamless .t-info {
+            min-width: 0; /* Bắt buộc để text-overflow hoạt động trong Flexbox */
+            flex: 1; 
+        }
+        
+        .timeline-wrapper-seamless .t-title {
+            font-size: 14px !important; /* Thu nhỏ chữ lại cho gọn gàng */
+            white-space: nowrap !important; /* Cấm rớt dòng */
+            overflow: hidden !important; /* Giấu phần chữ bị tràn */
+            text-overflow: ellipsis !important; /* Biến phần bị giấu thành dấu ... */
+        }
+
+        /* 3. BẢO VỆ SỐ TIỀN: Không để số tiền bị bóp méo nếu tên danh mục quá dài */
+        .timeline-wrapper-seamless .t-action {
+            flex-shrink: 0 !important; 
+        }
         /* ======================================================== */
         /* CẬP NHẬT CSS SỬA LỖI HIỂN THỊ HUY HIỆU VÀ % CHI          */
         /* ======================================================== */

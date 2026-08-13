@@ -552,11 +552,7 @@
             </div>
         </div>
 
-        <div class="card hide" id="budgetCard" style="margin-bottom: 20px;">
-            <div class="card-header" style="margin-bottom: 16px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 12px;"><h3 style="font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0;">Ngân sách tháng này</h3></div>
-            <div id="budgetList" style="display: flex; flex-direction: column; gap: 16px;"><div class="loading-text" style="font-size: 13px;">Đang tính toán...</div></div>
-        </div>
-
+        <!-- 1. FORM NHẬP THU/CHI (Đẩy lên trên) -->
         <div class="card" id="formCard">
             <form id="transactionForm">
                 <div class="type-toggle">
@@ -571,7 +567,7 @@
 
                 <div class="form-group">
                     <div class="amount-wrapper" id="mainAmountWrapper" style="cursor: pointer;">
-                        <!-- Đã thêm cơ chế tàng hình chống Autofill tuyệt đối -->
+                        <!-- Ô nhập tiền vô hình chống Autofill -->
                         <input type="text" id="amountInputDisplay" class="form-control input-amount" placeholder="0" readonly autocomplete="off" tabindex="-1" inputmode="none" onfocus="this.blur()" style="pointer-events: none; user-select: none; background: transparent;" required>
                         <span class="amount-currency">đ</span>
                     </div>
@@ -591,6 +587,16 @@
                 <button type="submit" class="btn-submit" id="submitBtn">Thêm giao dịch</button>
                 <button type="button" id="cancelEditBtn" class="btn-clear-filter hide" style="width: 100%; margin-top: 12px; justify-content: center; height: 48px;">Hủy chỉnh sửa</button>
             </form>
+        </div>
+
+        <!-- 2. NGÂN SÁCH THÁNG NÀY (Đẩy xuống dưới form nhập liệu) -->
+        <div class="card hide" id="budgetCard">
+            <div class="card-header" style="margin-bottom: 16px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 12px;">
+                <h3 style="font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0;">Ngân sách tháng này</h3>
+            </div>
+            <div id="budgetList" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="loading-text" style="font-size: 13px;">Đang tính toán...</div>
+            </div>
         </div>
     </div>
 

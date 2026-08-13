@@ -1165,6 +1165,20 @@ function switchType(type) {
     document.querySelector(`#transactionForm .btn-toggle[data-type="${type}"]`)?.classList.add('active', type);
     const typeInput = document.getElementById('typeInput');
     if (typeInput) typeInput.value = type;
+	// === CẢI TIẾN: ĐỔI MÀU FORM THEO NGỮ CẢNH ===
+    const formCard = document.getElementById('formCard');
+    if (formCard) {
+        // Xóa theme cũ, đắp theme mới (theme-income hoặc theme-expense)
+        formCard.classList.remove('theme-income', 'theme-expense');
+        formCard.classList.add(`theme-${type}`);
+        
+        // Đổi luôn chữ trên nút Submit cho rõ ràng tuyệt đối
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.innerText = type === 'expense' ? 'Thêm khoản chi' : 'Thêm khoản thu';
+        }
+    }
+    // ===========================================
 
     document.querySelectorAll('#categoryScroll .cat-pill[data-val]').forEach(opt => {
         if(opt.classList.contains(`opt-${type}`)) opt.classList.remove('hide');
@@ -1448,14 +1462,42 @@ function updateUI() {
 
     listHTML += `</div>`; 
 
+    // === 1. THAY NÚT BẤM BẰNG CẢM BIẾN TẢI THÊM ===
     if (sortedDates.length > currentDateLimit) {
-        listHTML += `<button class="btn-load-more" onclick="currentDateLimit += ${DATES_PER_PAGE}; updateUI();">Xem thêm các ngày trước</button>`;
+        listHTML += `
+            <div id="scrollSentinel" class="scroll-sentinel">
+                <svg class="loading-spinner" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle></svg>
+                <span>Đang nạp thêm...</span>
+            </div>`;
+    } else if (sortedDates.length > 0) {
+        // Thông báo khi đã cuộn đến tận cùng của dữ liệu
+        listHTML += `<div class="end-of-list-msg">Đã hiển thị toàn bộ giao dịch</div>`;
     }
 
     listEl.innerHTML = listHTML;
     if(typeof renderBudgets === 'function') renderBudgets();
     if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
     if (typeof calculateStreak === 'function') calculateStreak();
+
+    // === 2. KÍCH HOẠT CẢM BIẾN (INTERSECTION OBSERVER) ===
+    if (window.scrollObserver) window.scrollObserver.disconnect(); // Gỡ cảm biến cũ trước khi tạo mới
+    
+    const sentinel = document.getElementById('scrollSentinel');
+    if (sentinel) {
+        window.scrollObserver = new IntersectionObserver((entries) => {
+            // Khi thẻ "scrollSentinel" xuất hiện trên màn hình
+            if (entries[0].isIntersecting) {
+                currentDateLimit += DATES_PER_PAGE;
+                updateUI(); // Tự động load thêm
+            }
+        }, { 
+            // Cài đặt rootMargin: '150px' nghĩa là cảm biến sẽ kích hoạt TRƯỚC KHI 
+            // ngón tay cuộn tới đáy 150px, giúp trải nghiệm nạp dữ liệu không bị khựng
+            rootMargin: '150px' 
+        }); 
+        
+        window.scrollObserver.observe(sentinel);
+    }
 
     // ==========================================
     // VẼ BIỂU ĐỒ ĐƯỜNG KÉP CHO TAB LỊCH SỬ
@@ -1584,7 +1626,8 @@ window.changeCalendarMonth = function(delta) {
 function renderCalendar() {
     const y = currentCalDate.getFullYear();
     const m = currentCalDate.getMonth();
-    document.getElementById('calendarMonthDisplay').innerText = `Tháng ${m + 1}, ${y}`;
+    const monthDisplay = document.getElementById('calendarMonthDisplay');
+    if (monthDisplay) monthDisplay.innerText = `Tháng ${m + 1}, ${y}`;
 
     const grid = document.getElementById('calendarGrid');
     if(!grid) return;
@@ -1607,10 +1650,23 @@ function renderCalendar() {
 
         const dayTxs = transactions.filter(t => t.date === dateStr);
         let hasIn = false; let hasOut = false;
+        
+        // CẢI TIẾN: Tính tổng tiền chi trong ngày để làm Bản đồ nhiệt
+        let dailyExpense = 0;
+
         dayTxs.forEach(t => {
             if(t.type === 'income') hasIn = true;
-            if(t.type === 'expense') hasOut = true;
+            if(t.type === 'expense') {
+                hasOut = true;
+                dailyExpense += t.amount;
+            }
         });
+
+        // Xếp loại "Độ nóng" của ví tiền
+        let heatClass = '';
+        if (dailyExpense > 0 && dailyExpense <= 100000) heatClass = 'heat-1'; // Dưới 100k
+        else if (dailyExpense > 100000 && dailyExpense <= 500000) heatClass = 'heat-2'; // 100k - 500k
+        else if (dailyExpense > 500000) heatClass = 'heat-3'; // Lớn hơn 500k
 
         let dotsHtml = '';
         if(hasIn || hasOut) {
@@ -1620,7 +1676,8 @@ function renderCalendar() {
             </div>`;
         }
 
-        const classes = `cal-day ${isToday ? 'today' : ''} ${isSelected ? 'active' : ''}`;
+        // Nhét class bản đồ nhiệt vào HTML
+        const classes = `cal-day ${isToday ? 'today' : ''} ${isSelected ? 'active' : ''} ${heatClass}`;
         
         grid.innerHTML += `
             <div class="${classes}" onclick="selectCalendarDate('${dateStr}')">
@@ -1884,24 +1941,35 @@ function renderCharts() {
     } else {
         if (pieCanvas) pieCanvas.style.display = 'block';
         pieEmptyState?.classList.add('hide');
+        
+        // Tự động nhận diện màu viền nền theo Giao diện Sáng/Tối
+        const bgColor = document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff';
+
         if (pieCanvas) {
             pieChartInstance = new Chart(pieCanvas.getContext('2d'), {
                 type: 'doughnut',
-                data: { labels: pieLabels, datasets: [{ data: pieLabels.map(k => txByCat[k].amount), backgroundColor: pieLabels.map(k => txByCat[k].colorHex), borderWidth: 2, hoverOffset: 4 }] },
+                data: { 
+                    labels: pieLabels, 
+                    datasets: [{ 
+                        data: pieLabels.map(k => txByCat[k].amount), 
+                        backgroundColor: pieLabels.map(k => txByCat[k].colorHex), 
+                        borderWidth: 3, // Viền dày tạo khoảng cách
+                        borderColor: bgColor, // Viền tiệp màu nền
+                        hoverOffset: 6, // Hiệu ứng nảy to ra khi lướt ngón tay
+                        borderRadius: 4 // Bo tròn các lát cắt cực kỳ hiện đại
+                    }] 
+                },
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    cutout: '65%', 
+                    cutout: '75%', // Khoét lỗ giữa to ra để nhét chữ
                     plugins: { 
                         legend: { 
                             position: 'right', 
-                            labels: { usePointStyle: true, padding: 20, font: {size: 13, weight: '500'} } 
+                            labels: { usePointStyle: true, padding: 20, font: {size: 12, weight: '600'} } 
                         }, 
                         tooltip: { 
-                            callbacks: { 
-                                title: function(context) { return context[0].label; },
-                                label: function(context) { return ' ' + currencyFormatter.format(context.parsed); } 
-                            } 
+                            enabled: false // TẮT TOOLTIP MẶC ĐỊNH ĐỂ NHƯỜNG CHỖ CHO TÂM ĐIỂM ĐỘNG
                         } 
                     } 
                 }
@@ -1973,14 +2041,76 @@ function renderCharts() {
     const lineCanvas = document.getElementById('lineChart');
     if(lineChartInstance) lineChartInstance.destroy();
     if (lineCanvas) {
-        const ctxLine = lineCanvas.getContext('2d');
-        let gradient = ctxLine.createLinearGradient(0, 0, 0, 400); 
-        gradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)'); 
-        gradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
-        lineChartInstance = new Chart(ctxLine, {
+        const lineCtx = lineCanvas.getContext('2d');
+
+        // === 1. TẠO MÀU DÒNG CHẢY (GRADIENT) ===
+        const lineGradient = lineCtx.createLinearGradient(0, 0, 0, 260);
+        lineGradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)');
+        lineGradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
+
+        // === 2. VẼ BIỂU ĐỒ DÒNG CHẢY MỚI ===
+        lineChartInstance = new Chart(lineCtx, {
             type: 'line',
-            data: { labels: lineLabels, datasets: [{ label: 'Số dư', data: lineData, borderColor: '#4361ee', backgroundColor: gradient, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#4361ee', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.3 }] },
-            options: { responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' }, scales: { y: { ticks: { callback: function(v) { return (v / 1000) + 'K'; } }, grid: { borderDash: [4, 4] } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 15 } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c) { return 'Số dư: ' + currencyFormatter.format(c.parsed.y); } } } } }
+            data: {
+                labels: lineLabels, // Dữ liệu ngày tháng gốc
+                datasets: [{
+                    label: 'Số dư',
+                    data: lineData, // Dữ liệu số dư gốc
+                    
+                    borderColor: '#4361ee',
+                    backgroundColor: lineGradient,
+                    borderWidth: 2.5,
+                    
+                    fill: true,
+                    tension: 0.4, // Bo cong mềm mại
+                    
+                    pointRadius: 0, // Tàng hình điểm neo
+                    pointHoverRadius: 6, // Hiện khi vuốt qua
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#4361ee',
+                    pointBorderWidth: 2,
+                    pointHoverBorderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false, // Hiển thị tooltips mượt mà
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff',
+                        titleColor: document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b',
+                        bodyColor: document.body.classList.contains('dark-theme') ? '#f1f5f9' : '#0f172a',
+                        borderColor: document.body.classList.contains('dark-theme') ? '#334155' : '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 12,
+                        boxPadding: 6,
+                        usePointStyle: true,
+                        callbacks: {
+                            label: function(context) {
+                                return ' Số dư: ' + new Intl.NumberFormat('vi-VN').format(context.raw) + 'đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false, drawBorder: false },
+                        ticks: { maxTicksLimit: 6, color: '#94a3b8' }
+                    },
+                    y: {
+                        grid: {
+                            color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                            drawBorder: false
+                        },
+                        ticks: { display: false } // Ẩn số trục Y
+                    }
+                }
+            }
         });
     }
 }
@@ -2169,18 +2299,43 @@ document.getElementById('transactionForm')?.addEventListener('submit', (e) => {
     const type = document.getElementById('typeInput')?.value || 'expense';
 
     const txData = { type, amount: amt, categoryId: catId, categoryName: catName, note };
-
     const newId = Date.now();
+
+    // === CẢI TIẾN: BẮT ĐẦU MICRO-INTERACTION ===
+    const btn = document.getElementById('submitBtn');
+    
+    // 1. Chuyển nút bấm sang trạng thái Xoay tròn (Loading)
+    if (btn) btn.classList.add('is-loading');
+
     db.ref(`users/${currentUser.uid}/transactions/${date}/${newId}`).set(txData)
     .then(() => {
-        currentDateLimit = DATES_PER_PAGE; 
-        showToast('Thêm thành công!');
-        resetFormState();
+        // Giả lập độ trễ 400ms để người dùng kịp nhìn thấy hiệu ứng vòng quay xoay mượt mà
+        setTimeout(() => {
+            
+            // 2. Bung nút ra thành Dấu Check Thành công
+            if (btn) {
+                btn.classList.remove('is-loading');
+                btn.classList.add('is-success');
+            }
+            
+            // 3. Rung điện thoại nhẹ (Haptic Feedback) và phát âm thanh "Ting"
+            if (navigator.vibrate) navigator.vibrate([15, 40, 15]); 
+            if (typeof playUISound === 'function') playUISound(type);
+            
+            currentDateLimit = DATES_PER_PAGE; 
+            
+            // 4. Giữ nguyên trạng thái ăn mừng 1 giây, sau đó gỡ bỏ và xóa trắng form
+            setTimeout(() => {
+                if (btn) btn.classList.remove('is-success');
+                resetFormState();
+            }, 1000);
+            
+        }, 400); // 400ms delay
         
-        // KÍCH HOẠT ÂM THANH TƯƠNG TÁC TẠI ĐÂY
-        playUISound(type);
-        
-    }).catch(() => { showToast('Lỗi khi lưu!', 'error'); });
+    }).catch(() => { 
+        if (btn) btn.classList.remove('is-loading');
+        showToast('Lỗi khi lưu!', 'error'); 
+    });
 });
 
 // ==========================================
@@ -4597,3 +4752,280 @@ function finalizeCalculation() {
         npExpression = mainAmtRaw.value;
     }
 }
+// ==========================================
+// TÍNH NĂNG: MINI-LIST "VỪA NHẬP XONG"
+// ==========================================
+function renderRecentTransactions() {
+    const container = document.getElementById('recentTxContainer');
+    const listEl = document.getElementById('recentTxList');
+    if (!container || !listEl) return;
+
+    // 1. Lọc lấy các giao dịch của NGÀY HÔM NAY
+    const todayTxs = transactions.filter(t => t.date === todayStr);
+
+    // 2. Sắp xếp mới nhất lên đầu (theo ID vì ID chính là Timestamp) và LẤY TỐI ĐA 2 MỤC
+    const recentTxs = todayTxs.sort((a, b) => b.id - a.id).slice(0, 2);
+
+    // Nếu hôm nay chưa nhập gì -> Ẩn khối này đi
+    if (recentTxs.length === 0) {
+        container.classList.add('hide');
+        return;
+    }
+
+    // 3. Nếu có dữ liệu -> Bật lên và vẽ HTML
+    container.classList.remove('hide');
+    let html = '';
+    
+    recentTxs.forEach(t => {
+        const isInc = t.type === 'income';
+        const catObj = categories.find(c => c.id === t.categoryId);
+        const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+        const iconSvg = catObj ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
+        
+        // Trích xuất giờ:phút từ ID (Date.now())
+        const timeObj = new Date(t.id);
+        const timeStr = `${String(timeObj.getHours()).padStart(2, '0')}:${String(timeObj.getMinutes()).padStart(2, '0')}`;
+
+        const amountClass = isInc ? 'text-success' : 'text-danger';
+        const amountPrefix = isInc ? '+' : '-';
+
+        // Tách cái thẻ <svg> bên trong ra để cho vào khung icon siêu nhỏ 14px
+        const innerSvg = iconSvg.replace(/<svg[^>]*>|<\/svg>/g, '');
+
+        html += `
+            <div class="mini-tx-item">
+                <div class="mini-tx-left">
+                    <div class="mini-tx-icon" style="background: ${themeObj.bg}; color: ${themeObj.color};">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${innerSvg}</svg>
+                    </div>
+                    <div class="mini-tx-name">${t.categoryName || t.category} <span class="mini-tx-time">• ${timeStr}</span></div>
+                </div>
+                <!-- SỬA ĐỔI: Thêm nút Undo bên phải số tiền -->
+                <div style="display: flex; align-items: center;">
+                    <div class="mini-tx-amount ${amountClass}" style="font-weight: 800;">${amountPrefix}${formatter.format(t.amount)}đ</div>
+                    <button class="btn-undo-tx" onclick="undoTransaction(${t.id}, '${t.date}')" title="Hoàn tác (Sửa lại)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path></svg>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    listEl.innerHTML = html;
+}
+
+// 4. Móc nối ngầm vào hàm updateUI hiện tại
+// Mỗi khi Firebase trả về data mới (hoặc sau khi nhập/xóa), hàm này tự động được gọi
+if (typeof updateUI === 'function') {
+    const originalUpdateUIForRecents = updateUI;
+    updateUI = function() {
+        originalUpdateUIForRecents(); // Chạy ruột hàm gốc (cập nhật Lịch sử, Biểu đồ...)
+        renderRecentTransactions();   // Chạy thêm render Mini-List
+    };
+}
+// ==========================================
+// TÍNH NĂNG: NÚT HOÀN TÁC (QUICK UNDO)
+// ==========================================
+window.undoTransaction = function(id, dateStr) {
+    if(!currentUser) return;
+    
+    // 1. Tìm lại dữ liệu gốc của giao dịch đó
+    const t = transactions.find(x => x.id === id);
+    if(!t) return;
+
+    // Rung phản hồi (Haptic feedback)
+    if(navigator.vibrate) navigator.vibrate(20);
+
+    // 2. NHẢ NGƯỢC DỮ LIỆU VỀ FORM NHẬP LIỆU
+    // Trả lại Loại (Thu/Chi)
+    switchType(t.type);
+    
+    // Trả lại Số tiền (Đồng bộ với cả bàn phím Numpad)
+    const amtRaw = document.getElementById('amountInputRaw');
+    const amtDisp = document.getElementById('amountInputDisplay');
+    if (amtRaw) amtRaw.value = t.amount;
+    if (amtDisp) amtDisp.value = formatter.format(t.amount);
+    if (typeof npExpression !== 'undefined') npExpression = t.amount.toString();
+    
+    // Trả lại Ghi chú
+    const noteInput = document.getElementById('noteInput');
+    if (noteInput) noteInput.value = t.note || '';
+
+    // Trả lại Ngày tháng
+    const dateInp = document.getElementById('dateInput');
+    const dateDisp = document.getElementById('formDateDisplay');
+    if (dateInp) dateInp.value = t.date;
+    if (dateDisp) dateDisp.innerText = formatNiceDate(t.date);
+
+    // Trả lại Danh mục (Giả lập thao tác click vào nút Danh mục trên Grid)
+    setTimeout(() => {
+        const targetPill = document.querySelector(`#categoryScroll .cat-pill[data-id="${t.categoryId}"]`);
+        if (targetPill) {
+            targetPill.click(); // Click để kích hoạt màu xanh và cập nhật value ẩn
+        }
+    }, 50); // Delay nhẹ để hàm switchType render xong UI
+
+    // 3. XÓA GIAO DỊCH KHỎI FIREBASE
+    db.ref(`users/${currentUser.uid}/transactions/${dateStr}/${id}`).remove()
+    .then(() => {
+        showToast('Đã hoàn tác! Hãy sửa lại thông tin.', 'success');
+        // Cuộn màn hình lên trên cùng chỗ có Form
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    })
+    .catch(() => showToast('Lỗi khi hoàn tác', 'error'));
+};
+// ==========================================
+// TÍNH NĂNG: CHUYỂN ĐỔI BIỂU ĐỒ ALL-IN-ONE
+// ==========================================
+window.switchDashboardChart = function(type, btnElement) {
+    // 1. Cập nhật nút bấm (Sử dụng class 'active' cực kỳ gọn gàng)
+    const tabs = document.querySelectorAll('#dashboardTabs .dash-tab-btn');
+    tabs.forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+
+    // 2. Ẩn tất cả các khung biểu đồ đi
+    document.getElementById('dashViewPie').classList.add('hide');
+    document.getElementById('dashViewBar').classList.add('hide');
+    document.getElementById('dashViewLine').classList.add('hide');
+
+    // 3. Hiện khung được chọn
+    if (type === 'pie') document.getElementById('dashViewPie').classList.remove('hide');
+    if (type === 'bar') document.getElementById('dashViewBar').classList.remove('hide');
+    if (type === 'line') document.getElementById('dashViewLine').classList.remove('hide');
+
+    // 4. FIX LỖI CHART.JS: Vẽ lại kích thước biểu đồ khi hiển thị lên
+    setTimeout(() => {
+        if (type === 'pie' && typeof pieChartInstance !== 'undefined' && pieChartInstance) pieChartInstance.resize();
+        if (type === 'bar' && typeof barChartInstance !== 'undefined' && barChartInstance) barChartInstance.resize();
+        if (type === 'line' && typeof lineChartInstance !== 'undefined' && lineChartInstance) lineChartInstance.resize();
+    }, 50);
+};
+// ==========================================
+// PLUGIN CHART.JS: ĐƯỜNG HỒNG TÂM CẢNH BÁO
+// ==========================================
+Chart.register({
+    id: 'averageThresholdLine',
+    afterDraw: function(chart) {
+        // 1. Chỉ kích hoạt Radar này trên biểu đồ Cột (Thu/Chi)
+        if (chart.canvas.id !== 'barChart' && chart.canvas.id !== 'adm_barChart') return;
+
+        // 2. Truy tìm Dataset chứa "Tiền Chi" (Nhận diện qua chữ 'Chi')
+        const expenseDataset = chart.data.datasets.find(d => 
+            d.label && d.label.toLowerCase().includes('chi')
+        );
+        if (!expenseDataset || !expenseDataset.data || expenseDataset.data.length === 0) return;
+
+        // 3. Tính toán Mức chi tiêu trung bình
+        const dataArr = expenseDataset.data;
+        const total = dataArr.reduce((sum, val) => sum + (Number(val) || 0), 0);
+        const avgValue = total / (dataArr.length || 1);
+
+        // Bỏ qua nếu chưa có dữ liệu chi tiêu
+        if (avgValue === 0) return;
+
+        // 4. Lấy hệ tọa độ thực tế trên màn hình
+        const ctx = chart.ctx;
+        const yAxis = chart.scales.y;
+        const xAxis = chart.scales.x;
+        const yPixel = yAxis.getPixelForValue(avgValue);
+
+        // Chống lỗi văng nét vẽ ra ngoài khung hình
+        if (yPixel < chart.chartArea.top || yPixel > chart.chartArea.bottom) return;
+
+        ctx.save();
+
+        // 5. Kẻ đường đứt nét (Hồng tâm) màu đỏ
+        ctx.beginPath();
+        ctx.setLineDash([6, 4]); // Độ dài nét đứt
+        ctx.moveTo(xAxis.left, yPixel);
+        ctx.lineTo(xAxis.right, yPixel);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(231, 76, 60, 0.8)'; // Đỏ cảnh báo
+        ctx.stroke();
+
+        // 6. Vẽ nhãn dán thông minh báo hiệu con số
+        const text = 'TB: ' + new Intl.NumberFormat('vi-VN').format(Math.round(avgValue));
+        ctx.font = 'bold 10px sans-serif';
+        const textWidth = ctx.measureText(text).width;
+        const padding = 4;
+
+        // Vẽ nền cho Nhãn (Tự động đổi màu tương thích Dark Mode)
+        ctx.fillStyle = document.body.classList.contains('dark-theme') 
+            ? 'rgba(30, 41, 59, 0.9)'  // Nền tối
+            : 'rgba(255, 255, 255, 0.9)'; // Nền sáng
+        
+        ctx.fillRect(xAxis.right - textWidth - padding * 2, yPixel - 10, textWidth + padding * 2, 20);
+
+        // In con số lên
+        ctx.fillStyle = '#e74c3c';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, xAxis.right - textWidth/2 - padding, yPixel);
+
+        ctx.restore();
+    }
+});
+// ==========================================
+// PLUGIN CHART.JS: TÂM ĐIỂM ĐỘNG DOUGHNUT
+// ==========================================
+Chart.register({
+    id: 'dynamicDoughnutCenter',
+    beforeDraw: function(chart) {
+        if (chart.config.type !== 'doughnut') return;
+        
+        const ctx = chart.ctx;
+        const width = chart.chartArea.right - chart.chartArea.left;
+        const height = chart.chartArea.bottom - chart.chartArea.top;
+        const centerX = chart.chartArea.left + width / 2;
+        const centerY = chart.chartArea.top + height / 2;
+
+        const dataset = chart.data.datasets[0];
+        if (!dataset || !dataset.data || dataset.data.length === 0) return;
+
+        // Tính tổng tiền
+        let total = dataset.data.reduce((sum, val) => sum + (Number(val) || 0), 0);
+        if (total === 0) return;
+
+        // Trạng thái mặc định (Tổng cộng)
+        let activeLabel = 'TỔNG CỘNG';
+        let activeValue = total;
+        let activeColor = document.body.classList.contains('dark-theme') ? '#f1f5f9' : '#1e293b'; 
+        let percentText = '';
+
+        // Trạng thái khi ngón tay chạm vào 1 lát cắt
+        const activeElements = chart.getActiveElements();
+        if (activeElements.length > 0) {
+            const index = activeElements[0].index;
+            activeLabel = chart.data.labels[index].toUpperCase();
+            activeValue = dataset.data[index];
+            activeColor = dataset.backgroundColor[index];
+            percentText = Math.round((activeValue / total) * 100) + '%';
+        }
+
+        ctx.save();
+        
+        // 1. Vẽ Tên danh mục (Chữ nhỏ phía trên)
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '600 11px sans-serif';
+        ctx.fillStyle = document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b';
+        ctx.fillText(activeLabel, centerX, centerY - 12);
+
+        // 2. Vẽ Số tiền & Phần trăm (Chữ to phía dưới)
+        ctx.font = '800 15px sans-serif';
+        ctx.fillStyle = activeColor;
+        
+        let valueText = new Intl.NumberFormat('vi-VN').format(activeValue);
+        
+        // Rút gọn con số nếu quá tỷ/triệu để không bị tràn chữ ra ngoài lỗ
+        if (activeValue >= 1000000000) {
+            valueText = (activeValue / 1000000000).toFixed(1).replace('.0', '') + ' Tỷ';
+        } else if (activeValue >= 1000000 && activeElements.length === 0) {
+             valueText = (activeValue / 1000000).toFixed(1).replace('.0', '') + ' Tr';
+        }
+        
+        ctx.fillText(valueText + (percentText ? ` (${percentText})` : ''), centerX, centerY + 8);
+
+        ctx.restore();
+    }
+});

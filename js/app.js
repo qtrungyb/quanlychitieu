@@ -1421,8 +1421,22 @@ function updateUI() {
 
     for (const rawDate of paginatedDates) {
         const data = grouped[rawDate];
-        const displayDateText = formatNiceDate(rawDate).replace('Hôm nay, ', '');
         
+        // --- BẮT ĐẦU ĐOẠN CODE THAY THẾ ---
+        const dObj = new Date(rawDate);
+        const dayOfWeek = dObj.getDay();
+        const daysVN = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+        const todayD = new Date();
+        const yestD = new Date(); yestD.setDate(yestD.getDate() - 1);
+        const formatD = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        
+        let displayDateText = '';
+        const [y, m, d] = rawDate.split('-');
+        if (rawDate === formatD(todayD)) displayDateText = 'Hôm nay';
+        else if (rawDate === formatD(yestD)) displayDateText = 'Hôm qua';
+        else displayDateText = `${daysVN[dayOfWeek]}, ${d}/${m}`;
+        // --- KẾT THÚC ĐOẠN CODE THAY THẾ ---
+
         // Đã xóa bỏ hoàn toàn biến groupIndex gây lỗi
         const collapsedClass = 'collapsed';
 
@@ -1457,15 +1471,15 @@ function updateUI() {
         <div class="date-group ${collapsedClass}" id="date_group_${rawDate}" data-date="${rawDate}">
             <div class="date-group-header" onclick="toggleDateGroup('${rawDate}')" style="flex-direction: column; align-items: stretch; justify-content: center !important; gap: 8px; padding-bottom: 10px !important;">
                 
-                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                    <div class="date-title" style="font-size: 15px; display: flex; align-items: center;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; gap: 8px;">
+                    <div class="date-title" style="font-size: 14px; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0;">
                         ${displayDateText}
                         <svg class="header-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </div>
-                    <div class="date-summary">
-                        <span class="ds-in text-success">+${formatter.format(data.in)}</span>
-                        <span class="ds-sep">|</span> 
-                        <span class="ds-out text-danger">-${formatter.format(data.out)}</span>
+                    <div class="date-summary" style="display: flex; justify-content: flex-end; white-space: nowrap; overflow: hidden; flex: 1;">
+                        <span class="ds-in text-success" style="width: auto !important; text-align: right;">+${formatter.format(data.in)}</span>
+                        <span class="ds-sep" style="margin: 0 4px;">|</span> 
+                        <span class="ds-out text-danger" style="width: auto !important; text-align: left;">-${formatter.format(data.out)}</span>
                     </div>
                 </div>
 
@@ -2842,8 +2856,6 @@ let currentAdminCats = [];
 let adminTxDateLimit = 3; 
 
 window.addEventListener('DOMContentLoaded', () => {
-    
-    // TỐI ƯU HÓA: Tìm kiếm có Debounce 
     document.getElementById('admTxSearchInput')?.addEventListener('input', debounce(() => {
         adminTxDateLimit = 3; renderAdminTxList();
     }, 300));
@@ -2915,7 +2927,7 @@ window.viewUserTransactions = function(uid, userName) {
     
     const titleEl = document.getElementById('adminUserTxTitle');
     const subEl = document.getElementById('adminUserTxSubtitle');
-    if (titleEl) titleEl.innerText = 'Giao dịch: ' + userName;
+    if (titleEl) titleEl.innerText = 'Giao dịch: ' + userName.replace(/'/g, "\\'");
     if (subEl) subEl.innerText = 'Đang tải dữ liệu...';
     
     const searchIn = document.getElementById('admTxSearchInput');
@@ -2957,6 +2969,7 @@ window.viewUserTransactions = function(uid, userName) {
                     }
                 }
             }
+            adminTxDateLimit = 3;
             document.querySelector('#admTxQuickDateFilters .btn-quick-filter[data-range="this_month"]')?.click();
         });
     });
@@ -2965,6 +2978,17 @@ window.viewUserTransactions = function(uid, userName) {
 window.closeAdminUserTx = function() {
     document.getElementById('adminUserTxOverlay')?.classList.remove('show');
     document.getElementById('adminUserTxModal')?.classList.remove('show');
+};
+
+window.loadMoreAdminTx = function(btnElement) {
+    if(btnElement) {
+        btnElement.innerText = 'Đang tải...';
+        btnElement.style.opacity = '0.5';
+    }
+    adminTxDateLimit += 3;
+    setTimeout(() => {
+        renderAdminTxList();
+    }, 50);
 };
 
 function renderAdminTxList() {
@@ -3025,7 +3049,6 @@ function renderAdminTxList() {
 
     const sortedDates = Object.keys(grouped).sort().reverse();
 
-    // TỐI ƯU HÓA DOM: Gom chuỗi HTML
     let listHTML = '';
 
     if(sortedDates.length === 0) {
@@ -3033,20 +3056,76 @@ function renderAdminTxList() {
         return;
     }
 
+    // 1. BIỂU ĐỒ LUỒNG TIỀN
+    listHTML += `
+    <div class="modern-card" style="padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h4 style="font-size: 14px; color: var(--text-main); font-weight: 800; margin: 0;">Luồng tiền</h4>
+            <div style="display: flex; gap: 8px; font-size: 11px; font-weight: 700;">
+                <span style="color: var(--success);"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--success); margin-right:4px;"></span>Thu</span>
+                <span style="color: var(--danger);"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--danger); margin-right:4px;"></span>Chi</span>
+            </div>
+        </div>
+        <div style="position: relative; height: 180px; width: 100%;">
+            <canvas id="admHistoryLineChart"></canvas>
+        </div>
+    </div>`;
+
+    // 2. DANH SÁCH GIAO DỊCH
+    listHTML += '<div class="timeline-wrapper-seamless" style="padding-top: 4px;">';
+
     const paginatedDates = sortedDates.slice(0, adminTxDateLimit);
 
     paginatedDates.forEach(rawDate => {
         const data = grouped[rawDate];
+        const dObj = new Date(rawDate);
+        const dayOfWeek = dObj.getDay();
+        const daysVN = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+        const todayD = new Date();
+        const yestD = new Date(); yestD.setDate(yestD.getDate() - 1);
+        const formatD = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        
+        let friendlyDate = '';
         const [y, m, d] = rawDate.split('-');
+        if (rawDate === formatD(todayD)) friendlyDate = 'Hôm nay';
+        else if (rawDate === formatD(yestD)) friendlyDate = 'Hôm qua';
+        else friendlyDate = `${daysVN[dayOfWeek]}, ${d}/${m}`;
+
+        let sparkbarHtml = '';
+        if (data.out > 0) {
+            const catExpense = {};
+            data.items.forEach(t => {
+                if (t.type === 'expense') catExpense[t.categoryId] = (catExpense[t.categoryId] || 0) + t.amount;
+            });
+            let segmentsHtml = '';
+            for (let cid in catExpense) {
+                const pct = (catExpense[cid] / data.out) * 100;
+                const catObj = currentAdminCats.find(c => c.id === cid);
+                const colorHex = (catObj && catObj.color && THEMES[catObj.color]) ? THEMES[catObj.color].hex : '#8395a7';
+                segmentsHtml += `<div class="sparkbar-segment" style="width: ${pct}%; background-color: ${colorHex};"></div>`;
+            }
+            sparkbarHtml = `<div class="daily-sparkbar">${segmentsHtml}</div>`;
+        } else if (data.in > 0) {
+            sparkbarHtml = `<div class="daily-sparkbar"><div class="sparkbar-segment" style="width: 100%; background-color: #2ecc71; opacity: 0.6;"></div></div>`;
+        } else {
+            sparkbarHtml = `<div class="daily-sparkbar"></div>`;
+        }
 
         listHTML += `
-        <div class="date-group">
-            <div class="date-group-header">
-                <div class="date-title">${d}/${m}/${y}</div>
-                <div class="date-summary">
-                    <span class="text-success">+${formatter.format(data.in)}</span> &nbsp;|&nbsp; 
-                    <span class="text-danger">-${formatter.format(data.out)}</span>
-                </div>
+        <div class="date-group collapsed" id="adm_date_group_${rawDate}">
+            <div class="date-group-header" onclick="document.getElementById('adm_date_group_${rawDate}').classList.toggle('collapsed')" style="flex-direction: column; align-items: stretch; justify-content: center !important; gap: 8px; padding-bottom: 10px !important; cursor: pointer;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; gap: 8px;">
+                        <div class="date-title" style="font-size: 14px; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0;">
+                            ${friendlyDate}
+                            <svg class="header-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div class="date-summary" style="display: flex; justify-content: flex-end; white-space: nowrap; overflow: hidden; flex: 1;">
+                            <span class="ds-in text-success" style="width: auto !important; text-align: right;">+${formatter.format(data.in)}</span>
+                            <span class="ds-sep" style="margin: 0 4px;">|</span> 
+                            <span class="ds-out text-danger" style="width: auto !important; text-align: left;">-${formatter.format(data.out)}</span>
+                        </div>
+                    </div>
+                ${sparkbarHtml}
             </div>
             <div class="date-group-items">
         `;
@@ -3055,133 +3134,208 @@ function renderAdminTxList() {
 
         data.items.forEach(t => {
             const isInc = t.type === 'income';
+            const cName = t.categoryName || t.category;
+            
+            // BỌC GIÁP CHỐNG CRASH CHO DỮ LIỆU CŨ:
             const catObj = currentAdminCats.find(c => c.id === t.categoryId);
-            const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
-            const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+            const iconStr = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
+            const innerSvg = iconStr.replace(/<svg[^>]*>|<\/svg>/g, '');
+            const themeObj = (catObj && catObj.color && THEMES[catObj.color]) ? THEMES[catObj.color] : THEMES['theme-gray'];
+            
             const timeObj = new Date(t.id);
             const timeStr = `${String(timeObj.getHours()).padStart(2, '0')}:${String(timeObj.getMinutes()).padStart(2, '0')}`;
+            
+            const amountClass = isInc ? 'text-success' : 'text-danger';
+            const amountPrefix = isInc ? '+' : '-';
 
             listHTML += `
-                <div class="transaction-item" style="cursor: default;">
+                <div class="transaction-item timeline-item swipe-front" style="cursor: default; pointer-events: none;">
                     <div class="t-left">
-                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}">${iconSvg}</div>
+                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${innerSvg}</svg>
+                        </div>
                         <div class="t-info">
-                            <div class="t-title">${t.categoryName || t.category}</div>
-                            <div class="t-note">⏱ ${timeStr} ${t.note ? ' • ' + t.note : ''}</div>
+                            <div class="t-title" style="font-size: 15px;">${cName}</div>
+                            <div class="t-note" style="font-size: 12px;">⏱ ${timeStr} ${t.note ? ' • ' + t.note : ''}</div>
                         </div>
                     </div>
-                    <div class="t-action">
-                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                    <div class="t-action" style="display: flex; align-items: center; gap: 8px;">
+                        <div class="t-amount ${amountClass}" style="font-size: 15px; font-weight: 800;">${amountPrefix}${formatter.format(t.amount)}</div>
                     </div>
                 </div>
             `;
         });
         
-        listHTML += `</div></div>`; // Đóng date-group
+        listHTML += `</div></div>`;
     });
 
+    listHTML += `</div>`; 
+
     if (sortedDates.length > adminTxDateLimit) {
-        listHTML += `<button class="btn-load-more" onclick="adminTxDateLimit += 3; renderAdminTxList();">Xem thêm các ngày trước</button>`;
+        listHTML += `<div style="padding-bottom: 20px;"><button id="btnLoadMoreAdmin" style="width: 100%; padding: 14px; background: transparent; border: 2px dashed #cbd5e1; color: var(--text-muted); border-radius: 20px; font-weight: 700; cursor: pointer; text-align: center;" onclick="loadMoreAdminTx(this)">Xem thêm các ngày trước</button></div>`;
+    } else if (sortedDates.length > 0) {
+        listHTML += `<div class="end-of-list-msg">Đã hiển thị toàn bộ giao dịch</div>`;
     }
     
-    listEl.innerHTML = listHTML; // Gán 1 lần
+    listEl.innerHTML = listHTML;
+
+    setTimeout(() => {
+        if (sortedDates.length > 0) {
+            const canvas = document.getElementById('admHistoryLineChart');
+            if (canvas) {
+                if (window.admHistLineChartInst) window.admHistLineChartInst.destroy();
+                const ctx = canvas.getContext('2d');
+                
+                const chartLabels = [];
+                const chartIncData = [];
+                const chartExpData = [];
+
+                const chartSortedDates = [...sortedDates].reverse();
+
+                chartSortedDates.forEach(dateStr => {
+                    const d = grouped[dateStr];
+                    const [y, m, day] = dateStr.split('-');
+                    chartLabels.push(`${day}/${m}`);
+                    chartIncData.push(d.in);
+                    chartExpData.push(d.out);
+                });
+
+                const incGradient = ctx.createLinearGradient(0, 0, 0, 180);
+                incGradient.addColorStop(0, 'rgba(46, 204, 113, 0.4)');
+                incGradient.addColorStop(1, 'rgba(46, 204, 113, 0.0)');
+
+                const expGradient = ctx.createLinearGradient(0, 0, 0, 180);
+                expGradient.addColorStop(0, 'rgba(231, 76, 60, 0.4)');
+                expGradient.addColorStop(1, 'rgba(231, 76, 60, 0.0)');
+
+                window.admHistLineChartInst = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [
+                            { label: 'Tiền Thu', data: chartIncData, borderColor: '#2ecc71', backgroundColor: incGradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, fill: true, tension: 0.4 },
+                            { label: 'Tiền Chi', data: chartExpData, borderColor: '#e74c3c', backgroundColor: expGradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, fill: true, tension: 0.4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} }, grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } },
+                            x: { grid: { display: false }, ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        }
+    }, 100);
 }
 
 // ==========================================
 // 13. ADMIN XEM THỐNG KÊ CỦA USER
 // ==========================================
+// ==========================================
+// 13. ADMIN XEM THỐNG KÊ CỦA USER
+// ==========================================
+
+// --- BẮT ĐẦU ĐOẠN CODE CẦN THÊM VÀO ---
+
+// 1. Khai báo các biến toàn cục dùng cho Thống kê Admin để tránh lỗi Undefined/Crash
+let admCurrentPieType = 'expense';
 let admTxs = [];
 let admCats = [];
-let admPieChartInst = null;
 let admBarChartInst = null;
 let admLineChartInst = null;
-let admCurrentPieType = 'expense';
+let admPieChartInst = null;
 
+// 2. Hàm chuyển đổi chế độ lọc (Ngày/Tháng) dành riêng cho Admin
+window.switchAdmStatsMode = function(mode) {
+    const modeEl = document.getElementById('adm_statsFilterMode');
+    const btnRange = document.getElementById('adm_btnModeRange');
+    const btnMonth = document.getElementById('adm_btnModeMonth');
+    const rangeContainer = document.getElementById('adm_statsRangeContainer');
+    const monthContainer = document.getElementById('adm_statsMonthContainer');
+
+    if (modeEl) modeEl.value = mode;
+
+    if (mode === 'range') {
+        if (btnRange) { btnRange.classList.add('active'); btnRange.style.background = 'var(--primary)'; btnRange.style.color = 'white'; }
+        if (btnMonth) { btnMonth.classList.remove('active'); btnMonth.style.background = 'var(--bg-color)'; btnMonth.style.color = 'var(--text-muted)'; }
+        if (rangeContainer) rangeContainer.classList.remove('hide');
+        if (monthContainer) monthContainer.classList.add('hide');
+    } else {
+        if (btnMonth) { btnMonth.classList.add('active'); btnMonth.style.background = 'var(--primary)'; btnMonth.style.color = 'white'; }
+        if (btnRange) { btnRange.classList.remove('active'); btnRange.style.background = 'var(--bg-color)'; btnRange.style.color = 'var(--text-muted)'; }
+        if (monthContainer) monthContainer.classList.remove('hide');
+        if (rangeContainer) rangeContainer.classList.add('hide');
+    }
+    // Gọi lại hàm vẽ biểu đồ sau khi đổi UI
+    renderAdmCharts();
+};
+
+// 3. Gắn sự kiện (Listeners) cho các nút bấm và bộ lọc trong Admin Modal
 window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('adm_btnModeRange')?.addEventListener('click', () => {
-        const modeEl = document.getElementById('adm_statsFilterMode');
-        const btnR = document.getElementById('adm_btnModeRange');
-        const btnM = document.getElementById('adm_btnModeMonth');
-        
-        if (modeEl) modeEl.value = 'range';
-        if (btnR) { btnR.className = 'btn-toggle active'; btnR.style.cssText = 'font-size: 14px; background: var(--primary); color: white;'; }
-        if (btnM) { btnM.className = 'btn-toggle'; btnM.style.cssText = 'font-size: 14px; background: var(--bg-color); color: var(--text-muted);'; }
-        
-        document.getElementById('adm_statsRangeContainer')?.classList.remove('hide');
-        document.getElementById('adm_statsMonthContainer')?.classList.add('hide');
-        renderAdmCharts();
-    });
-    
-    document.getElementById('adm_btnModeMonth')?.addEventListener('click', () => {
-        const modeEl = document.getElementById('adm_statsFilterMode');
-        const btnR = document.getElementById('adm_btnModeRange');
-        const btnM = document.getElementById('adm_btnModeMonth');
-        
-        if (modeEl) modeEl.value = 'month';
-        if (btnM) { btnM.className = 'btn-toggle active'; btnM.style.cssText = 'font-size: 14px; background: var(--primary); color: white;'; }
-        if (btnR) { btnR.className = 'btn-toggle'; btnR.style.cssText = 'font-size: 14px; background: var(--bg-color); color: var(--text-muted);'; }
-        
-        document.getElementById('adm_statsMonthContainer')?.classList.remove('hide');
-        document.getElementById('adm_statsRangeContainer')?.classList.add('hide');
-        renderAdmCharts();
-    });
+    // Sự kiện chuyển Tab Ngày/Tháng
+    document.getElementById('adm_btnModeRange')?.addEventListener('click', () => switchAdmStatsMode('range'));
+    document.getElementById('adm_btnModeMonth')?.addEventListener('click', () => switchAdmStatsMode('month'));
 
+    // Sự kiện thay đổi Input thời gian -> Tự động cập nhật biểu đồ
     document.getElementById('adm_statsMonthPicker')?.addEventListener('change', renderAdmCharts);
-    document.getElementById('adm_statsStartDate')?.addEventListener('change', () => { updateAdmDateUI(); renderAdmCharts(); });
-    document.getElementById('adm_statsEndDate')?.addEventListener('change', () => { updateAdmDateUI(); renderAdmCharts(); });
+    document.getElementById('adm_statsStartDate')?.addEventListener('change', renderAdmCharts);
+    document.getElementById('adm_statsEndDate')?.addEventListener('change', renderAdmCharts);
 
+    // Sự kiện chọn Thu/Chi cho Biểu đồ tròn (Pie Chart)
     document.getElementById('adm_btnPieExp')?.addEventListener('click', function() {
-        this.className = 'btn-toggle active expense';
-        const incBtn = document.getElementById('adm_btnPieInc');
-        if (incBtn) incBtn.className = 'btn-toggle income';
+        this.classList.add('active', 'expense');
+        document.getElementById('adm_btnPieInc')?.classList.remove('active', 'income');
         admCurrentPieType = 'expense';
         renderAdmCharts();
     });
-    
+
     document.getElementById('adm_btnPieInc')?.addEventListener('click', function() {
-        this.className = 'btn-toggle active income';
-        const expBtn = document.getElementById('adm_btnPieExp');
-        if (expBtn) expBtn.className = 'btn-toggle expense';
+        this.classList.add('active', 'income');
+        document.getElementById('adm_btnPieExp')?.classList.remove('active', 'expense');
         admCurrentPieType = 'income';
         renderAdmCharts();
     });
 });
-
-function updateAdmDateUI() {
-    const sVal = document.getElementById('adm_statsStartDate')?.value;
-    const eVal = document.getElementById('adm_statsEndDate')?.value;
-    if(sVal) {
-        const [y, m, d] = sVal.split('-');
-        const disp = document.getElementById('adm_statsStartDateDisplay');
-        if (disp) disp.innerText = `${d}/${m}/${y}`;
-    }
-    if(eVal) {
-        const [y, m, d] = eVal.split('-');
-        const disp = document.getElementById('adm_statsEndDateDisplay');
-        if (disp) disp.innerText = `${d}/${m}/${y}`;
-    }
-}
-
 window.viewUserStats = function(uid, userName) {
     document.getElementById('adminUserStatsOverlay')?.classList.add('show');
     document.getElementById('adminUserStatsModal')?.classList.add('show');
     
     const titleEl = document.getElementById('adminUserStatsTitle');
-    if (titleEl) titleEl.innerText = 'Thống kê: ' + userName;
+    if (titleEl) titleEl.innerText = 'Thống kê: ' + userName.replace(/'/g, "\\'");
+
+    // ÉP NGÀY THÁNG ĐỂ TRÁNH LỖI TRỐNG DỮ LIỆU
+    const t = new Date();
+    const y = t.getFullYear();
+    const m = String(t.getMonth() + 1).padStart(2, '0');
+    const d = String(t.getDate()).padStart(2, '0');
+    
+    const sDate = `${y}-${m}-01`;
+    const eDate = `${y}-${m}-${d}`;
 
     const mp = document.getElementById('adm_statsMonthPicker');
-    if(mp && !mp.value) {
-        const t = new Date();
-        const y = t.getFullYear();
-        const m = String(t.getMonth() + 1).padStart(2, '0');
-        const d = String(t.getDate()).padStart(2, '0');
-        mp.value = `${y}-${m}`;
-        const sd = document.getElementById('adm_statsStartDate');
-        const ed = document.getElementById('adm_statsEndDate');
-        if (sd) sd.value = `${y}-${m}-01`;
-        if (ed) ed.value = `${y}-${m}-${d}`;
-        updateAdmDateUI();
-    }
+    const sd = document.getElementById('adm_statsStartDate');
+    const ed = document.getElementById('adm_statsEndDate');
+    
+    if (mp) mp.value = `${y}-${m}`;
+    if (sd) sd.value = sDate;
+    if (ed) ed.value = eDate;
+    
+    const dispStart = document.getElementById('adm_statsStartDateDisplay');
+    const dispEnd = document.getElementById('adm_statsEndDateDisplay');
+    if (dispStart) dispStart.innerText = `01/${m}/${y}`;
+    if (dispEnd) dispEnd.innerText = `${d}/${m}/${y}`;
+
+    const modeEl = document.getElementById('adm_statsFilterMode');
+    const btnR = document.getElementById('adm_btnModeRange');
+    const btnM = document.getElementById('adm_btnModeMonth');
+    if (modeEl) modeEl.value = 'range';
+    if (btnR) { btnR.className = 'btn-toggle active'; btnR.style.background = 'var(--primary)'; btnR.style.color = 'white'; }
+    if (btnM) { btnM.className = 'btn-toggle'; btnM.style.background = 'var(--bg-color)'; btnM.style.color = 'var(--text-muted)'; }
+    document.getElementById('adm_statsRangeContainer')?.classList.remove('hide');
+    document.getElementById('adm_statsMonthContainer')?.classList.add('hide');
 
     db.ref(`users/${uid}/categories`).once('value').then(catSnap => {
         if(catSnap.exists()) {
@@ -3200,8 +3354,8 @@ window.viewUserStats = function(uid, userName) {
                     }
                 }
             }
-            // TỐI ƯU HÓA: Chờ giao diện hiện lên hoàn tất rồi mới vẽ biểu đồ Admin
-            setTimeout(() => { requestAnimationFrame(() => renderAdmCharts()); }, 50);
+            // Gọi vẽ bằng SetTimeout để đảm bảo DOM được nạp
+            setTimeout(() => { renderAdmCharts(); }, 350);
         });
     });
 };
@@ -3211,14 +3365,33 @@ window.closeAdminUserStats = function() {
     document.getElementById('adminUserStatsModal')?.classList.remove('show');
 };
 
+window.switchAdmDashboardChart = function(type, btnElement) {
+    const tabs = document.querySelectorAll('#adm_dashboardTabs .dash-tab-btn');
+    tabs.forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+
+    document.getElementById('adm_dashViewPie').classList.add('hide');
+    document.getElementById('adm_dashViewBar').classList.add('hide');
+    document.getElementById('adm_dashViewLine').classList.add('hide');
+
+    if (type === 'pie') document.getElementById('adm_dashViewPie').classList.remove('hide');
+    if (type === 'bar') document.getElementById('adm_dashViewBar').classList.remove('hide');
+    if (type === 'line') document.getElementById('adm_dashViewLine').classList.remove('hide');
+
+    setTimeout(() => {
+        if (type === 'pie' && admPieChartInst) admPieChartInst.resize();
+        if (type === 'bar' && admBarChartInst) admBarChartInst.resize();
+        if (type === 'line' && admLineChartInst) admLineChartInst.resize();
+    }, 50);
+};
+
 function renderAdmCharts() {
     const modeEl = document.getElementById('adm_statsFilterMode');
     const mode = modeEl ? modeEl.value : 'range';
     let startDateStr = '', endDateStr = '', displayTitleText = '', daysToAverage = 1;
 
     if (mode === 'month') {
-        const monthVal = document.getElementById('adm_statsMonthPicker')?.value;
-        if (!monthVal) return;
+        const monthVal = document.getElementById('adm_statsMonthPicker')?.value || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
         const [y, m] = monthVal.split('-');
         startDateStr = `${y}-${m}-01`;
         const lastDay = new Date(y, parseInt(m), 0).getDate();
@@ -3227,18 +3400,24 @@ function renderAdmCharts() {
         const now = new Date();
         daysToAverage = (parseInt(y) === now.getFullYear() && parseInt(m) === (now.getMonth() + 1)) ? now.getDate() : lastDay;
     } else {
-        startDateStr = document.getElementById('adm_statsStartDate')?.value || '';
-        endDateStr = document.getElementById('adm_statsEndDate')?.value || '';
-        if (!startDateStr || !endDateStr) return;
+        const t = new Date();
+        const y = t.getFullYear(); const m = String(t.getMonth() + 1).padStart(2, '0'); const d = String(t.getDate()).padStart(2, '0');
+        
+        startDateStr = document.getElementById('adm_statsStartDate')?.value || `${y}-${m}-01`;
+        endDateStr = document.getElementById('adm_statsEndDate')?.value || `${y}-${m}-${d}`;
+        
         if (startDateStr > endDateStr) {
             let temp = startDateStr; startDateStr = endDateStr; endDateStr = temp;
-            const sd = document.getElementById('adm_statsStartDate');
-            const ed = document.getElementById('adm_statsEndDate');
-            if (sd) sd.value = startDateStr;
-            if (ed) ed.value = endDateStr;
-            updateAdmDateUI();
         }
-        const formatVN = (d) => `${d.split('-')[2]}/${d.split('-')[1]}`;
+        
+        // Tránh lỗi khi cắt chuỗi ngày
+        const formatVN = (str) => {
+            if(!str) return '';
+            const parts = str.split('-');
+            if(parts.length < 3) return str;
+            return `${parts[2]}/${parts[1]}`;
+        };
+        
         displayTitleText = `${formatVN(startDateStr)} - ${formatVN(endDateStr)}`;
         const sDate = new Date(startDateStr); const eDate = new Date(endDateStr);
         daysToAverage = Math.floor((eDate - sDate) / (1000 * 60 * 60 * 24)) + 1;
@@ -3310,7 +3489,11 @@ function renderAdmCharts() {
     const maxExpNameEl = document.getElementById('adm_kpiMaxExpenseName');
     if (maxExpTx) {
         if (maxExpEl) maxExpEl.innerText = currencyFormatter.format(maxExpTx.amount);
-        if (maxExpNameEl) maxExpNameEl.innerText = (maxExpTx.categoryName || maxExpTx.category || 'Khác') + ` (${maxExpTx.date.split('-')[2]}/${maxExpTx.date.split('-')[1]})`;
+        
+        // Tránh lỗi lấy ngày từ khoản max
+        const mDateParts = maxExpTx.date ? maxExpTx.date.split('-') : ['','',''];
+        const mDateStr = mDateParts.length >= 3 ? `${mDateParts[2]}/${mDateParts[1]}` : '';
+        if (maxExpNameEl) maxExpNameEl.innerText = (maxExpTx.categoryName || maxExpTx.category || 'Khác') + ` (${mDateStr})`;
     } else {
         if (maxExpEl) maxExpEl.innerText = '0 đ';
         if (maxExpNameEl) maxExpNameEl.innerText = 'Chưa có dữ liệu';
@@ -3322,7 +3505,7 @@ function renderAdmCharts() {
         const cName = t.categoryName || t.category;
         if(!txByCat[cName]) {
             const catObj = admCats.find(c => c.id === t.categoryId);
-            txByCat[cName] = { amount: 0, colorHex: catObj ? THEMES[catObj.color]?.hex : '#8395a7' };
+            txByCat[cName] = { amount: 0, colorHex: (catObj && catObj.color && THEMES[catObj.color]) ? THEMES[catObj.color].hex : '#8395a7' };
         }
         txByCat[cName].amount += t.amount;
     });
@@ -3339,11 +3522,32 @@ function renderAdmCharts() {
     } else {
         if (pCanvas) pCanvas.style.display = 'block';
         pEmpty?.classList.add('hide');
+        
+        const bgColor = document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff';
+
         if (pCanvas) {
             admPieChartInst = new Chart(pCanvas.getContext('2d'), {
                 type: 'doughnut',
-                data: { labels: pieLabels, datasets: [{ data: pieLabels.map(k => txByCat[k].amount), backgroundColor: pieLabels.map(k => txByCat[k].colorHex), borderWidth: 2 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, font: {size: 11} } }, tooltip: { callbacks: { label: c => ' ' + currencyFormatter.format(c.parsed) } } } }
+                data: { 
+                    labels: pieLabels, 
+                    datasets: [{ 
+                        data: pieLabels.map(k => txByCat[k].amount), 
+                        backgroundColor: pieLabels.map(k => txByCat[k].colorHex), 
+                        borderWidth: 3, 
+                        borderColor: bgColor, 
+                        hoverOffset: 6, 
+                        borderRadius: 4 
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '75%', 
+                    plugins: { 
+                        legend: { position: 'right', labels: { usePointStyle: true, padding: 20, font: {size: 12, weight: '600'} } }, 
+                        tooltip: { enabled: false } 
+                    } 
+                }
             });
         }
     }
@@ -3354,24 +3558,33 @@ function renderAdmCharts() {
     const top5Txs = targetTypeTxs.sort((a, b) => b.amount - a.amount).slice(0, 5);
     const topListEl = document.getElementById('adm_topExpenseList');
     if (topListEl) {
-        let top5HTML = ''; // TỐI ƯU DOM
-        
+        let top5HTML = ''; 
         if (top5Txs.length === 0) {
             topListEl.innerHTML = `<div style="text-align:center; padding: 20px 0; color: var(--text-muted); font-size: 13px;">Không có dữ liệu</div>`;
         } else {
             top5Txs.forEach(t => {
+                
+                // BỌC GIÁP CHỐNG CRASH CHO TOP 5
                 const catObj = admCats.find(c => c.id === t.categoryId);
-                const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+                const themeObj = (catObj && catObj.color && THEMES[catObj.color]) ? THEMES[catObj.color] : THEMES['theme-gray'];
+                const iconStr = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
+                const innerSvg = iconStr.replace(/<svg[^>]*>|<\/svg>/g, '');
+
                 const amtClass = admCurrentPieType === 'expense' ? 'text-danger' : 'text-success';
                 const amtPrefix = admCurrentPieType === 'expense' ? '-' : '+';
+                
+                const tDateParts = t.date ? t.date.split('-') : ['','',''];
+                const shortDate = tDateParts.length >= 3 ? `${tDateParts[2]}/${tDateParts[1]}/${tDateParts[0].substring(2)}` : '';
                 
                 top5HTML += `
                     <div class="transaction-item" style="padding: 12px 0; cursor: default;">
                         <div class="t-left">
-                            <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">${catObj ? SVG_LIB[catObj.icon] : SVG_LIB['other']}</div>
+                            <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${innerSvg}</svg>
+                            </div>
                             <div class="t-info">
                                 <div class="t-title" style="font-size: 15px;">${t.categoryName || t.category}</div>
-                                <div class="t-note" style="font-size: 12px;">${t.date.split('-')[2]}/${t.date.split('-')[1]}/${t.date.split('-')[0].substring(2)}</div>
+                                <div class="t-note" style="font-size: 12px;">${shortDate}</div>
                             </div>
                         </div>
                         <div class="t-action"><div class="t-amount ${amtClass}" style="font-size: 15px;">${amtPrefix}${formatter.format(t.amount)}</div></div>
@@ -3415,13 +3628,61 @@ function renderAdmCharts() {
     if(admLineChartInst) admLineChartInst.destroy();
     if (lCanvas) {
         const ctxLine = lCanvas.getContext('2d');
-        let gradient = ctxLine.createLinearGradient(0, 0, 0, 400); 
-        gradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)'); 
-        gradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
+        const lineGradient = ctxLine.createLinearGradient(0, 0, 0, 260);
+        lineGradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)');
+        lineGradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
+
         admLineChartInst = new Chart(ctxLine, {
             type: 'line',
-            data: { labels: barLabels, datasets: [{ label: 'Số dư', data: lineData, borderColor: '#4361ee', backgroundColor: gradient, borderWidth: 3, pointRadius: 2, fill: true, tension: 0.3 }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => (v/1000+'K') } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
+            data: { 
+                labels: barLabels, 
+                datasets: [{ 
+                    label: 'Số dư', 
+                    data: lineData, 
+                    borderColor: '#4361ee', 
+                    backgroundColor: lineGradient, 
+                    borderWidth: 2.5, 
+                    fill: true, 
+                    tension: 0.4, 
+                    pointRadius: 0, 
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#4361ee',
+                    pointBorderWidth: 2,
+                    pointHoverBorderWidth: 3
+                }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                interaction: { intersect: false, mode: 'index' }, 
+                scales: { 
+                    y: { 
+                        ticks: { display: false }, 
+                        grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } 
+                    }, 
+                    x: { 
+                        grid: { display: false }, 
+                        ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' } 
+                    } 
+                }, 
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff',
+                        titleColor: document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b',
+                        bodyColor: document.body.classList.contains('dark-theme') ? '#f1f5f9' : '#0f172a',
+                        borderColor: document.body.classList.contains('dark-theme') ? '#334155' : '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 12,
+                        boxPadding: 6,
+                        usePointStyle: true,
+                        callbacks: {
+                            label: function(context) { return ' Số dư: ' + new Intl.NumberFormat('vi-VN').format(context.raw) + 'đ'; }
+                        }
+                    } 
+                } 
+            }
         });
     }
 }
@@ -4966,62 +5227,46 @@ window.switchDashboardChart = function(type, btnElement) {
 Chart.register({
     id: 'averageThresholdLine',
     afterDraw: function(chart) {
-        // 1. Chỉ kích hoạt Radar này trên biểu đồ Cột (Thu/Chi)
         if (chart.canvas.id !== 'barChart' && chart.canvas.id !== 'adm_barChart') return;
+        if (!chart.chartArea) return; // CHỐNG CRASH QUAN TRỌNG
 
-        // 2. Truy tìm Dataset chứa "Tiền Chi" (Nhận diện qua chữ 'Chi')
-        const expenseDataset = chart.data.datasets.find(d => 
-            d.label && d.label.toLowerCase().includes('chi')
-        );
+        const expenseDataset = chart.data.datasets.find(d => d.label && d.label.toLowerCase().includes('chi'));
         if (!expenseDataset || !expenseDataset.data || expenseDataset.data.length === 0) return;
 
-        // 3. Tính toán Mức chi tiêu trung bình
         const dataArr = expenseDataset.data;
         const total = dataArr.reduce((sum, val) => sum + (Number(val) || 0), 0);
         const avgValue = total / (dataArr.length || 1);
 
-        // Bỏ qua nếu chưa có dữ liệu chi tiêu
         if (avgValue === 0) return;
 
-        // 4. Lấy hệ tọa độ thực tế trên màn hình
         const ctx = chart.ctx;
         const yAxis = chart.scales.y;
         const xAxis = chart.scales.x;
         const yPixel = yAxis.getPixelForValue(avgValue);
 
-        // Chống lỗi văng nét vẽ ra ngoài khung hình
         if (yPixel < chart.chartArea.top || yPixel > chart.chartArea.bottom) return;
 
         ctx.save();
-
-        // 5. Kẻ đường đứt nét (Hồng tâm) màu đỏ
         ctx.beginPath();
-        ctx.setLineDash([6, 4]); // Độ dài nét đứt
+        ctx.setLineDash([6, 4]); 
         ctx.moveTo(xAxis.left, yPixel);
         ctx.lineTo(xAxis.right, yPixel);
         ctx.lineWidth = 1.5;
-        ctx.strokeStyle = 'rgba(231, 76, 60, 0.8)'; // Đỏ cảnh báo
+        ctx.strokeStyle = 'rgba(231, 76, 60, 0.8)'; 
         ctx.stroke();
 
-        // 6. Vẽ nhãn dán thông minh báo hiệu con số
         const text = 'TB: ' + new Intl.NumberFormat('vi-VN').format(Math.round(avgValue));
         ctx.font = 'bold 10px sans-serif';
         const textWidth = ctx.measureText(text).width;
         const padding = 4;
 
-        // Vẽ nền cho Nhãn (Tự động đổi màu tương thích Dark Mode)
-        ctx.fillStyle = document.body.classList.contains('dark-theme') 
-            ? 'rgba(30, 41, 59, 0.9)'  // Nền tối
-            : 'rgba(255, 255, 255, 0.9)'; // Nền sáng
-        
+        ctx.fillStyle = document.body.classList.contains('dark-theme') ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)'; 
         ctx.fillRect(xAxis.right - textWidth - padding * 2, yPixel - 10, textWidth + padding * 2, 20);
-
-        // In con số lên
+        
         ctx.fillStyle = '#e74c3c';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(text, xAxis.right - textWidth/2 - padding, yPixel);
-
         ctx.restore();
     }
 });
@@ -5032,6 +5277,7 @@ Chart.register({
     id: 'dynamicDoughnutCenter',
     beforeDraw: function(chart) {
         if (chart.config.type !== 'doughnut') return;
+        if (!chart.chartArea) return; // CHỐNG CRASH QUAN TRỌNG
         
         const ctx = chart.ctx;
         const width = chart.chartArea.right - chart.chartArea.left;
@@ -5042,17 +5288,14 @@ Chart.register({
         const dataset = chart.data.datasets[0];
         if (!dataset || !dataset.data || dataset.data.length === 0) return;
 
-        // Tính tổng tiền
         let total = dataset.data.reduce((sum, val) => sum + (Number(val) || 0), 0);
         if (total === 0) return;
 
-        // Trạng thái mặc định (Tổng cộng)
         let activeLabel = 'TỔNG CỘNG';
         let activeValue = total;
         let activeColor = document.body.classList.contains('dark-theme') ? '#f1f5f9' : '#1e293b'; 
         let percentText = '';
 
-        // Trạng thái khi ngón tay chạm vào 1 lát cắt
         const activeElements = chart.getActiveElements();
         if (activeElements.length > 0) {
             const index = activeElements[0].index;
@@ -5063,29 +5306,22 @@ Chart.register({
         }
 
         ctx.save();
-        
-        // 1. Vẽ Tên danh mục (Chữ nhỏ phía trên)
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = '600 11px sans-serif';
         ctx.fillStyle = document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b';
         ctx.fillText(activeLabel, centerX, centerY - 12);
 
-        // 2. Vẽ Số tiền & Phần trăm (Chữ to phía dưới)
         ctx.font = '800 15px sans-serif';
         ctx.fillStyle = activeColor;
         
         let valueText = new Intl.NumberFormat('vi-VN').format(activeValue);
-        
-        // Rút gọn con số nếu quá tỷ/triệu để không bị tràn chữ ra ngoài lỗ
         if (activeValue >= 1000000000) {
             valueText = (activeValue / 1000000000).toFixed(1).replace('.0', '') + ' Tỷ';
         } else if (activeValue >= 1000000 && activeElements.length === 0) {
              valueText = (activeValue / 1000000).toFixed(1).replace('.0', '') + ' Tr';
         }
-        
         ctx.fillText(valueText + (percentText ? ` (${percentText})` : ''), centerX, centerY + 8);
-
         ctx.restore();
     }
 });

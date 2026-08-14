@@ -1158,7 +1158,30 @@ document.querySelectorAll('.btn-quick').forEach(btn => {
     });
 });
 
-document.querySelector('.btn-quick-filter[data-range="this_month"]')?.click();
+// ==========================================
+// THIẾT LẬP BỘ LỌC MẶC ĐỊNH KHI TẢI TRANG
+// ==========================================
+function setDefaultHistoryFilters() {
+    // 1. Ép chọn nút "Tháng này"
+    const monthBtn = document.querySelector('.btn-quick-filter[data-range="this_month"]');
+    if (monthBtn && !monthBtn.classList.contains('active')) {
+        monthBtn.click();
+    }
+    
+    // 2. Ép chọn nút "Tất cả" danh mục
+    const allCatBtn = document.querySelector('#historyCategoryFilter .cat-pill[data-filter=""]');
+    if (allCatBtn && !allCatBtn.classList.contains('active')) {
+        document.querySelectorAll('#historyCategoryFilter .cat-pill').forEach(p => p.classList.remove('active'));
+        allCatBtn.classList.add('active');
+    }
+    
+    // Xóa từ khóa tìm kiếm nếu có
+    const searchInp = document.getElementById('searchInput');
+    if (searchInp) searchInp.value = '';
+}
+
+// Chạy hàm này một lần khi web vừa nạp xong
+setTimeout(setDefaultHistoryFilters, 300);
 
 function switchType(type) {
     document.querySelectorAll('#transactionForm .btn-toggle').forEach(b => b.classList.remove('active', 'income', 'expense'));
@@ -1365,6 +1388,9 @@ function updateUI() {
         if (t.type === 'expense') grouped[dateStr].out += t.amount;
     });
 
+    // BỔ SUNG LƯU BIẾN TOÀN CỤC CHO RECYCLER
+    window.currentGroupedData = grouped; 
+
     const sortedDates = Object.keys(grouped).sort().reverse();
     
     let listHTML = '<div class="timeline-wrapper-seamless">';
@@ -1384,23 +1410,19 @@ function updateUI() {
 
     const paginatedDates = sortedDates.slice(0, currentDateLimit);
 
-    let groupIndex = 0; // Thêm biến đếm để biết đâu là ngày đầu tiên
+    let groupIndex = 0; 
     
     for (const rawDate of paginatedDates) {
         const data = grouped[rawDate];
         const displayDateText = formatNiceDate(rawDate).replace('Hôm nay, ', '');
-        
-        // Nhóm đầu tiên (mới nhất) sẽ mở, các nhóm cũ hơn sẽ bị gập (thêm class 'collapsed')
         const collapsedClass = groupIndex === 0 ? '' : 'collapsed';
 
         listHTML += `
-        <div class="date-group ${collapsedClass}" id="date_group_${rawDate}">
-            <!-- Bổ sung sự kiện onclick để gập/mở -->
+        <div class="date-group ${collapsedClass}" id="date_group_${rawDate}" data-date="${rawDate}">
             <div class="date-group-header" onclick="toggleDateGroup('${rawDate}')">
                 <div class="timeline-group-marker"></div>
                 <div class="date-title" style="font-size: 15px; display: flex; align-items: center;">
                     ${displayDateText}
-                    <!-- Thêm mũi tên báo hiệu trạng thái -->
                     <svg class="header-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
                 <div class="date-summary">
@@ -1409,66 +1431,59 @@ function updateUI() {
                     <span class="ds-out text-danger">-${formatter.format(data.out)}</span>
                 </div>
             </div>
-            <div class="date-group-items">
+            <!-- RUỘT RỖNG: Dành chỗ cho kỹ thuật DOM Recycling -->
+            <div class="date-group-items" id="items_${rawDate}"></div>
+        </div>
         `;
         
-        groupIndex++; // Tăng biến đếm lên
-
-        data.items.sort((a, b) => b.id - a.id);
-
-        data.items.forEach(t => {
-            const isInc = t.type === 'income';
-            const cName = t.categoryName || t.category;
-            const catObj = categories.find(c => c.id === t.categoryId);
-            const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
-            const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
-            const safeName = cName.replace(/'/g, "\\'");
-
-            // CẤU TRÚC SWIPE-TO-ACTION (KẾT HỢP DÒNG THỜI GIAN)
-            listHTML += `
-                <div class="swipe-container">
-                    <div class="timeline-dot ${isInc ? 'in' : 'out'}"></div>
-                    
-                    <!-- Lớp dưới: Các nút Hành động -->
-                    <div class="swipe-actions">
-                        <button class="btn-edit" onclick="triggerEdit(${t.id})">
-							<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-						</button>
-                        <button class="btn-delete" onclick="triggerDelete(${t.id})">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                    </div>
-
-                    <!-- Lớp trên: Giao dịch (Có thể trượt) -->
-                    <div class="transaction-item timeline-item swipe-front" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})">
-                        <div class="t-left">
-                            <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">${iconSvg}</div>
-                            <div class="t-info">
-                                <div class="t-title" style="font-size: 15px;">${cName}</div>
-                                <div class="t-note" style="font-size: 12px;">${t.note || '...'}</div>
-                            </div>
-                        </div>
-                        <div class="t-action" style="display: flex; align-items: center; gap: 8px;">
-                            <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}" style="font-size: 15px; font-weight: 800;">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
-                            <div class="t-chevron" style="color: #cbd5e1; font-size: 18px; margin-top: -2px;">›</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        listHTML += `</div></div>`; 
+        groupIndex++; 
     }
 
     listHTML += `</div>`; 
 
-    // === TRẢ LẠI NÚT XEM THÊM NGUYÊN BẢN ===
+    // QUAY LẠI NÚT TẢI THÊM TRUYỀN THỐNG (Khắc phục lỗi đơ khi cuộn tự động)
     if (sortedDates.length > currentDateLimit) {
         listHTML += `<button class="btn-load-more" onclick="currentDateLimit += ${DATES_PER_PAGE}; updateUI();">Xem thêm các ngày trước</button>`;
+    } else if (sortedDates.length > 0) {
+        listHTML += `<div class="end-of-list-msg">Đã hiển thị toàn bộ giao dịch</div>`;
     }
 
     listEl.innerHTML = listHTML;
+
+    // === TÁI CHẾ DOM (VIRTUAL SCROLLING) BẰNG INTERSECTION OBSERVER ===
+    if (window.domRecycler) window.domRecycler.disconnect();
     
+    window.domRecycler = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const group = entry.target;
+            const dateStr = group.getAttribute('data-date');
+            const itemsContainer = document.getElementById('items_' + dateStr);
+            if (!itemsContainer) return;
+
+            if (entry.isIntersecting) {
+                // VÀO KHUNG NHÌN: Bơm ruột HTML vào
+                if (!itemsContainer.hasAttribute('data-loaded')) {
+                    itemsContainer.innerHTML = buildGroupItemsHTML(dateStr);
+                    itemsContainer.setAttribute('data-loaded', 'true');
+                    itemsContainer.style.height = 'auto'; // Gỡ khóa chiều cao
+                }
+            } else {
+                // RA KHỎI KHUNG NHÌN: Hút sạch HTML để giải phóng RAM
+                if (itemsContainer.hasAttribute('data-loaded')) {
+                    // Chốt chiều cao hiện tại để thanh cuộn không bị giật
+                    const currentHeight = itemsContainer.getBoundingClientRect().height;
+                    if (currentHeight > 0) itemsContainer.style.height = currentHeight + 'px';
+                    
+                    itemsContainer.innerHTML = ''; // Hút cạn DOM
+                    itemsContainer.removeAttribute('data-loaded');
+                }
+            }
+        });
+    }, { rootMargin: '1000px 0px' }); // Bắt đầu load ngầm khi cách mép màn hình 1000px
+
+    // Gắn cảm biến vào các nhóm ngày
+    document.querySelectorAll('.date-group').forEach(g => window.domRecycler.observe(g));
+
     if(typeof renderBudgets === 'function') renderBudgets();
     if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
     if (typeof calculateStreak === 'function') calculateStreak();
@@ -1503,6 +1518,19 @@ function updateUI() {
                 window.histLineChartInst.destroy();
             }
             const ctx = canvas.getContext('2d');
+
+            // === 1. TẠO MÀU SÓNG GRADIENT XANH/ĐỎ ===
+            // Sóng Thu (Màu Xanh lá)
+            const incGradient = ctx.createLinearGradient(0, 0, 0, 180);
+            incGradient.addColorStop(0, 'rgba(46, 204, 113, 0.4)');
+            incGradient.addColorStop(1, 'rgba(46, 204, 113, 0.0)');
+
+            // Sóng Chi (Màu Đỏ)
+            const expGradient = ctx.createLinearGradient(0, 0, 0, 180);
+            expGradient.addColorStop(0, 'rgba(231, 76, 60, 0.4)');
+            expGradient.addColorStop(1, 'rgba(231, 76, 60, 0.0)');
+
+            // === 2. VẼ BIỂU ĐỒ SÓNG ĐAN XEN ===
             window.histLineChartInst = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -1512,23 +1540,25 @@ function updateUI() {
                             label: 'Tiền Thu',
                             data: chartIncData,
                             borderColor: '#2ecc71',
-                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
-                            borderWidth: 2,
+                            backgroundColor: incGradient, // Đổ màu sóng Xanh
+                            borderWidth: 2.5,
                             pointBackgroundColor: '#fff',
                             pointBorderColor: '#2ecc71',
-                            pointRadius: 4,
+                            pointRadius: 0, // Ẩn các chấm tròn gồ ghề
+                            pointHoverRadius: 6, // Chỉ hiện khi vuốt qua
                             fill: true,
-                            tension: 0.4
+                            tension: 0.4 // Bo cong mềm mại
                         },
                         {
                             label: 'Tiền Chi',
                             data: chartExpData,
                             borderColor: '#e74c3c',
-                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                            borderWidth: 2,
+                            backgroundColor: expGradient, // Đổ màu sóng Đỏ
+                            borderWidth: 2.5,
                             pointBackgroundColor: '#fff',
                             pointBorderColor: '#e74c3c',
-                            pointRadius: 4,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
                             fill: true,
                             tension: 0.4
                         }
@@ -1542,16 +1572,22 @@ function updateUI() {
                         y: {
                             beginAtZero: true,
                             ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} },
-                            grid: { borderDash: [4, 4] }
+                            grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }
                         },
                         x: {
                             grid: { display: false },
-                            ticks: { maxTicksLimit: 7, font: {size: 10} }
+                            ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' }
                         }
                     },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
+                            backgroundColor: document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff',
+                            titleColor: document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b',
+                            bodyColor: document.body.classList.contains('dark-theme') ? '#f1f5f9' : '#0f172a',
+                            borderColor: document.body.classList.contains('dark-theme') ? '#334155' : '#e2e8f0',
+                            borderWidth: 1,
+                            usePointStyle: true,
                             callbacks: {
                                 label: function(c) {
                                     return ' ' + c.dataset.label + ': ' + formatter.format(c.parsed.y) + 'đ';
@@ -5003,3 +5039,49 @@ Chart.register({
         ctx.restore();
     }
 });
+// ==========================================
+// TÍNH NĂNG: TÁI CHẾ DOM (VIRTUAL SCROLLING HELPER)
+// ==========================================
+window.buildGroupItemsHTML = function(dateStr) {
+    if (!window.currentGroupedData || !window.currentGroupedData[dateStr]) return '';
+    const data = window.currentGroupedData[dateStr];
+    data.items.sort((a, b) => b.id - a.id);
+
+    let itemsHtml = '';
+    data.items.forEach(t => {
+        const isInc = t.type === 'income';
+        const cName = t.categoryName || t.category;
+        const catObj = categories.find(c => c.id === t.categoryId);
+        const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
+        const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+        const safeName = cName.replace(/'/g, "\\'");
+
+        itemsHtml += `
+            <div class="swipe-container">
+                <div class="timeline-dot ${isInc ? 'in' : 'out'}"></div>
+                <div class="swipe-actions">
+                    <button class="btn-edit" onclick="triggerEdit(${t.id})">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    </button>
+                    <button class="btn-delete" onclick="triggerDelete(${t.id})">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                </div>
+                <div class="transaction-item timeline-item swipe-front" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})">
+                    <div class="t-left">
+                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">${iconSvg}</div>
+                        <div class="t-info">
+                            <div class="t-title" style="font-size: 15px;">${cName}</div>
+                            <div class="t-note" style="font-size: 12px;">${t.note || '...'}</div>
+                        </div>
+                    </div>
+                    <div class="t-action" style="display: flex; align-items: center; gap: 8px;">
+                        <div class="t-amount ${isInc ? 'text-success' : 'text-danger'}" style="font-size: 15px; font-weight: 800;">${isInc ? '+' : '-'}${formatter.format(t.amount)}</div>
+                        <div class="t-chevron" style="color: #cbd5e1; font-size: 18px; margin-top: -2px;">›</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    return itemsHtml;
+};

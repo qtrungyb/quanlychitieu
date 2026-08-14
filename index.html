@@ -17,13 +17,14 @@
     <!-- LIÊN KẾT FILE CSS CHÍNH -->
     <link rel="stylesheet" href="css/style.css">
     <style>
-/* =========================================================
-           1. LAYOUT CHUNG & THẺ CARD
+        /* =========================================================
+           1. CHUNG, BỐ CỤC & THẺ CARD (FLAT DESIGN)
            ========================================================= */
         #historyView, #analyticsView { background-color: #f4f7f9 !important; padding: 12px 12px 100px 12px !important; min-height: 100vh; }
         .modern-card { background: var(--card-bg, #ffffff); border-radius: 20px; padding: 20px 16px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.04); }
         .modern-card.p-0 { padding: 16px 0; } 
         .modern-card.text-center { text-align: center; }
+
         .fab-button { position: fixed; bottom: 85px; right: 20px; width: 56px; height: 56px; background: var(--primary); color: white; border: none; border-radius: 50%; box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 999; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .fab-button:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 8px 25px rgba(67, 97, 238, 0.5); }
         .fab-button:active { transform: translateY(2px) scale(0.95); }
@@ -32,15 +33,17 @@
         .fab-button.spin svg { transform: rotate(90deg); }
 
         /* =========================================================
-           2. TAB 1: FORM NHẬP LIỆU (THEME, MINI-LIST, UNDO, NUMPAD)
+           2. TAB NHẬP LIỆU (FORM, DYNAMC THEME, NUMPAD, MINI-LIST)
            ========================================================= */
         #formCard .modern-date-wrapper, #formCard .modern-date-wrapper svg, #formCard .input-amount, #formCard .amount-currency, #formCard .btn-submit { transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        
         #formCard.theme-expense .modern-date-wrapper:focus-within { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1); }
         #formCard.theme-expense .modern-date-wrapper svg { color: var(--danger); }
         #formCard.theme-expense .input-amount { color: var(--danger); }
         #formCard.theme-expense .amount-currency { color: rgba(231, 76, 60, 0.7); }
         #formCard.theme-expense .btn-submit { background: var(--danger); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.25); }
         #formCard.theme-expense .btn-submit:active { background: #c0392b; }
+
         #formCard.theme-income .modern-date-wrapper:focus-within { border-color: var(--success); box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1); }
         #formCard.theme-income .modern-date-wrapper svg { color: var(--success); }
         #formCard.theme-income .input-amount { color: var(--success); }
@@ -83,10 +86,11 @@
         .np-btn.np-done:active { background: #324cdd; }
 
         /* =========================================================
-           3. TAB 2: LỊCH SỬ GIAO DỊCH (BỘ LỌC, ACCORDION, SWIPE)
+           3. TAB LỊCH SỬ (TÌM KIẾM, SWIPE, ACCORDION & INLINE SPARKBAR)
            ========================================================= */
         #histListViewFilters .search-box input { border-radius: 24px; background: #f1f5f9; border: 1px solid transparent; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); transition: all 0.3s ease; }
         #histListViewFilters .search-box input:focus { background: #ffffff; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1); }
+        
         .btn-smart-filter { width: 44px; height: 44px; border-radius: 12px; background: #f8f9fa; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; color: var(--text-muted); transition: all 0.3s ease; flex-shrink: 0; }
         .btn-smart-filter:active, .btn-smart-filter.active { background: #eef2ff; border-color: var(--primary); color: var(--primary); }
         .btn-smart-filter svg { width: 18px; height: 18px; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
@@ -122,6 +126,7 @@
         .date-group-header { position: sticky; top: 75px; z-index: 10; background: rgba(255, 255, 255, 0.85) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 12px 16px !important; border-radius: 14px !important; margin: 0 0 8px 0 !important; width: 100% !important; box-shadow: 0 4px 15px rgba(0,0,0,0.06) !important; border: 1px solid rgba(255,255,255,0.6) !important; display: flex; justify-content: space-between !important; align-items: center; cursor: pointer; user-select: none; transition: background 0.2s; }
         .date-group-header:active { background: rgba(0,0,0,0.02) !important; }
         .timeline-wrapper-seamless .date-title { font-size: 13px !important; color: var(--primary) !important; display: flex; align-items: center; }
+        
         .header-chevron { transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); color: #94a3b8; margin-left: 6px; }
         .date-group.collapsed .header-chevron { transform: rotate(-90deg); }
         .date-group.collapsed .date-group-items { display: none; }
@@ -131,12 +136,16 @@
         .date-summary .ds-sep { margin: 0 8px; color: #cbd5e1; font-size: 14px; font-weight: 400; }
         .date-summary .ds-out { width: 80px; text-align: left; display: inline-block; }
 
+        /* Dải lụa tỷ trọng */
+        .daily-sparkbar { width: 100%; height: 4px; display: flex; gap: 2px; background: transparent; }
+        .sparkbar-segment { height: 100%; border-radius: 4px; transform-origin: left center; animation: growSparkbar 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
+        @keyframes growSparkbar { 0% { transform: scaleX(0); opacity: 0; } 100% { transform: scaleX(1); opacity: 1; } }
+
         .timeline-wrapper-seamless .date-group-items { background: #ffffff !important; border-radius: 20px !important; box-shadow: 0 2px 15px rgba(0,0,0,0.04) !important; border: 1px solid #f1f5f9 !important; padding: 0 !important; overflow: hidden !important; margin-left: -12px !important; margin-right: -12px !important; }
         .timeline-wrapper-seamless .swipe-container { position: relative; overflow: hidden; background: transparent !important; margin-bottom: 0 !important; touch-action: pan-y !important; animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
         .timeline-wrapper-seamless .swipe-container:not(:last-child)::after { content: ''; position: absolute; bottom: 0; left: 60px !important; right: 0 !important; height: 1px !important; background: #f1f5f9 !important; z-index: 5; }
         
         .timeline-wrapper-seamless .transaction-item.swipe-front { position: relative; z-index: 2; width: 100%; transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); background: #ffffff !important; padding: 10px 16px 10px 24px !important; border-radius: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; }
-        
         .timeline-wrapper-seamless .t-icon { width: 36px !important; height: 36px !important; border-radius: 50% !important; z-index: 1; box-shadow: none !important; }
         .timeline-wrapper-seamless .t-icon::after { display: none !important; }
         .timeline-wrapper-seamless .t-left { min-width: 0 !important; gap: 12px !important; }
@@ -184,7 +193,6 @@
         .cal-dot.in { background: var(--success); }
         .cal-dot.out { background: var(--danger); }
         .flatpickr-calendar { font-family: inherit; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: none; }
-        
         .cal-day.heat-1 { background: rgba(231, 76, 60, 0.1); border-color: rgba(231, 76, 60, 0.2); }
         .cal-day.heat-2 { background: rgba(231, 76, 60, 0.4); color: #fff; font-weight: 800; border-color: rgba(231, 76, 60, 0.5); }
         .cal-day.heat-3 { background: rgba(231, 76, 60, 0.85); color: #fff; font-weight: 800; border-color: rgba(231, 76, 60, 0.9); box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3); }
@@ -221,8 +229,9 @@
         .budget-stats { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--text-muted); font-weight: 500;}
 
         /* =========================================================
-           5. GIAO DIỆN TỐI (DARK MODE) OVERRIDES
+           5. GIAO DIỆN TỐI (DARK MODE) TỔNG HỢP
            ========================================================= */
+        body.dark-theme #historyView, body.dark-theme #analyticsView { background-color: transparent !important; }
         body.dark-theme .modern-card { background: var(--card-bg, #1e293b); border-color: rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
         body.dark-theme #histListViewFilters .search-box input { background: #1e293b; color: var(--text-main); }
         body.dark-theme #histListViewFilters .search-box input:focus { background: #0f172a; }
@@ -233,6 +242,7 @@
         body.dark-theme #filteredSummary .box-out { background: rgba(231, 76, 60, 0.15); }
         body.dark-theme #filteredSummary .box-out .sc-label, body.dark-theme #filteredSummary .box-out .sc-val { color: var(--danger); }
         body.dark-theme #filteredSummary .box-bal { background: #2d3748; }
+        
         body.dark-theme .timeline-wrapper-seamless .date-group-header { background: rgba(30, 41, 59, 0.85) !important; border-color: rgba(255,255,255,0.05) !important; }
         body.dark-theme .timeline-wrapper-seamless .date-group-header::after { background: linear-gradient(to bottom, #829fff, transparent); }
         body.dark-theme .timeline-wrapper-seamless .date-group:not(:last-child)::after { background: linear-gradient(90deg, transparent, rgba(130, 159, 255, 0.15), transparent); }
@@ -246,6 +256,7 @@
         body.dark-theme .btn-load-more:hover, body.dark-theme .btn-load-more:active { background: #1e293b !important; }
         body.dark-theme .timeline-wrapper-seamless .t-chevron { color: #475569 !important; }
         body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:hover .t-chevron, body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:active .t-chevron { color: #829fff !important; }
+        body.dark-theme .date-group-header:active { background: rgba(255,255,255,0.02) !important; }
         
         body.dark-theme .btn-smart-filter { background: #1e293b; border-color: #2d3748; color: var(--text-main); }
         body.dark-theme .btn-smart-filter:active, body.dark-theme .btn-smart-filter.active { background: rgba(67, 97, 238, 0.2); color: #829fff; border-color: #829fff; }
@@ -253,7 +264,6 @@
         body.dark-theme .btn-smart-filter.active .filter-dot { border-color: #1e293b; }
         body.dark-theme .advanced-filters-wrapper.open .advanced-filters-inner { border-top-color: #2d3748; }
 
-        body.dark-theme .date-group-header:active { background: rgba(255,255,255,0.02) !important; }
         body.dark-theme .numpad-grid .np-btn { background: var(--card-bg); color: var(--text-main); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         body.dark-theme .numpad-grid .np-btn:active { background: #2d3748; }
         body.dark-theme .numpad-grid .np-op { background: rgba(67, 97, 238, 0.15); color: #829fff; }
@@ -262,15 +272,20 @@
         body.dark-theme #categoryScroll .cat-pill.active { background: rgba(255,255,255,0.05); }
         body.dark-theme .recent-tx-container { border-top-color: #2d3748; }
         body.dark-theme .mini-tx-item { background: #1e293b; box-shadow: none;}
+        
         body.dark-theme .cal-day.heat-1 { background: rgba(231, 76, 60, 0.15); border-color: rgba(231, 76, 60, 0.3); }
         body.dark-theme .cal-day.heat-2 { background: rgba(231, 76, 60, 0.4); color: #fff; }
         body.dark-theme .cal-day.heat-3 { background: rgba(231, 76, 60, 0.8); color: #fff; }
+        
         body.dark-theme .dashboard-tabs { background: #1e293b; }
         body.dark-theme .dash-tab-btn.active { background: var(--card-bg); color: #829fff; }
         body.dark-theme .pie-switch { background: rgba(255,255,255,0.08); }
         body.dark-theme .pie-switch button.active.expense, body.dark-theme .pie-switch button.active.income { background: var(--card-bg); }
         body.dark-theme .badge-item { border-color: #2d3748; }
         body.dark-theme .badge-item.unlocked { background: linear-gradient(135deg, #3a3210, #544400); }
+        
+        /* Dark Mode: Dải lụa tỷ trọng */
+        body.dark-theme .daily-sparkbar { background: rgba(255,255,255,0.05); }
     </style>
 
     <!-- SDK FIREBASE -->
@@ -1018,27 +1033,6 @@
     </div>
 </div>
 
-<!-- MODAL SỔ CHI TIÊU CHUNG -->
-<div class="history-overlay" id="sharedLedgerOverlay" style="z-index: 10060;" onclick="closeSharedLedgerModal()"></div>
-<div class="history-modal" id="sharedLedgerModal" style="z-index: 10061; height: auto; max-height: 80vh;">
-    <div class="history-modal-header"><h3>Sổ Chi Tiêu Chung</h3><button class="btn-close-modal" onclick="closeSharedLedgerModal()">&times;</button></div>
-    <div class="history-modal-body" style="background: #fff; padding-top: 20px;">
-        <div id="noLedgerState">
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Bạn đang sử dụng sổ cá nhân. Bạn có thể tự tạo một sổ chung mới để gửi mã cho người thân, hoặc nhập mã sổ của người khác để cùng quản lý thời gian thực.</p>
-            <button type="button" class="btn-submit" onclick="createSharedLedger()" style="margin-bottom: 16px; background: var(--primary); box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);">Tạo sổ chung mới</button>
-            <div style="position: relative; text-align: center; margin: 16px 0;"><span style="background: #fff; padding: 0 10px; font-size: 12px; color: var(--text-muted); position: relative; z-index: 1;">HOẶC THAM GIA SỔ CÓ SẴN</span><div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; z-index: 0;"></div></div>
-            <div class="form-group" style="margin-top: 16px;"><input type="text" id="joinLedgerCodeInput" class="form-control" placeholder="Nhập mã sổ chung (VD: ledger_171...)" required></div>
-            <button type="button" onclick="joinSharedLedger()" class="btn-submit" style="background: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">Tham gia ngay</button>
-        </div>
-        <div id="activeLedgerState" class="hide" style="text-align: center;">
-            <div style="width: 60px; height: 60px; border-radius: 50%; background: #eef2ff; color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
-            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">MÃ SỔ CHUNG CỦA BẠN</div>
-            <div id="displayLedgerCode" style="font-size: 16px; font-weight: 800; color: var(--primary); font-family: monospace; background: #f8f9fa; padding: 10px 16px; border-radius: 8px; border: 1px dashed #cbd5e1; display: inline-block; margin-bottom: 20px; word-break: break-all;">---</div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.4;">Mọi giao dịch bạn hoặc thành viên khác nhập sẽ tự động đồng bộ tức thì trên tất cả các máy cùng tham gia mã này.</p>
-            <button type="button" onclick="leaveSharedLedger()" class="btn-clear-filter" style="width: 100%; border: 1px solid var(--danger); color: var(--danger); justify-content: center; height: 48px;">Rời khỏi sổ chung (Trở về sổ cá nhân)</button>
-        </div>
-    </div>
-</div>
 <!-- BÀN PHÍM MÁY TÍNH TÍCH HỢP (CUSTOM NUMPAD) -->
 <div class="sheet-overlay" id="numpadOverlay" style="z-index: 10050;"></div>
 <div class="bottom-sheet" id="numpadSheet" style="z-index: 10051; padding: 20px 16px 30px 16px; background: var(--bg-color);">

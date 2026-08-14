@@ -17,17 +17,88 @@
     <!-- LIÊN KẾT FILE CSS CHÍNH -->
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* 1. THIẾT KẾ THẺ CARD (FLAT DESIGN) CHO TAB 2 & 3 */
+/* =========================================================
+           1. LAYOUT CHUNG & THẺ CARD
+           ========================================================= */
         #historyView, #analyticsView { background-color: #f4f7f9 !important; padding: 12px 12px 100px 12px !important; min-height: 100vh; }
-        body.dark-theme #historyView, body.dark-theme #analyticsView { background-color: #0f172a !important; }
         .modern-card { background: var(--card-bg, #ffffff); border-radius: 20px; padding: 20px 16px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.04); }
-        body.dark-theme .modern-card { background: var(--card-bg, #1e293b); border-color: rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
         .modern-card.p-0 { padding: 16px 0; } 
         .modern-card.text-center { text-align: center; }
+        .fab-button { position: fixed; bottom: 85px; right: 20px; width: 56px; height: 56px; background: var(--primary); color: white; border: none; border-radius: 50%; box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 999; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .fab-button:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 8px 25px rgba(67, 97, 238, 0.5); }
+        .fab-button:active { transform: translateY(2px) scale(0.95); }
+        .fab-button.hide { transform: scale(0) rotate(-90deg); opacity: 0; pointer-events: none; }
+        .fab-button svg { width: 26px; height: 26px; transition: transform 0.3s ease; }
+        .fab-button.spin svg { transform: rotate(90deg); }
 
-        /* 2. LỊCH SỬ GIAO DỊCH: BỘ LỌC & TÌM KIẾM */
+        /* =========================================================
+           2. TAB 1: FORM NHẬP LIỆU (THEME, MINI-LIST, UNDO, NUMPAD)
+           ========================================================= */
+        #formCard .modern-date-wrapper, #formCard .modern-date-wrapper svg, #formCard .input-amount, #formCard .amount-currency, #formCard .btn-submit { transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        #formCard.theme-expense .modern-date-wrapper:focus-within { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1); }
+        #formCard.theme-expense .modern-date-wrapper svg { color: var(--danger); }
+        #formCard.theme-expense .input-amount { color: var(--danger); }
+        #formCard.theme-expense .amount-currency { color: rgba(231, 76, 60, 0.7); }
+        #formCard.theme-expense .btn-submit { background: var(--danger); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.25); }
+        #formCard.theme-expense .btn-submit:active { background: #c0392b; }
+        #formCard.theme-income .modern-date-wrapper:focus-within { border-color: var(--success); box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1); }
+        #formCard.theme-income .modern-date-wrapper svg { color: var(--success); }
+        #formCard.theme-income .input-amount { color: var(--success); }
+        #formCard.theme-income .amount-currency { color: rgba(46, 204, 113, 0.7); }
+        #formCard.theme-income .btn-submit { background: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.25); }
+        #formCard.theme-income .btn-submit:active { background: #27ae60; }
+        
+        #formCard .btn-submit { width: 100%; display: flex; align-items: center; justify-content: center; margin: 8px auto 0 auto; position: relative; overflow: hidden; transition: width 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55), background-color 0.35s ease !important; }
+        #formCard .btn-submit.is-loading { width: 48px !important; border-radius: 24px !important; color: transparent !important; pointer-events: none; }
+        #formCard .btn-submit.is-loading::after { content: ''; position: absolute; width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: btnSpin 0.6s linear infinite; }
+        @keyframes btnSpin { to { transform: rotate(360deg); } }
+        #formCard .btn-submit.is-success { width: 100% !important; background: var(--success) !important; color: transparent !important; pointer-events: none; }
+        #formCard .btn-submit.is-success::after { content: ''; position: absolute; width: 10px; height: 20px; border: solid white; border-width: 0 3px 3px 0; transform: rotate(45deg) scale(0); margin-top: -4px; animation: checkmarkPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes checkmarkPop { 0% { transform: scale(0) rotate(45deg); } 100% { transform: scale(1) rotate(45deg); } }
+
+        #categoryScroll { display: grid !important; grid-template-columns: repeat(4, 1fr); gap: 12px 8px; overflow-x: hidden; padding: 8px 0; }
+        #categoryScroll .cat-pill { display: flex; flex-direction: column; padding: 8px 4px; border-radius: 16px; border: 2px solid transparent; background: transparent; font-size: 11.5px; gap: 0; box-shadow: none; text-align: center; }
+        #categoryScroll .cat-pill.active { background: rgba(0,0,0,0.02); border-color: var(--cat-color, var(--primary)); color: var(--text-main); }
+        #categoryScroll .cat-pill.active .pill-icon { transform: scale(1.15); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+        .recent-tx-container { margin-top: 20px; padding-top: 16px; border-top: 1px dashed #e2e8f0; animation: fadeIn 0.4s ease; }
+        .recent-tx-header { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; text-align: center; }
+        .recent-tx-list { display: flex; flex-direction: column; gap: 8px; }
+        .mini-tx-item { display: flex; align-items: center; justify-content: space-between; background: var(--bg-color); padding: 8px 12px; border-radius: 12px; font-size: 13px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.01); }
+        .mini-tx-left { display: flex; align-items: center; gap: 8px; }
+        .mini-tx-icon { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+        .mini-tx-icon svg { width: 14px; height: 14px; }
+        .mini-tx-name { font-weight: 700; color: var(--text-main); }
+        .mini-tx-time { font-size: 11px; color: var(--text-muted); margin-left: 4px; font-weight: 500;}
+        .btn-undo-tx { background: transparent; border: none; padding: 4px 8px; color: var(--warning); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; border-radius: 8px; margin-left: 8px; }
+        .btn-undo-tx:active { background: rgba(243, 156, 18, 0.15); transform: scale(0.9); }
+        .btn-undo-tx svg { width: 18px; height: 18px; stroke-width: 2.5; }
+
+        .numpad-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .np-btn { height: 60px; border-radius: 16px; border: none; background: #fff; font-size: 24px; font-weight: 700; color: var(--text-main); box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer; transition: all 0.15s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; align-items: center; justify-content: center; }
+        .np-btn:active { transform: scale(0.92); background: #e2e8f0; }
+        .np-btn.np-op { background: #eef2ff; color: var(--primary); font-size: 22px; }
+        .np-btn.np-back { color: var(--danger); background: #fceceb; }
+        .np-btn.np-done { grid-row: span 2; height: 100%; background: var(--primary); color: #fff; box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3); font-size: 20px; }
+        .np-btn.np-done:active { background: #324cdd; }
+
+        /* =========================================================
+           3. TAB 2: LỊCH SỬ GIAO DỊCH (BỘ LỌC, ACCORDION, SWIPE)
+           ========================================================= */
         #histListViewFilters .search-box input { border-radius: 24px; background: #f1f5f9; border: 1px solid transparent; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); transition: all 0.3s ease; }
         #histListViewFilters .search-box input:focus { background: #ffffff; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1); }
+        .btn-smart-filter { width: 44px; height: 44px; border-radius: 12px; background: #f8f9fa; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; color: var(--text-muted); transition: all 0.3s ease; flex-shrink: 0; }
+        .btn-smart-filter:active, .btn-smart-filter.active { background: #eef2ff; border-color: var(--primary); color: var(--primary); }
+        .btn-smart-filter svg { width: 18px; height: 18px; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .btn-smart-filter.active svg { transform: scale(1.1) translateY(-1px); }
+        .filter-dot { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid #f8f9fa; transition: border-color 0.3s; }
+        .btn-smart-filter.active .filter-dot { border-color: #eef2ff; }
+        .filter-dot.hide { display: none; }
+        .advanced-filters-wrapper { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .advanced-filters-wrapper.open { grid-template-rows: 1fr; }
+        .advanced-filters-inner { overflow: hidden; opacity: 0; transition: opacity 0.3s ease, padding-top 0.3s ease; }
+        .advanced-filters-wrapper.open .advanced-filters-inner { opacity: 1; padding-top: 12px; border-top: 1px dashed #e2e8f0; margin-top: 4px; }
+        
         .quick-filters-scroll { padding: 8px 0 12px 0; mask-image: linear-gradient(to right, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%); }
         .btn-quick-filter { border-radius: 20px; padding: 8px 18px; background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.02); color: var(--text-muted); font-weight: 600; }
         .btn-quick-filter.active { background: var(--primary); color: #ffffff; border-color: var(--primary); box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3); transform: translateY(-1px); }
@@ -40,49 +111,46 @@
         #filteredSummary .box-out .sc-label, #filteredSummary .box-out .sc-val { color: #991b1b; }
         #filteredSummary .box-bal { background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); }
 
-        body.dark-theme #histListViewFilters .search-box input { background: #1e293b; color: var(--text-main); }
-        body.dark-theme #histListViewFilters .search-box input:focus { background: #0f172a; }
-        body.dark-theme .btn-quick-filter { background: var(--card-bg); border-color: #2d3748; }
-        body.dark-theme .btn-quick-filter.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
-        body.dark-theme #filteredSummary .box-in { background: rgba(46, 204, 113, 0.15); }
-        body.dark-theme #filteredSummary .box-in .sc-label, body.dark-theme #filteredSummary .box-in .sc-val { color: var(--success); }
-        body.dark-theme #filteredSummary .box-out { background: rgba(231, 76, 60, 0.15); }
-        body.dark-theme #filteredSummary .box-out .sc-label, body.dark-theme #filteredSummary .box-out .sc-val { color: var(--danger); }
-        body.dark-theme #filteredSummary .box-bal { background: #2d3748; }
-
-        /* 3. LỊCH SỬ GIAO DỊCH: DANH SÁCH (CARD GỘP LIỀN MẠCH) */
-        #transactionList { overflow: visible !important; padding-left: 0; margin-top: 12px; }
-        .timeline-wrapper-seamless { position: relative; padding-bottom: 24px; }
-        .timeline-wrapper-seamless::before, .timeline-wrapper-seamless .timeline-group-marker, .timeline-wrapper-seamless .timeline-dot, .timeline-wrapper-seamless .t-chevron { display: none !important; }
-
-        .timeline-wrapper-seamless .date-group { margin-bottom: 40px !important; position: relative; }
-        .timeline-wrapper-seamless .date-group-header { position: sticky; top: 75px; z-index: 10; background: rgba(255, 255, 255, 0.85) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 8px 20px !important; border-radius: 30px; margin: 10px auto 20px auto !important; width: fit-content; box-shadow: 0 4px 15px rgba(0,0,0,0.06) !important; border: 1px solid rgba(255,255,255,0.6) !important; display: flex; gap: 12px; align-items: center; justify-content: center; }
-        .timeline-wrapper-seamless .date-title { font-size: 13px !important; color: var(--primary) !important; }
-        .timeline-wrapper-seamless .date-summary { font-size: 12px !important; opacity: 0.9; }
+        #historyChartWrapper { margin-bottom: 4px !important; }
+        #transactionList { overflow: visible !important; padding-left: 0; margin-top: 0 !important; }
+        #histListContainerCard { padding-bottom: 0 !important; }
+        .timeline-wrapper-seamless { position: relative; padding-bottom: 4px !important; padding-top: 4px !important; }
+        .timeline-wrapper-seamless::before, .timeline-wrapper-seamless .timeline-group-marker, .timeline-wrapper-seamless .timeline-dot { display: none !important; }
         
-        .timeline-wrapper-seamless .date-group-header::after { content: ''; position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); width: 2px; height: 12px; background: linear-gradient(to bottom, var(--primary), transparent); opacity: 0.5; border-radius: 2px; }
-        .timeline-wrapper-seamless .date-group:not(:last-child)::after { content: ''; display: block; width: 120px; height: 3px; background: linear-gradient(90deg, transparent, rgba(67, 97, 238, 0.15), transparent); margin: 36px auto -10px auto; border-radius: 4px; }
+        .date-group { margin-bottom: 12px !important; position: relative; transition: all 0.3s ease; }
+        .date-group.collapsed { margin-bottom: 8px !important; }
+        .date-group-header { position: sticky; top: 75px; z-index: 10; background: rgba(255, 255, 255, 0.85) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 12px 16px !important; border-radius: 14px !important; margin: 0 0 8px 0 !important; width: 100% !important; box-shadow: 0 4px 15px rgba(0,0,0,0.06) !important; border: 1px solid rgba(255,255,255,0.6) !important; display: flex; justify-content: space-between !important; align-items: center; cursor: pointer; user-select: none; transition: background 0.2s; }
+        .date-group-header:active { background: rgba(0,0,0,0.02) !important; }
+        .timeline-wrapper-seamless .date-title { font-size: 13px !important; color: var(--primary) !important; display: flex; align-items: center; }
+        .header-chevron { transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); color: #94a3b8; margin-left: 6px; }
+        .date-group.collapsed .header-chevron { transform: rotate(-90deg); }
+        .date-group.collapsed .date-group-items { display: none; }
+        
+        .date-summary { display: flex; align-items: center; font-size: 12px !important; opacity: 0.9; }
+        .date-summary .ds-in { width: 80px; text-align: right; display: inline-block; }
+        .date-summary .ds-sep { margin: 0 8px; color: #cbd5e1; font-size: 14px; font-weight: 400; }
+        .date-summary .ds-out { width: 80px; text-align: left; display: inline-block; }
 
         .timeline-wrapper-seamless .date-group-items { background: #ffffff !important; border-radius: 20px !important; box-shadow: 0 2px 15px rgba(0,0,0,0.04) !important; border: 1px solid #f1f5f9 !important; padding: 0 !important; overflow: hidden !important; margin-left: -12px !important; margin-right: -12px !important; }
-        
         .timeline-wrapper-seamless .swipe-container { position: relative; overflow: hidden; background: transparent !important; margin-bottom: 0 !important; touch-action: pan-y !important; animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
-        .timeline-wrapper-seamless .swipe-container:not(:last-child)::after { content: ''; position: absolute; bottom: 0; left: 68px !important; right: 0 !important; height: 1px !important; background: #f1f5f9 !important; z-index: 5; }
+        .timeline-wrapper-seamless .swipe-container:not(:last-child)::after { content: ''; position: absolute; bottom: 0; left: 60px !important; right: 0 !important; height: 1px !important; background: #f1f5f9 !important; z-index: 5; }
         
-        .timeline-wrapper-seamless .transaction-item.swipe-front { position: relative; z-index: 2; width: 100%; transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); background: #ffffff !important; padding: 14px 16px 14px 28px !important; border-radius: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; }
+        .timeline-wrapper-seamless .transaction-item.swipe-front { position: relative; z-index: 2; width: 100%; transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); background: #ffffff !important; padding: 10px 16px 10px 24px !important; border-radius: 0 !important; border: none !important; box-shadow: none !important; margin-bottom: 0 !important; }
         
-        .timeline-wrapper-seamless .t-icon { width: 40px !important; height: 40px !important; border-radius: 50% !important; z-index: 1; box-shadow: none !important; }
+        .timeline-wrapper-seamless .t-icon { width: 36px !important; height: 36px !important; border-radius: 50% !important; z-index: 1; box-shadow: none !important; }
         .timeline-wrapper-seamless .t-icon::after { display: none !important; }
-
         .timeline-wrapper-seamless .t-left { min-width: 0 !important; gap: 12px !important; }
         .timeline-wrapper-seamless .t-info { min-width: 0 !important; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 2px !important; }
-        .timeline-wrapper-seamless .t-title { font-size: 15px !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; color: #1e293b !important; display: block !important; line-height: 1.4 !important;}
-        .timeline-wrapper-seamless .t-note { display: block !important; font-size: 13px !important; color: #8c98a9 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; margin-top: 0 !important; font-weight: 400 !important; }
+        .timeline-wrapper-seamless .t-title { font-size: 14.5px !important; font-weight: 600 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; color: #1e293b !important; display: block !important; line-height: 1.4 !important;}
+        .timeline-wrapper-seamless .t-note { display: block !important; font-size: 12.5px !important; color: #8c98a9 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; margin-top: 0 !important; font-weight: 400 !important; }
         .timeline-wrapper-seamless .t-note::before { display: none !important; }
-
         .timeline-wrapper-seamless .t-action { flex-shrink: 0 !important; display: flex; align-items: center; }
-        .timeline-wrapper-seamless .t-amount { background: transparent !important; padding: 0 !important; font-size: 16px !important; font-weight: 700 !important; letter-spacing: -0.2px !important; }
+        .timeline-wrapper-seamless .t-amount { background: transparent !important; padding: 0 !important; font-size: 15.5px !important; font-weight: 700 !important; letter-spacing: -0.2px !important; }
         .timeline-wrapper-seamless .t-amount.text-danger { color: #e74c3c !important; }
         .timeline-wrapper-seamless .t-amount.text-success { color: #2ecc71 !important; }
+
+        .timeline-wrapper-seamless .t-chevron { display: block !important; font-size: 22px !important; color: #cbd5e1 !important; margin-left: 6px !important; font-weight: 300 !important; transition: transform 0.2s ease, color 0.2s ease !important; padding: 15px 5px 15px 20px !important; margin-right: -5px !important; cursor: pointer; z-index: 10; }
+        .timeline-wrapper-seamless .transaction-item.swipe-front:hover .t-chevron, .timeline-wrapper-seamless .transaction-item.swipe-front:active .t-chevron { color: var(--primary) !important; transform: translateX(4px) !important; }
 
         .swipe-actions { position: absolute; right: 12px; top: 0; bottom: 0; display: flex; gap: 10px; align-items: center; z-index: 1; background: transparent !important; }
         .swipe-actions button { border: none; color: white; width: 44px !important; height: 44px !important; border-radius: 14px !important; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; cursor: pointer; transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important; }
@@ -92,6 +160,8 @@
 
         .btn-load-more { background: transparent !important; border: 2px dashed #cbd5e1 !important; color: var(--text-muted) !important; border-radius: 20px !important; font-weight: 700 !important; transition: all 0.3s ease !important; height: 52px !important; margin-top: 16px !important; position: relative !important; z-index: 999 !important; pointer-events: auto !important; user-select: none; }
         .btn-load-more:hover, .btn-load-more:active { background: #f8f9fa !important; border-color: var(--primary) !important; color: var(--primary) !important; }
+        
+        .end-of-list-msg { text-align: center; padding: 30px 20px 100px 20px !important; margin: 0 !important; color: var(--text-muted); font-size: 13px; font-weight: 500; opacity: 0.4; letter-spacing: 0.5px; }
 
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .timeline-wrapper-seamless .swipe-container:nth-child(1) { animation-delay: 0.05s; }
@@ -101,20 +171,7 @@
         .timeline-wrapper-seamless .swipe-container:nth-child(5) { animation-delay: 0.25s; }
         .timeline-wrapper-seamless .swipe-container:nth-child(n+6) { animation-delay: 0.30s; }
 
-        /* DARK MODE CHO LỊCH SỬ */
-        body.dark-theme .timeline-wrapper-seamless .date-group-header { background: rgba(30, 41, 59, 0.85) !important; border-color: rgba(255,255,255,0.05) !important; }
-        body.dark-theme .timeline-wrapper-seamless .date-group-header::after { background: linear-gradient(to bottom, #829fff, transparent); }
-        body.dark-theme .timeline-wrapper-seamless .date-group:not(:last-child)::after { background: linear-gradient(90deg, transparent, rgba(130, 159, 255, 0.15), transparent); }
-        body.dark-theme .timeline-wrapper-seamless .date-group-items { background: var(--card-bg) !important; border-color: #2d3748 !important; box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important; }
-        body.dark-theme .timeline-wrapper-seamless .swipe-container:not(:last-child)::after { background: #1e293b !important; }
-        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front { background: var(--card-bg) !important; }
-        body.dark-theme .timeline-wrapper-seamless .t-title { color: #f1f5f9 !important; }
-        body.dark-theme .timeline-wrapper-seamless .t-note { color: #94a3b8 !important; }
-        body.dark-theme .swipe-actions button { box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important; }
-        body.dark-theme .btn-load-more { border-color: #4a5568 !important; }
-        body.dark-theme .btn-load-more:hover, body.dark-theme .btn-load-more:active { background: #1e293b !important; }
-
-        /* 4. LỊCH LƯỚI */
+        /* Lịch lưới (Calendar Grid) & Heatmap */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
         .cal-day-header { font-size: 11px; font-weight: 800; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
         .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: 1px solid transparent; position: relative; background: var(--bg-color); color: var(--text-main); transition: 0.2s; }
@@ -127,505 +184,93 @@
         .cal-dot.in { background: var(--success); }
         .cal-dot.out { background: var(--danger); }
         .flatpickr-calendar { font-family: inherit; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: none; }
+        
+        .cal-day.heat-1 { background: rgba(231, 76, 60, 0.1); border-color: rgba(231, 76, 60, 0.2); }
+        .cal-day.heat-2 { background: rgba(231, 76, 60, 0.4); color: #fff; font-weight: 800; border-color: rgba(231, 76, 60, 0.5); }
+        .cal-day.heat-3 { background: rgba(231, 76, 60, 0.85); color: #fff; font-weight: 800; border-color: rgba(231, 76, 60, 0.9); box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3); }
 
-        /* 5. NÚT THÊM NHANH (FAB) */
-        .fab-button { position: fixed; bottom: 85px; right: 20px; width: 56px; height: 56px; background: var(--primary); color: white; border: none; border-radius: 50%; box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 999; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        .fab-button:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 8px 25px rgba(67, 97, 238, 0.5); }
-        .fab-button:active { transform: translateY(2px) scale(0.95); }
-        .fab-button.hide { transform: scale(0) rotate(-90deg); opacity: 0; pointer-events: none; }
-        .fab-button svg { width: 26px; height: 26px; transition: transform 0.3s ease; }
-        .fab-button.spin svg { transform: rotate(90deg); }
+        /* =========================================================
+           4. TAB 3: THỐNG KÊ (DASHBOARD) & HUY HIỆU
+           ========================================================= */
+        .dashboard-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 20px; }
+        .dash-tab-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 0; border: none; background: transparent; color: var(--text-muted); font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .dash-tab-btn svg { width: 16px; height: 16px; }
+        .dash-tab-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        
+        .dash-view { animation: fadeInChart 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        @keyframes fadeInChart { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        
+        .pie-switch { display: inline-flex; background: rgba(0,0,0,0.05); border-radius: 30px; padding: 4px; position: relative; }
+        .pie-switch button { background: transparent; border: none; border-radius: 26px; padding: 6px 20px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .pie-switch button.active.expense { background: #fff; color: var(--danger); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .pie-switch button.active.income { background: #fff; color: var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-        /* 6. THANH TIẾN TRÌNH NGÂN SÁCH */
+        .kpi-trend-wrapper { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+        .trend-badge { white-space: nowrap; font-size: 13px; }
+        #badgeCabinet { display: block; }
+        .badge-item { height: auto !important; min-height: 95px; border-radius: 20px; background: var(--card-bg); border: 1px solid #f1f5f9; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; padding: 12px 4px; position: relative; overflow: hidden; transition: all 0.3s ease; filter: grayscale(1); opacity: 0.5; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .badge-icon { font-size: 34px !important; margin-bottom: 6px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .badge-name { font-size: 11px !important; font-weight: 800; line-height: 1.3; width: 100%; word-wrap: break-word; }
+        .badge-item.unlocked { filter: grayscale(0); opacity: 1; border-color: #ffd700; background: linear-gradient(135deg, #fffcf0, #fff7c2); box-shadow: 0 6px 20px rgba(255, 215, 0, 0.25); transform: translateY(-3px); }
+        .badge-item.unlocked::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.8), transparent); transform: rotate(45deg) translateY(-100%); animation: foilShine 4s infinite; }
+
         .budget-item { width: 100%; }
         .budget-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); }
         .budget-bar-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; position: relative; }
         .budget-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease-out, background-color 0.5s; }
         .budget-stats { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--text-muted); font-weight: 500;}
-        
-        /* 7. NÚT CÔNG TẮC (SWITCH) DÀNH CHO BIỂU ĐỒ TRÒN */
-        .pie-switch { display: inline-flex; background: rgba(0,0,0,0.05); border-radius: 30px; padding: 4px; position: relative; }
-        body.dark-theme .pie-switch { background: rgba(255,255,255,0.08); }
-        .pie-switch button { background: transparent; border: none; border-radius: 26px; padding: 6px 20px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        .pie-switch button.active.expense { background: #fff; color: var(--danger); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .pie-switch button.active.income { background: #fff; color: var(--success); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        body.dark-theme .pie-switch button.active.expense, body.dark-theme .pie-switch button.active.income { background: var(--card-bg); }
 
-        /* 8. CẬP NHẬT CSS SỬA LỖI HIỂN THỊ HUY HIỆU VÀ % CHI */
-        .kpi-trend-wrapper { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
-        .trend-badge { white-space: nowrap; font-size: 13px; }
-        #badgeCabinet { display: block; }
-        .badge-item { height: auto !important; min-height: 95px; border-radius: 20px; background: var(--card-bg); border: 1px solid #f1f5f9; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; padding: 12px 4px; position: relative; overflow: hidden; transition: all 0.3s ease; filter: grayscale(1); opacity: 0.5; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        body.dark-theme .badge-item { border-color: #2d3748; }
-        .badge-icon { font-size: 34px !important; margin-bottom: 6px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
-        .badge-name { font-size: 11px !important; font-weight: 800; line-height: 1.3; width: 100%; word-wrap: break-word; }
-        .badge-item.unlocked { filter: grayscale(0); opacity: 1; border-color: #ffd700; background: linear-gradient(135deg, #fffcf0, #fff7c2); box-shadow: 0 6px 20px rgba(255, 215, 0, 0.25); transform: translateY(-3px); }
-        body.dark-theme .badge-item.unlocked { background: linear-gradient(135deg, #3a3210, #544400); }
-        .badge-item.unlocked::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.8), transparent); transform: rotate(45deg) translateY(-100%); animation: foilShine 4s infinite; }
-        
-        /* 9. THIẾT KẾ FLAT SECTION (CHO TAB THỐNG KÊ) */
-        .flat-section { padding: 24px 8px 12px 8px; border-bottom: 1px solid rgba(0,0,0,0.06); }
-        .flat-section:last-child { border-bottom: none; padding-bottom: 40px; }
-        body.dark-theme .flat-section { border-bottom-color: rgba(255,255,255,0.05); }
-        .flat-section .chart-title { font-size: 17px; font-weight: 800; color: var(--text-main); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; letter-spacing: -0.3px; }
-        .flat-section .chart-title::before { content: ''; display: block; width: 5px; height: 16px; background: var(--primary); border-radius: 6px; }
-        .flat-section .chart-subtitle { background: transparent !important; padding: 0 0 0 13px !important; margin-bottom: 12px !important; border-radius: 0 !important; }
-        .flat-section .transaction-item { background: transparent !important; padding: 14px 8px !important; border: none !important; border-bottom: 1px dashed rgba(0,0,0,0.06) !important; box-shadow: none !important; border-radius: 0 !important; }
-        body.dark-theme .flat-section .transaction-item { border-bottom-color: rgba(255,255,255,0.05) !important; }
-        .flat-section .transaction-item:last-child { border-bottom: none !important; }
-		/* =========================================================
-           15. THU GỌN KHOẢNG CÁCH VÀ TỐI ƯU HIỂN THỊ (PRO FIX)
+        /* =========================================================
+           5. GIAO DIỆN TỐI (DARK MODE) OVERRIDES
            ========================================================= */
-           
-        /* 1. Giảm padding trên/dưới của thẻ giao dịch */
-        .timeline-wrapper-seamless .transaction-item.swipe-front {
-            padding: 10px 16px 10px 24px !important; 
-        }
-
-        /* 2. Thu nhỏ icon danh mục để cân đối với dòng chữ */
-        .timeline-wrapper-seamless .t-icon {
-            width: 36px !important;
-            height: 36px !important;
-        }
-
-        /* 3. Giảm khoảng cách thừa giữa các nhóm ngày */
-        .timeline-wrapper-seamless .date-group {
-            margin-bottom: 24px !important;
-        }
-
-        /* 4. Canh chỉnh lại đường phân cách mỏng cho khớp với icon đã thu nhỏ */
-        .timeline-wrapper-seamless .swipe-container:not(:last-child)::after {
-            left: 60px !important; 
-        }
+        body.dark-theme .modern-card { background: var(--card-bg, #1e293b); border-color: rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        body.dark-theme #histListViewFilters .search-box input { background: #1e293b; color: var(--text-main); }
+        body.dark-theme #histListViewFilters .search-box input:focus { background: #0f172a; }
+        body.dark-theme .btn-quick-filter { background: var(--card-bg); border-color: #2d3748; }
+        body.dark-theme .btn-quick-filter.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
+        body.dark-theme #filteredSummary .box-in { background: rgba(46, 204, 113, 0.15); }
+        body.dark-theme #filteredSummary .box-in .sc-label, body.dark-theme #filteredSummary .box-in .sc-val { color: var(--success); }
+        body.dark-theme #filteredSummary .box-out { background: rgba(231, 76, 60, 0.15); }
+        body.dark-theme #filteredSummary .box-out .sc-label, body.dark-theme #filteredSummary .box-out .sc-val { color: var(--danger); }
+        body.dark-theme #filteredSummary .box-bal { background: #2d3748; }
+        body.dark-theme .timeline-wrapper-seamless .date-group-header { background: rgba(30, 41, 59, 0.85) !important; border-color: rgba(255,255,255,0.05) !important; }
+        body.dark-theme .timeline-wrapper-seamless .date-group-header::after { background: linear-gradient(to bottom, #829fff, transparent); }
+        body.dark-theme .timeline-wrapper-seamless .date-group:not(:last-child)::after { background: linear-gradient(90deg, transparent, rgba(130, 159, 255, 0.15), transparent); }
+        body.dark-theme .timeline-wrapper-seamless .date-group-items { background: var(--card-bg) !important; border-color: #2d3748 !important; box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important; }
+        body.dark-theme .timeline-wrapper-seamless .swipe-container:not(:last-child)::after { background: #1e293b !important; }
+        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front { background: var(--card-bg) !important; }
+        body.dark-theme .timeline-wrapper-seamless .t-title { color: #f1f5f9 !important; }
+        body.dark-theme .timeline-wrapper-seamless .t-note { color: #94a3b8 !important; }
+        body.dark-theme .swipe-actions button { box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important; }
+        body.dark-theme .btn-load-more { border-color: #4a5568 !important; }
+        body.dark-theme .btn-load-more:hover, body.dark-theme .btn-load-more:active { background: #1e293b !important; }
+        body.dark-theme .timeline-wrapper-seamless .t-chevron { color: #475569 !important; }
+        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:hover .t-chevron, body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:active .t-chevron { color: #829fff !important; }
         
-        /* 5. Tinh chỉnh cỡ chữ nhỏ lại 1 chút cho tinh tế */
-        .timeline-wrapper-seamless .t-title { font-size: 14.5px !important; }
-        .timeline-wrapper-seamless .t-note { font-size: 12.5px !important; }
-        .timeline-wrapper-seamless .t-amount { font-size: 15.5px !important; }
-		/* =========================================================
-           16. KHÔI PHỤC VÀ LÀM ĐẸP MŨI TÊN (CHEVRON)
-           ========================================================= */
-           
-        /* 1. Ghi đè lệnh ẩn trước đó, cho phép mũi tên hiển thị lại */
-        .timeline-wrapper-seamless .t-chevron {
-            display: block !important; 
-            font-size: 22px !important;
-            color: #cbd5e1 !important; /* Màu xám nhạt tinh tế */
-            margin-left: 6px !important; /* Canh khoảng cách với số tiền */
-            font-weight: 300 !important;
-            transition: transform 0.2s ease, color 0.2s ease !important;
-        }
-
-        /* 2. Hiệu ứng tương tác: Trượt nhẹ và đổi màu khi chạm vào dòng giao dịch */
-        .timeline-wrapper-seamless .transaction-item.swipe-front:hover .t-chevron,
-        .timeline-wrapper-seamless .transaction-item.swipe-front:active .t-chevron {
-            color: var(--primary) !important; /* Đổi sang màu xanh của app */
-            transform: translateX(4px) !important; /* Trượt mũi tên sang phải 4px */
-        }
-        
-        /* 3. Tương thích Dark Mode */
-        body.dark-theme .timeline-wrapper-seamless .t-chevron {
-            color: #475569 !important;
-        }
-        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:hover .t-chevron,
-        body.dark-theme .timeline-wrapper-seamless .transaction-item.swipe-front:active .t-chevron {
-            color: #829fff !important;
-        }
-		
-		/* =========================================================
-           17. TỐI ƯU VÙNG CHẠM (TOUCH TARGET) CHO MŨI TÊN
-           ========================================================= */
-        .timeline-wrapper-seamless .t-chevron {
-            padding: 15px 5px 15px 20px !important; /* Nới rộng vùng bấm trong suốt ra xung quanh */
-            margin-right: -5px !important; /* Cân bằng lại layout để không bị xô lệch */
-            cursor: pointer;
-            z-index: 10;
-        }
-		/* =========================================================
-           18. BỘ LỌC TÍCH HỢP (SMART FILTER TOGGLE)
-           ========================================================= */
-        /* Nút Lọc Giao diện Mới */
-        .btn-smart-filter {
-            width: 44px; height: 44px; border-radius: 12px; background: #f8f9fa;
-            border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; color: var(--text-muted); transition: all 0.3s ease; flex-shrink: 0;
-        }
-        .btn-smart-filter:active, .btn-smart-filter.active { 
-            background: #eef2ff; border-color: var(--primary); color: var(--primary); 
-        }
-        .btn-smart-filter svg { width: 18px; height: 18px; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        .btn-smart-filter.active svg { transform: scale(1.1) translateY(-1px); }
-        
-        /* Chấm Đỏ báo hiệu có lọc */
-        .filter-dot {
-            position: absolute; top: 10px; right: 10px; width: 8px; height: 8px;
-            background: var(--danger); border-radius: 50%; border: 2px solid #f8f9fa;
-            transition: border-color 0.3s;
-        }
-        .btn-smart-filter.active .filter-dot { border-color: #eef2ff; }
-        .filter-dot.hide { display: none; }
-
-        /* Vùng chứa bộ lọc - Hiệu ứng trượt CSS Grid cực mượt */
-        .advanced-filters-wrapper {
-            display: grid;
-            grid-template-rows: 0fr; /* Đóng */
-            transition: grid-template-rows 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        .advanced-filters-wrapper.open {
-            grid-template-rows: 1fr; /* Mở - tự động fit chiều cao */
-        }
-        .advanced-filters-inner {
-            overflow: hidden; /* Cắt phần dư khi đóng */
-            opacity: 0; transition: opacity 0.3s ease, padding-top 0.3s ease;
-        }
-        .advanced-filters-wrapper.open .advanced-filters-inner {
-            opacity: 1; padding-top: 12px; border-top: 1px dashed #e2e8f0; margin-top: 4px;
-        }
-
-        /* Chế độ Tối */
         body.dark-theme .btn-smart-filter { background: #1e293b; border-color: #2d3748; color: var(--text-main); }
         body.dark-theme .btn-smart-filter:active, body.dark-theme .btn-smart-filter.active { background: rgba(67, 97, 238, 0.2); color: #829fff; border-color: #829fff; }
         body.dark-theme .filter-dot { border-color: #1e293b; }
         body.dark-theme .btn-smart-filter.active .filter-dot { border-color: #1e293b; }
         body.dark-theme .advanced-filters-wrapper.open .advanced-filters-inner { border-top-color: #2d3748; }
-		/* =========================================================
-           19. LỊCH SỬ GẬP/MỞ (ACCORDION DATES)
-           ========================================================= */
-        .date-group { transition: all 0.3s ease; margin-bottom: 24px; }
-        .date-group-header { cursor: pointer; user-select: none; transition: background 0.2s; }
-        .date-group-header:active { background: rgba(0,0,0,0.02) !important; }
-        
-        /* Icon mũi tên gập mở */
-        .header-chevron {
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            color: #94a3b8;
-            margin-left: 6px;
-        }
-        
-        /* Trạng thái gập (Collapsed) */
-        .date-group.collapsed .date-group-items { display: none; }
-        /* Xoay mũi tên hướng sang phải khi gập */
-        .date-group.collapsed .header-chevron { transform: rotate(-90deg); }
-        /* Thu gọn khoảng cách thừa khi đã gập */
-        .date-group.collapsed { margin-bottom: 16px !important; }
-        
+
         body.dark-theme .date-group-header:active { background: rgba(255,255,255,0.02) !important; }
-		/* =========================================================
-           20. TỐI ƯU KHOẢNG CÁCH LỊCH SỬ GẬP/MỞ
-           ========================================================= */
-        /* 1. Xóa bỏ các đường nối và khoảng trống khổng lồ của thiết kế cũ */
-        .timeline-wrapper-seamless .date-group:not(:last-child)::after {
-            display: none !important;
-        }
-        .timeline-wrapper-seamless .date-group-header::after {
-            display: none !important;
-        }
-        .timeline-wrapper-seamless .timeline-group-marker {
-            display: none !important; /* Ẩn chấm tròn thừa */
-        }
-
-        /* 2. Thu hẹp triệt để khoảng cách giữa các nhóm ngày */
-        .timeline-wrapper-seamless .date-group {
-            margin-bottom: 12px !important; /* Khi đang xòe: Cách nhau 12px (Cũ là 40px) */
-        }
-        .timeline-wrapper-seamless .date-group.collapsed {
-            margin-bottom: 8px !important;  /* Khi đang gập: Ép sát lại chỉ còn 8px */
-        }
-
-        /* 3. Tối ưu thanh Tiêu đề Ngày: To ra để dễ bấm, nhưng gọn về lề */
-        .timeline-wrapper-seamless .date-group-header {
-            margin: 0 0 8px 0 !important; /* Cắt bỏ margin thừa xung quanh */
-            padding: 12px 16px !important; /* Nới rộng vùng bấm bên trong (Touch Target) */
-            width: 100% !important; /* Trải dài full màn hình */
-            border-radius: 14px !important;
-            justify-content: space-between !important; /* Đẩy tên ngày và tổng tiền ra 2 mép */
-        }
-		/* =========================================================
-           21. CĂN CHỈNH THẲNG HÀNG TỔNG THU/CHI NGÀY
-           ========================================================= */
-        .date-summary {
-            display: flex;
-            align-items: center;
-        }
-        /* Cột Thu: Chiều rộng cố định 80px, dồn chữ sang phải */
-        .date-summary .ds-in {
-            width: 80px; 
-            text-align: right;
-            display: inline-block;
-        }
-        /* Dấu chia ở giữa: Luôn đứng im một chỗ */
-        .date-summary .ds-sep {
-            margin: 0 8px;
-            color: #cbd5e1;
-            font-size: 14px;
-            font-weight: 400;
-        }
-        /* Cột Chi: Chiều rộng cố định 80px, dồn chữ sang trái */
-        .date-summary .ds-out {
-            width: 80px; 
-            text-align: left;
-            display: inline-block;
-        }
-		/* =========================================================
-           22. BÀN PHÍM MÁY TÍNH TÍCH HỢP (CUSTOM NUMPAD)
-           ========================================================= */
-        .numpad-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-        }
-        .np-btn {
-            height: 60px; border-radius: 16px; border: none; background: #fff;
-            font-size: 24px; font-weight: 700; color: var(--text-main);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer;
-            transition: all 0.15s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .np-btn:active { transform: scale(0.92); background: #e2e8f0; }
-        .np-btn.np-op { background: #eef2ff; color: var(--primary); font-size: 22px; }
-        
-        /* Cột ngoài cùng bên phải: Nút xóa và Nút Xong */
-        .np-btn.np-back { color: var(--danger); background: #fceceb; }
-        .np-btn.np-done {
-            grid-row: span 2; height: 100%; background: var(--primary); color: #fff;
-            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3); font-size: 20px;
-        }
-        .np-btn.np-done:active { background: #324cdd; }
-
-        /* Hỗ trợ Dark Mode */
         body.dark-theme .numpad-grid .np-btn { background: var(--card-bg); color: var(--text-main); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         body.dark-theme .numpad-grid .np-btn:active { background: #2d3748; }
         body.dark-theme .numpad-grid .np-op { background: rgba(67, 97, 238, 0.15); color: #829fff; }
         body.dark-theme .numpad-grid .np-back { background: rgba(231, 76, 60, 0.15); color: #ff7668; }
         body.dark-theme .numpad-grid .np-done { background: var(--primary); color: #fff; }
-		/* =========================================================
-           23. LƯỚI DANH MỤC THÔNG MINH (SMART CATEGORY GRID)
-           ========================================================= */
-        /* Biến thanh cuộn thành Lưới 4 cột */
-        #categoryScroll {
-            display: grid !important;
-            grid-template-columns: repeat(4, 1fr); /* Chia đều 4 cột */
-            gap: 12px 8px;
-            overflow-x: hidden;
-            padding: 8px 0;
-        }
-        
-        /* Ghi đè giao diện nút bấm (Icon nằm trên, Chữ nằm dưới) */
-        #categoryScroll .cat-pill {
-            display: flex; flex-direction: column; padding: 8px 4px;
-            border-radius: 16px; border: 2px solid transparent; background: transparent;
-            font-size: 11.5px; gap: 0; box-shadow: none; text-align: center;
-        }
-        
-        /* Hiệu ứng khi được chọn: Tạo khung viền và phóng to icon */
-        #categoryScroll .cat-pill.active {
-            background: rgba(0,0,0,0.02);
-            border-color: var(--cat-color, var(--primary));
-            color: var(--text-main);
-        }
-        #categoryScroll .cat-pill.active .pill-icon {
-            transform: scale(1.15);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        body.dark-theme #categoryScroll .cat-pill.active {
-            background: rgba(255,255,255,0.05);
-        }
-		/* =========================================================
-           24. GIAO DIỆN ĐỔI MÀU THEO NGỮ CẢNH (CONTEXTUAL THEME)
-           ========================================================= */
-        /* Bật hiệu ứng chuyển màu mượt mà cho các phần tử */
-        #formCard .modern-date-wrapper, 
-        #formCard .modern-date-wrapper svg,
-        #formCard .input-amount,
-        #formCard .amount-currency,
-        #formCard .btn-submit {
-            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
-        /* --- THEME: TIỀN CHI (MÀU ĐỎ) --- */
-        #formCard.theme-expense .modern-date-wrapper:focus-within { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1); }
-        #formCard.theme-expense .modern-date-wrapper svg { color: var(--danger); }
-        #formCard.theme-expense .input-amount { color: var(--danger); }
-        #formCard.theme-expense .amount-currency { color: rgba(231, 76, 60, 0.7); }
-        #formCard.theme-expense .btn-submit { background: var(--danger); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.25); }
-        #formCard.theme-expense .btn-submit:active { background: #c0392b; }
-
-        /* --- THEME: TIỀN THU (MÀU XANH LÁ) --- */
-        #formCard.theme-income .modern-date-wrapper:focus-within { border-color: var(--success); box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1); }
-        #formCard.theme-income .modern-date-wrapper svg { color: var(--success); }
-        #formCard.theme-income .input-amount { color: var(--success); }
-        #formCard.theme-income .amount-currency { color: rgba(46, 204, 113, 0.7); }
-        #formCard.theme-income .btn-submit { background: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.25); }
-        #formCard.theme-income .btn-submit:active { background: #27ae60; }
-		/* =========================================================
-           25. NÚT BẤM "HÒA TAN" (MICRO-INTERACTION SUBMIT)
-           ========================================================= */
-        /* Nền tảng: Thêm thuộc tính chuyển động (transition) cho chiều rộng */
-        #formCard .btn-submit {
-            width: 100%; display: flex; align-items: center; justify-content: center;
-            margin: 8px auto 0 auto; position: relative; overflow: hidden;
-            transition: width 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55), background-color 0.35s ease !important;
-        }
-
-        /* TRẠNG THÁI 1: Đang tải (Thu nhỏ thành hình tròn) */
-        #formCard .btn-submit.is-loading {
-            width: 48px !important; 
-            border-radius: 24px !important; 
-            color: transparent !important;
-            pointer-events: none; /* Khóa bấm đúp */
-        }
-        /* Vòng tròn xoay */
-        #formCard .btn-submit.is-loading::after {
-            content: ''; position: absolute;
-            width: 22px; height: 22px;
-            border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff;
-            border-radius: 50%;
-            animation: btnSpin 0.6s linear infinite;
-        }
-        @keyframes btnSpin { to { transform: rotate(360deg); } }
-
-        /* TRẠNG THÁI 2: Thành công (Bung rộng ra, màu Xanh, Dấu check) */
-        #formCard .btn-submit.is-success {
-            width: 100% !important; 
-            background: var(--success) !important;
-            color: transparent !important;
-            pointer-events: none;
-        }
-        /* Dấu Check mark bật nảy */
-        #formCard .btn-submit.is-success::after {
-            content: ''; position: absolute;
-            width: 10px; height: 20px;
-            border: solid white; border-width: 0 3px 3px 0;
-            transform: rotate(45deg) scale(0); margin-top: -4px;
-            animation: checkmarkPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        @keyframes checkmarkPop { 
-            0% { transform: scale(0) rotate(45deg); } 
-            100% { transform: scale(1) rotate(45deg); } 
-        }
-		/* =========================================================
-           26. MINI-LIST "VỪA NHẬP XONG" (QUICK RECENTS)
-           ========================================================= */
-        .recent-tx-container {
-            margin-top: 20px; padding-top: 16px;
-            border-top: 1px dashed #e2e8f0;
-            animation: fadeIn 0.4s ease;
-        }
-        .recent-tx-header {
-            font-size: 11px; font-weight: 800; color: var(--text-muted);
-            text-transform: uppercase; letter-spacing: 0.5px;
-            margin-bottom: 12px; text-align: center;
-        }
-        .recent-tx-list { display: flex; flex-direction: column; gap: 8px; }
-        
-        /* Thẻ giao dịch phiên bản thu nhỏ */
-        .mini-tx-item {
-            display: flex; align-items: center; justify-content: space-between;
-            background: var(--bg-color); padding: 8px 12px;
-            border-radius: 12px; font-size: 13px;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
-        }
-        .mini-tx-left { display: flex; align-items: center; gap: 8px; }
-        .mini-tx-icon {
-            width: 24px; height: 24px; border-radius: 6px;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .mini-tx-icon svg { width: 14px; height: 14px; }
-        .mini-tx-name { font-weight: 700; color: var(--text-main); }
-        .mini-tx-time { font-size: 11px; color: var(--text-muted); margin-left: 4px; font-weight: 500;}
-
-        /* Hỗ trợ Dark Mode */
+        body.dark-theme #categoryScroll .cat-pill.active { background: rgba(255,255,255,0.05); }
         body.dark-theme .recent-tx-container { border-top-color: #2d3748; }
         body.dark-theme .mini-tx-item { background: #1e293b; box-shadow: none;}
-		/* =========================================================
-           27. NÚT HOÀN TÁC GIAO DỊCH (QUICK UNDO)
-           ========================================================= */
-        .btn-undo-tx {
-            background: transparent; border: none; padding: 4px 8px;
-            color: var(--warning); cursor: pointer; display: flex;
-            align-items: center; justify-content: center; transition: 0.2s;
-            border-radius: 8px; margin-left: 8px;
-        }
-        .btn-undo-tx:active { background: rgba(243, 156, 18, 0.15); transform: scale(0.9); }
-        .btn-undo-tx svg { width: 18px; height: 18px; stroke-width: 2.5; }
-		/* =========================================================
-           29. BẢN ĐỒ NHIỆT (HEATMAP) CHO LỊCH LƯỚI
-           ========================================================= */
-        /* Mức 1: Chi tiêu nhẹ (Dưới 100k) - Đỏ nhạt */
-        .cal-day.heat-1 { background: rgba(231, 76, 60, 0.1); border-color: rgba(231, 76, 60, 0.2); }
-        /* Mức 2: Chi tiêu vừa (100k - 500k) - Đỏ cam */
-        .cal-day.heat-2 { background: rgba(231, 76, 60, 0.4); color: #fff; font-weight: 800; border-color: rgba(231, 76, 60, 0.5); }
-        /* Mức 3: Đốt tiền (Trên 500k) - Đỏ rực */
-        .cal-day.heat-3 { background: rgba(231, 76, 60, 0.85); color: #fff; font-weight: 800; border-color: rgba(231, 76, 60, 0.9); box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3); }
-        
-        /* Chế độ Tối (Dark Mode) cho Heatmap */
         body.dark-theme .cal-day.heat-1 { background: rgba(231, 76, 60, 0.15); border-color: rgba(231, 76, 60, 0.3); }
         body.dark-theme .cal-day.heat-2 { background: rgba(231, 76, 60, 0.4); color: #fff; }
         body.dark-theme .cal-day.heat-3 { background: rgba(231, 76, 60, 0.8); color: #fff; }
-
-        /* =========================================================
-           30. RÚT GỌN KHOẢNG TRỐNG GIỮA BIỂU ĐỒ VÀ DANH SÁCH
-           ========================================================= */
-        #historyChartWrapper {
-            margin-bottom: 4px !important; /* Giảm mạnh margin dưới của Biểu đồ */
-        }
-        #transactionList {
-            margin-top: 0 !important; /* Xóa margin trên của Danh sách */
-        }
-        .timeline-wrapper-seamless {
-            padding-top: 4px !important; /* Cắt bớt padding thừa */
-        }
-        .timeline-wrapper-seamless .date-group-header {
-            margin-top: 0 !important; /* Kéo thanh tiêu đề ngày sát lên trên */
-        }
-		/* =========================================================
-           34. THU GỌN KHOẢNG TRỐNG ĐÁY DANH SÁCH LỊCH SỬ
-           ========================================================= */
-        /* Giảm padding của khối bao bọc danh sách */
-        .timeline-wrapper-seamless {
-            padding-bottom: 4px !important;
-        }
-        
-        /* Ép xẹp lề của dòng chữ "Đã hiển thị toàn bộ..." và Vòng tròn nạp dữ liệu */
-        .scroll-sentinel, 
-        .end-of-list-msg {
-            padding: 12px 0 16px 0 !important; 
-            margin: 0 !important;
-        }
-        
-        /* Giảm khoảng cách của container bọc ngoài cùng */
-        #histListContainerCard {
-            padding-bottom: 0 !important;
-        }
-		/* =========================================================
-           35. BỘ NÚT CHUYỂN BIỂU ĐỒ CẢI TIẾN (SEGMENTED CONTROL)
-           ========================================================= */
-        .dashboard-tabs {
-            display: flex; background: #f1f5f9; padding: 4px; 
-            border-radius: 12px; margin-bottom: 20px;
-        }
-        .dash-tab-btn {
-            flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-            padding: 8px 0; border: none; background: transparent; color: var(--text-muted);
-            font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        .dash-tab-btn svg { width: 16px; height: 16px; }
-        
-        /* Hiệu ứng khi Nút được bôi sáng */
-        .dash-tab-btn.active {
-            background: #ffffff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
-        /* Hỗ trợ Dark Mode */
         body.dark-theme .dashboard-tabs { background: #1e293b; }
         body.dark-theme .dash-tab-btn.active { background: var(--card-bg); color: #829fff; }
-        
-        /* Hiệu ứng Fade-in nảy nhẹ khi đổi biểu đồ */
-        .dash-view { animation: fadeInChart 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        @keyframes fadeInChart { 
-            from { opacity: 0; transform: translateY(8px) scale(0.98); } 
-            to { opacity: 1; transform: translateY(0) scale(1); } 
-        }
+        body.dark-theme .pie-switch { background: rgba(255,255,255,0.08); }
+        body.dark-theme .pie-switch button.active.expense, body.dark-theme .pie-switch button.active.income { background: var(--card-bg); }
+        body.dark-theme .badge-item { border-color: #2d3748; }
+        body.dark-theme .badge-item.unlocked { background: linear-gradient(135deg, #3a3210, #544400); }
     </style>
 
     <!-- SDK FIREBASE -->

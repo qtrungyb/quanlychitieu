@@ -1393,6 +1393,15 @@ function updateUI() {
 
     const sortedDates = Object.keys(grouped).sort().reverse();
     
+    // ==========================================
+    // THUẬT TOÁN TÌM MỐC 100% CHO NỀN HÀO QUANG
+    // ==========================================
+    let maxDailyExpenseGlobal = 0;
+    for (let d in grouped) {
+        if (grouped[d].out > maxDailyExpenseGlobal) maxDailyExpenseGlobal = grouped[d].out;
+    }
+    if (maxDailyExpenseGlobal === 0) maxDailyExpenseGlobal = 1;
+
     let listHTML = '<div class="timeline-wrapper-seamless">';
 
     if(sortedDates.length === 0) {
@@ -1410,36 +1419,67 @@ function updateUI() {
 
     const paginatedDates = sortedDates.slice(0, currentDateLimit);
 
-    let groupIndex = 0; 
-    
     for (const rawDate of paginatedDates) {
         const data = grouped[rawDate];
         const displayDateText = formatNiceDate(rawDate).replace('Hôm nay, ', '');
-        const collapsedClass = groupIndex === 0 ? '' : 'collapsed';
+        
+        // Đã xóa bỏ hoàn toàn biến groupIndex gây lỗi
+        const collapsedClass = 'collapsed';
+
+        // ==========================================
+        // THUẬT TOÁN DẢI LỤA TỶ TRỌNG (INLINE SPARKBAR)
+        // ==========================================
+        let sparkbarHtml = '';
+        if (data.out > 0) {
+            const catExpense = {};
+            data.items.forEach(t => {
+                if (t.type === 'expense') {
+                    catExpense[t.categoryId] = (catExpense[t.categoryId] || 0) + t.amount;
+                }
+            });
+            
+            let segmentsHtml = '';
+            for (let cid in catExpense) {
+                const pct = (catExpense[cid] / data.out) * 100;
+                const catObj = categories.find(c => c.id === cid);
+                const colorHex = catObj && THEMES[catObj.color] ? THEMES[catObj.color].hex : '#8395a7';
+                segmentsHtml += `<div class="sparkbar-segment" style="width: ${pct}%; background-color: ${colorHex};"></div>`;
+            }
+            sparkbarHtml = `<div class="daily-sparkbar">${segmentsHtml}</div>`;
+        } else if (data.in > 0) {
+            sparkbarHtml = `<div class="daily-sparkbar"><div class="sparkbar-segment" style="width: 100%; background-color: #2ecc71; opacity: 0.6;"></div></div>`;
+        } else {
+            sparkbarHtml = `<div class="daily-sparkbar"></div>`;
+        }
+        // ==========================================
 
         listHTML += `
         <div class="date-group ${collapsedClass}" id="date_group_${rawDate}" data-date="${rawDate}">
-            <div class="date-group-header" onclick="toggleDateGroup('${rawDate}')">
-                <div class="timeline-group-marker"></div>
-                <div class="date-title" style="font-size: 15px; display: flex; align-items: center;">
-                    ${displayDateText}
-                    <svg class="header-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <div class="date-group-header" onclick="toggleDateGroup('${rawDate}')" style="flex-direction: column; align-items: stretch; justify-content: center !important; gap: 8px; padding-bottom: 10px !important;">
+                
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <div class="date-title" style="font-size: 15px; display: flex; align-items: center;">
+                        ${displayDateText}
+                        <svg class="header-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="date-summary">
+                        <span class="ds-in text-success">+${formatter.format(data.in)}</span>
+                        <span class="ds-sep">|</span> 
+                        <span class="ds-out text-danger">-${formatter.format(data.out)}</span>
+                    </div>
                 </div>
-                <div class="date-summary">
-                    <span class="ds-in text-success">+${formatter.format(data.in)}</span>
-                    <span class="ds-sep">|</span> 
-                    <span class="ds-out text-danger">-${formatter.format(data.out)}</span>
-                </div>
+
+                ${sparkbarHtml}
+                
             </div>
-            <!-- RUỘT RỖNG: Dành chỗ cho kỹ thuật DOM Recycling -->
+            
             <div class="date-group-items" id="items_${rawDate}"></div>
         </div>
         `;
-        
-        groupIndex++; 
+        // Đã xóa dòng `groupIndex++;` gây lỗi ở đây
     }
 
-    listHTML += `</div>`; 
+    listHTML += `</div>`;
 
     // QUAY LẠI NÚT TẢI THÊM TRUYỀN THỐNG (Khắc phục lỗi đơ khi cuộn tự động)
     if (sortedDates.length > currentDateLimit) {
@@ -4663,12 +4703,22 @@ if (typeof updateUI === 'function') {
     };
 }
 // ==========================================
-// TÍNH NĂNG: GẬP/MỞ LỊCH SỬ (ACCORDION DATES)
+// TÍNH NĂNG: GẬP/MỞ LỊCH SỬ (TÍCH HỢP TẢI LƯỜI BIẾNG)
 // ==========================================
 window.toggleDateGroup = function(dateStr) {
     const groupEl = document.getElementById('date_group_' + dateStr);
     if (groupEl) {
-        // Bật/tắt class 'collapsed' để thay đổi trạng thái
+        // TẢI LƯỜI BIẾNG (Lazy Load): Tiết kiệm RAM tuyệt đối!
+        // Chỉ vẽ thẻ HTML khi người dùng THỰC SỰ BẤM MỞ xem ngày hôm đó
+        const itemsContainer = document.getElementById('items_' + dateStr);
+        if (itemsContainer && !itemsContainer.hasAttribute('data-loaded')) {
+            if (typeof buildGroupItemsHTML === 'function') {
+                itemsContainer.innerHTML = buildGroupItemsHTML(dateStr);
+                itemsContainer.setAttribute('data-loaded', 'true');
+            }
+        }
+        
+        // Đảo trạng thái gập/mở
         groupEl.classList.toggle('collapsed');
     }
 };

@@ -1462,42 +1462,16 @@ function updateUI() {
 
     listHTML += `</div>`; 
 
-    // === 1. THAY NÚT BẤM BẰNG CẢM BIẾN TẢI THÊM ===
+    // === TRẢ LẠI NÚT XEM THÊM NGUYÊN BẢN ===
     if (sortedDates.length > currentDateLimit) {
-        listHTML += `
-            <div id="scrollSentinel" class="scroll-sentinel">
-                <svg class="loading-spinner" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle></svg>
-                <span>Đang nạp thêm...</span>
-            </div>`;
-    } else if (sortedDates.length > 0) {
-        // Thông báo khi đã cuộn đến tận cùng của dữ liệu
-        listHTML += `<div class="end-of-list-msg">Đã hiển thị toàn bộ giao dịch</div>`;
+        listHTML += `<button class="btn-load-more" onclick="currentDateLimit += ${DATES_PER_PAGE}; updateUI();">Xem thêm các ngày trước</button>`;
     }
 
     listEl.innerHTML = listHTML;
+    
     if(typeof renderBudgets === 'function') renderBudgets();
     if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
     if (typeof calculateStreak === 'function') calculateStreak();
-
-    // === 2. KÍCH HOẠT CẢM BIẾN (INTERSECTION OBSERVER) ===
-    if (window.scrollObserver) window.scrollObserver.disconnect(); // Gỡ cảm biến cũ trước khi tạo mới
-    
-    const sentinel = document.getElementById('scrollSentinel');
-    if (sentinel) {
-        window.scrollObserver = new IntersectionObserver((entries) => {
-            // Khi thẻ "scrollSentinel" xuất hiện trên màn hình
-            if (entries[0].isIntersecting) {
-                currentDateLimit += DATES_PER_PAGE;
-                updateUI(); // Tự động load thêm
-            }
-        }, { 
-            // Cài đặt rootMargin: '150px' nghĩa là cảm biến sẽ kích hoạt TRƯỚC KHI 
-            // ngón tay cuộn tới đáy 150px, giúp trải nghiệm nạp dữ liệu không bị khựng
-            rootMargin: '150px' 
-        }); 
-        
-        window.scrollObserver.observe(sentinel);
-    }
 
     // ==========================================
     // VẼ BIỂU ĐỒ ĐƯỜNG KÉP CHO TAB LỊCH SỬ

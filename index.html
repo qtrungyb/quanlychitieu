@@ -989,36 +989,99 @@
     </div>
 </div>
 
+<!-- POPUP ADMIN: THỐNG KÊ CHI TIẾT CỦA USER -->
 <div class="history-overlay" id="adminUserStatsOverlay" style="z-index: 10021;" onclick="closeAdminUserStats()"></div>
 <div class="history-modal" id="adminUserStatsModal" style="z-index: 10022; height: 95vh; display: flex; flex-direction: column;">
     <div class="history-modal-header" style="flex-shrink: 0;"><h3 id="adminUserStatsTitle" style="font-size: 16px;">Thống kê của user</h3><button class="btn-close-modal" onclick="closeAdminUserStats()">&times;</button></div>
     <div class="history-modal-body" style="background: var(--bg-color); padding: 16px; flex: 1; overflow-y: auto;">
-        <div class="chart-card" style="margin-bottom: 8px; padding: 16px;">
-            <div class="type-toggle" style="margin-bottom: 16px;">
-                <button type="button" class="btn-toggle active" id="adm_btnModeRange" style="font-size: 14px; background: var(--primary); color: white;">Tùy chỉnh ngày</button><button type="button" class="btn-toggle" id="adm_btnModeMonth" style="font-size: 14px;">Theo tháng</button>
+        
+        <!-- BỘ LỌC NGÀY THÁNG -->
+        <div class="chart-card" style="margin-bottom: 12px; padding: 16px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <div class="type-toggle" style="margin-bottom: 12px;">
+                <button type="button" class="btn-toggle active" id="adm_btnModeRange" style="font-size: 14px; background: var(--primary); color: white;">Tùy chỉnh ngày</button>
+                <button type="button" class="btn-toggle" id="adm_btnModeMonth" style="font-size: 14px;">Theo tháng</button>
             </div>
             <input type="hidden" id="adm_statsFilterMode" value="range">
             <div id="adm_statsRangeContainer" class="filter-row" style="width: 100%;">
                 <div class="filter-date-wrapper active" id="adm_statsStartDateWrapper"><span class="date-text" id="adm_statsStartDateDisplay">Từ ngày</span><input type="date" id="adm_statsStartDate"></div>
                 <div class="filter-date-wrapper active" id="adm_statsEndDateWrapper"><span class="date-text" id="adm_statsEndDateDisplay">Đến ngày</span><input type="date" id="adm_statsEndDate"></div>
             </div>
-            <div id="adm_statsMonthContainer" class="hide"><input type="month" id="adm_statsMonthPicker" style="border: none; background: transparent; font-size: 15px; font-weight: 700; width: 100%; text-align: center;"></div>
+            <div id="adm_statsMonthContainer" class="hide"><input type="month" id="adm_statsMonthPicker" style="border: none; background: transparent; font-size: 15px; font-weight: 700; width: 100%; text-align: center; height: 44px; outline: none; color: var(--text-main);"></div>
         </div>
-        <div class="hero-kpi"><div class="kpi-title">Số dư khả dụng</div><div class="hero-kpi-value" id="adm_kpiNetFlow">0 đ</div><div class="kpi-desc" id="adm_kpiNetFlowDesc"></div></div>
-        <div class="kpi-container">
-            <div class="kpi-card"><div class="kpi-title">Trung bình chi</div><div style="display: flex; gap: 8px;"><div class="kpi-value text-danger" id="adm_kpiAvgExpense">0 đ</div><div class="trend-badge hide" id="adm_kpiAvgExpenseTrend"></div></div><div class="kpi-desc">/ ngày</div></div>
-            <div class="kpi-card"><div class="kpi-title">Chi lớn nhất</div><div class="kpi-value" id="adm_kpiMaxExpense">0 đ</div><div class="kpi-desc" id="adm_kpiMaxExpenseName"></div></div>
-        </div>
-        <div class="chart-card">
-            <div class="chart-header" style="flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; width: 100%;"><h3 class="chart-title">Cơ cấu danh mục</h3><span class="chart-subtitle" id="adm_pieSubtitle"></span></div>
-                <div class="type-toggle" style="margin-bottom: 0; width: 100%;"><button type="button" class="btn-toggle active expense" id="adm_btnPieExp">Tiền Chi</button><button type="button" class="btn-toggle income" id="adm_btnPieInc">Tiền Thu</button></div>
+
+        <!-- KHỐI 1: TẤT CẢ KPI -->
+        <div class="modern-card" style="padding: 24px 16px;">
+            <div class="hero-kpi" style="padding: 0 0 24px 0; border-bottom: 1px dashed rgba(0,0,0,0.08); margin-bottom: 20px;">
+                <div class="kpi-title" style="margin-bottom: 8px;">Số dư khả dụng</div>
+                <div class="hero-kpi-value" id="adm_kpiNetFlow" style="font-size: 36px; color: var(--success);">0 đ</div>
+                <div class="kpi-desc" id="adm_kpiNetFlowDesc" style="margin-top: 12px; background: var(--bg-color); border: none; padding: 6px 16px; border-radius: 20px;"></div>
             </div>
-            <div class="chart-container"><canvas id="adm_pieChart"></canvas></div><div id="adm_pieEmptyState" class="empty-chart hide"><p>Chưa có dữ liệu</p></div>
-            <div id="adm_top5Container" style="margin-top: 16px; border-top: 1px dashed #e2e8f0; padding-top: 16px;"><h3 class="chart-title" style="font-size: 14px;" id="adm_top5Title">Top 5 khoản chi</h3><div class="transaction-list" id="adm_topExpenseList"></div></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div class="kpi-title">Trung bình chi</div>
+                    <div class="kpi-trend-wrapper">
+                        <div class="kpi-value text-danger" id="adm_kpiAvgExpense" style="font-size: 18px;">0 đ</div>
+                        <div class="trend-badge hide" id="adm_kpiAvgExpenseTrend"></div>
+                    </div>
+                    <div class="kpi-desc">/ ngày</div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px; border-left: 1px solid rgba(0,0,0,0.05); padding-left: 16px;">
+                    <div class="kpi-title">Chi lớn nhất</div>
+                    <div class="kpi-value" id="adm_kpiMaxExpense" style="font-size: 18px; color: var(--text-main);">0 đ</div>
+                    <div class="kpi-desc" id="adm_kpiMaxExpenseName" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-muted);"></div>
+                </div>
+            </div>
         </div>
-        <div class="chart-card" style="margin-top: 20px;"><div class="chart-header"><h3 class="chart-title">Thu / Chi</h3></div><div class="chart-container"><canvas id="adm_barChart"></canvas></div></div>
-        <div class="chart-card" style="margin-top: 20px; margin-bottom: 40px;"><div class="chart-header"><h3 class="chart-title">Xu hướng số dư</h3></div><div class="chart-container"><canvas id="adm_lineChart"></canvas></div></div>
+
+        <!-- KHỐI 2: ALL-IN-ONE DASHBOARD -->
+        <div class="modern-card" style="padding: 24px 16px;">
+            <div class="dashboard-tabs" id="adm_dashboardTabs">
+                <button type="button" class="dash-tab-btn active" onclick="switchAdmDashboardChart('bar', this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> Cột
+                </button>
+                <button type="button" class="dash-tab-btn" onclick="switchAdmDashboardChart('line', this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg> Đường
+                </button>
+                <button type="button" class="dash-tab-btn" onclick="switchAdmDashboardChart('pie', this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg> Tròn
+                </button>
+            </div>
+
+            <div id="adm_dashViewBar" class="dash-view">
+                <div style="margin-bottom: 16px;"><h3 class="chart-title" style="font-size: 16px; margin-bottom: 4px;">So sánh Thu / Chi</h3><span class="chart-subtitle" id="adm_barSubtitle" style="background: transparent; padding: 0; display: block;"></span></div>
+                <div class="chart-container" style="height: 260px; width: 100%;"><canvas id="adm_barChart"></canvas></div>
+            </div>
+
+            <div id="adm_dashViewLine" class="dash-view hide">
+                <div style="margin-bottom: 16px;"><h3 class="chart-title" style="font-size: 16px; margin-bottom: 4px;">Biến động Số dư</h3><span class="chart-subtitle" id="adm_lineSubtitle" style="background: transparent; padding: 0; display: block;"></span></div>
+                <div class="chart-container" style="height: 260px; width: 100%;"><canvas id="adm_lineChart"></canvas></div>
+            </div>
+
+            <div id="adm_dashViewPie" class="dash-view hide">
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 4px;">
+                        <h3 class="chart-title" style="font-size: 16px; margin: 0;">Cơ cấu Tỷ trọng</h3>
+                        <div class="pie-switch">
+                            <button id="adm_btnPieExp" class="btn-toggle active expense">Chi</button>
+                            <button id="adm_btnPieInc" class="btn-toggle income">Thu</button>
+                        </div>
+                    </div>
+                    <span class="chart-subtitle" id="adm_pieSubtitle" style="background: transparent; padding: 0; display: block;"></span>
+                </div>
+                <div class="chart-container" style="height: 260px; width: 100%; position: relative;">
+                    <canvas id="adm_pieChart"></canvas>
+                    <div id="adm_pieEmptyState" class="hide" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-muted);">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.3;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        <span id="adm_pieEmptyText" style="font-size: 14px; font-weight: 500;">Chưa có dữ liệu</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="adm_top5Container" style="margin-top: 24px; padding-top: 24px; border-top: 1px dashed rgba(0,0,0,0.08);">
+                <div class="chart-header" style="margin-bottom: 16px;"><h3 class="chart-title" id="adm_top5Title" style="font-size: 16px;">Top 5 khoản chi lớn nhất</h3></div>
+                <div class="transaction-list" id="adm_topExpenseList" style="gap: 12px;"></div>
+            </div>
+        </div>
     </div>
 </div>
 

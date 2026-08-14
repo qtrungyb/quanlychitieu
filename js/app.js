@@ -1162,15 +1162,15 @@ document.querySelectorAll('.btn-quick').forEach(btn => {
 // THIẾT LẬP BỘ LỌC MẶC ĐỊNH KHI TẢI TRANG
 // ==========================================
 function setDefaultHistoryFilters() {
-    // 1. Ép chọn nút "Tháng này"
+    // 1. Ép chọn nút "Tháng này" (Bỏ điều kiện check class active để luôn luôn ép click)
     const monthBtn = document.querySelector('.btn-quick-filter[data-range="this_month"]');
-    if (monthBtn && !monthBtn.classList.contains('active')) {
-        monthBtn.click();
+    if (monthBtn) {
+        monthBtn.click(); // Luôn click để tính toán và đổ dữ liệu ngày tháng vào input ẩn
     }
     
     // 2. Ép chọn nút "Tất cả" danh mục
     const allCatBtn = document.querySelector('#historyCategoryFilter .cat-pill[data-filter=""]');
-    if (allCatBtn && !allCatBtn.classList.contains('active')) {
+    if (allCatBtn) {
         document.querySelectorAll('#historyCategoryFilter .cat-pill').forEach(p => p.classList.remove('active'));
         allCatBtn.classList.add('active');
     }

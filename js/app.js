@@ -5401,3 +5401,79 @@ window.buildGroupItemsHTML = function(dateStr) {
     });
     return itemsHtml;
 };
+// ==========================================
+// TÍNH NĂNG: HOLOGRAPHIC GYROSCOPE SHIMMER
+// ==========================================
+function initGyroscopeShimmer() {
+    const card = document.querySelector('.wallet-card');
+    if (!card) return;
+
+    let isPermissionGranted = false;
+
+    // 1. Hàm xử lý tọa độ khi điện thoại nghiêng
+    const handleOrientation = (e) => {
+        const gamma = e.gamma; // Góc nghiêng trái-phải (-90 đến 90)
+        const beta = e.beta;   // Góc nghiêng trước-sau (-180 đến 180)
+
+        if (gamma === null || beta === null) return;
+
+        // Quy đổi góc nghiêng thành tọa độ % trên bề mặt thẻ (0% đến 100%)
+        // Thu hẹp biên độ để vệt sáng di chuyển mượt mà theo cổ tay
+        const px = Math.min(Math.max((gamma + 30) / 60 * 100, 0), 100);
+        const py = Math.min(Math.max((beta + 30) / 60 * 100, 0), 100);
+
+        card.style.setProperty('--px', `${px}%`);
+        card.style.setProperty('--py', `${py}%`);
+        card.style.setProperty('--o', `1`); // Bật sáng ánh kim
+    };
+
+    // 2. Kích hoạt cảm biến trên Mobile (Đặc biệt xử lý bảo mật cho iOS 13+)
+    const enableGyroscope = () => {
+        if (window.DeviceOrientationEvent) {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                // iOS yêu cầu người dùng phải chạm 1 lần vào thẻ để cấp quyền đọc cảm biến
+                DeviceOrientationEvent.requestPermission()
+                    .then(response => {
+                        if (response === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation);
+                            isPermissionGranted = true;
+                            showToast('Đã kích hoạt cảm biến ánh kim!');
+                        }
+                    })
+                    .catch(err => console.log('Lỗi cấp quyền Gyroscope:', err));
+            } else {
+                // Android và các thiết bị hỗ trợ trực tiếp không cần hỏi quyền
+                window.addEventListener('deviceorientation', handleOrientation);
+                isPermissionGranted = true;
+            }
+        }
+    };
+
+    // Cho phép người dùng chạm vào thẻ trên iOS để bật cảm biến
+    card.addEventListener('click', () => {
+        if (!isPermissionGranted) {
+            enableGyroscope();
+        }
+    });
+
+    // 3. Dự phòng cho Máy tính (PC): Dùng chuột rà qua lại để test hiệu ứng
+    card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const px = ((e.clientX - rect.left) / rect.width) * 100;
+        const py = ((e.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--px', `${px}%`);
+        card.style.setProperty('--py', `${py}%`);
+        card.style.setProperty('--o', `1`);
+    });
+
+    card.addEventListener('mouseleave', () => {
+        if (!isPermissionGranted) {
+            card.style.setProperty('--o', `0`);
+        }
+    });
+}
+
+// Khởi chạy sau khi nạp trang
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initGyroscopeShimmer, 500);
+});

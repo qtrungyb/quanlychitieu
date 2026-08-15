@@ -104,6 +104,8 @@ body { background-color: var(--bg-color); color: var(--text-main); display: flex
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.6); 
     z-index: 10; 
     overflow: hidden; 
+	transform-style: preserve-3d;
+    will-change: transform;
 }
 
 /* Lớp màu nền: Được phóng to 300% và tạo dòng chảy liên tục (Aura Flow) */
@@ -119,19 +121,37 @@ body { background-color: var(--bg-color); color: var(--text-main); display: flex
     z-index: -2; 
 }
 
-/* Quả cầu ánh sáng (Orb) trôi nổi đa chiều bên dưới lớp kính */
+/* 1. Lớp ánh kim Holographic (Phản chiếu theo góc nghiêng điện thoại) */
 .wallet-card::after { 
+    content: ''; 
+    position: absolute; 
+    top: 0; left: 0; right: 0; bottom: 0; 
+    border-radius: inherit;
+    background: radial-gradient(
+        circle at var(--px, 50%) var(--py, 50%), 
+        rgba(255, 255, 255, 0.8) 0%, 
+        rgba(255, 180, 255, 0.35) 25%, 
+        rgba(100, 220, 255, 0.2) 50%, 
+        transparent 75%
+    );
+    opacity: var(--o, 0); 
+    transition: opacity 0.4s ease;
+    z-index: 5; 
+    pointer-events: none; 
+}
+/* 2. Quả cầu ánh sáng (Orb) trôi nổi đa chiều bên dưới lớp kính */
+.wallet-orb { 
     content: ''; 
     position: absolute; 
     top: -20px; left: -20px; 
     width: 150px; height: 150px; 
     background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 70%); 
     border-radius: 50%; 
-    z-index: -1; 
+    z-index: 2; 
     mix-blend-mode: overlay; /* Hòa trộn ánh sáng vào màu nền cực đẹp */
     animation: floatingOrb 10s ease-in-out infinite alternate; 
+    pointer-events: none;
 }
-
 /* Hiệu ứng chuyển động Dòng chảy Gradient */
 @keyframes auraGradientFlow {
     0% { background-position: 0% 50%; }
@@ -146,6 +166,9 @@ body { background-color: var(--bg-color); color: var(--text-main); display: flex
     66% { transform: translate(250px, -20px) scale(0.8); }
     100% { transform: translate(50px, 80px) scale(1.5); }
 }
+
+
+
 body.dark-theme .wallet-card::before { opacity: 0.4; }
 .card-header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; opacity: 0.9; margin-bottom: 12px; z-index: 1; position: relative; font-weight: 600; }
 .btn-eye { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: 0.2s; }

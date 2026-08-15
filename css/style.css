@@ -90,9 +90,10 @@ body { background-color: var(--bg-color); color: var(--text-main); display: flex
    5. BẢNG TỔNG QUAN (THẺ LẬT 3D - FLIP CARD)
    ========================================= */
 .wallet-card-wrapper {
-    perspective: 1500px; /* Độ sâu của không gian 3D */
+    perspective: 1500px; 
     width: 100%;
     z-index: 10;
+    touch-action: none; /* Khóa cuộn trang để ưu tiên tuyệt đối cho vuốt 3D */
 }
 
 .wallet-card-inner {
@@ -151,7 +152,7 @@ body { background-color: var(--bg-color); color: var(--text-main); display: flex
     z-index: -2; 
 }
 
-/* Luồng sáng Hologram ánh kim trượt theo tọa độ ngón tay */
+/* Luồng sáng Hologram (Đã tối ưu hóa cho Mobile, loại bỏ giật lag) */
 .wallet-card::after { 
     content: ''; 
     position: absolute; 
@@ -159,16 +160,14 @@ body { background-color: var(--bg-color); color: var(--text-main); display: flex
     border-radius: inherit;
     background: radial-gradient(
         circle at var(--px, 50%) var(--py, 50%), 
-        rgba(255, 255, 255, 0.8) 0%, 
-        rgba(255, 200, 255, 0.3) 20%, 
-        rgba(150, 255, 255, 0.1) 40%, 
-        transparent 70%
+        rgba(255, 255, 255, 0.6) 0%, 
+        rgba(255, 200, 255, 0.2) 20%, 
+        transparent 60%
     );
-    mix-blend-mode: overlay;
-    opacity: var(--o, 0); /* 0: Tàng hình, 1: Sáng rực khi vuốt */
+    opacity: var(--o, 0); 
     transition: opacity 0.3s ease;
     z-index: 10; 
-    pointer-events: none; /* Không chặn các thao tác bấm nút bên dưới */
+    pointer-events: none; 
 }
 
 /* Ép mặt sau (Back) xoay ngược sẵn 180 độ chờ lật lại */

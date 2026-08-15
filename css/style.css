@@ -87,104 +87,64 @@ body { background-color: var(--bg-color); color: var(--text-main); display: flex
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* =========================================
-   5. BẢNG TỔNG QUAN (THẺ LẬT 3D - FLIP CARD)
+   5. BẢNG TỔNG QUAN (GLASSMORPHISM TỐI ƯU MOBILE)
    ========================================= */
-.wallet-card-wrapper {
-    perspective: 1500px; 
-    width: 100%;
-    z-index: 10;
-    touch-action: none; /* Khóa cuộn trang để ưu tiên tuyệt đối cho vuốt 3D */
-}
-
-.wallet-card-inner {
-    position: relative;
-    width: 100%;
-    /* Gộp 2 hiệu ứng: Nghiêng (rx, ry) bám tay + Lật (flip) */
-    transform: rotateX(var(--rx, 0deg)) rotateY(calc(var(--flip, 0deg) + var(--ry, 0deg)));
-    transform-style: preserve-3d;
-    transition: transform 0.1s ease-out; /* Phản hồi bám ngón tay cực nhanh */
-}
-
-/* Lệnh lật 180 độ */
-.wallet-card-wrapper.flipped .wallet-card-inner {
-    --flip: 180deg;
-}
-
-/* Khi buông tay ra, nhả thẻ về trạng thái tĩnh mượt mà */
-.wallet-card-wrapper.reset-3d .wallet-card-inner {
-    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* Đẩy các chữ, số, icon bên trong nổi lên 40px tạo chiều sâu 3D */
-.wallet-card .card-header, 
-.wallet-card .card-balance, 
-.wallet-card .card-stats,
-.wallet-card.back > div {
-    transform: translateZ(40px);
-    transform-style: preserve-3d;
-}
-
-/* Thiết lập dùng chung cho 2 mặt */
 .wallet-card { 
     position: relative; 
     border-radius: 24px; 
     padding: 24px; 
     color: #fff; 
-    background: rgba(255, 255, 255, 0.15); 
+    
+    /* Phủ hạt Noise Texture (độ mờ 8%) kết hợp với nền trắng trong suốt 15% */
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E"), rgba(255, 255, 255, 0.15); 
+    
     backdrop-filter: blur(16px) saturate(120%); 
     -webkit-backdrop-filter: blur(16px) saturate(120%); 
     border: 1px solid rgba(255, 255, 255, 0.4); 
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.6); 
+    z-index: 10; 
     overflow: hidden; 
-    
-    /* Ẩn mặt sau khi bị lật úp */
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
-/* Lớp màu nền chạy chung cho cả 2 mặt (Được bơm từ JS thông qua Wrapper) */
+/* Lớp màu nền: Được phóng to 300% và tạo dòng chảy liên tục (Aura Flow) */
 .wallet-card::before { 
     content: ''; 
     position: absolute; 
-    top: 0; left: 0; right: 0; bottom: 0; 
+    /* Mở rộng vùng nền để có không gian di chuyển */
+    top: -50%; left: -50%; width: 200%; height: 200%; 
     background: var(--wallet-bg, linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)); 
-    opacity: 0.7; 
+    background-size: 300% 300%; /* Kéo giãn màu sắc hòa quyện vào nhau */
+    animation: auraGradientFlow 12s ease infinite alternate; /* Chuyển động lỏng */
+    opacity: 0.75; 
     z-index: -2; 
 }
 
-/* Luồng sáng Hologram (Đã tối ưu hóa cho Mobile, loại bỏ giật lag) */
+/* Quả cầu ánh sáng (Orb) trôi nổi đa chiều bên dưới lớp kính */
 .wallet-card::after { 
     content: ''; 
     position: absolute; 
-    top: 0; left: 0; right: 0; bottom: 0; 
-    border-radius: inherit;
-    background: radial-gradient(
-        circle at var(--px, 50%) var(--py, 50%), 
-        rgba(255, 255, 255, 0.6) 0%, 
-        rgba(255, 200, 255, 0.2) 20%, 
-        transparent 60%
-    );
-    opacity: var(--o, 0); 
-    transition: opacity 0.3s ease;
-    z-index: 10; 
-    pointer-events: none; 
+    top: -20px; left: -20px; 
+    width: 150px; height: 150px; 
+    background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 70%); 
+    border-radius: 50%; 
+    z-index: -1; 
+    mix-blend-mode: overlay; /* Hòa trộn ánh sáng vào màu nền cực đẹp */
+    animation: floatingOrb 10s ease-in-out infinite alternate; 
 }
 
-/* Ép mặt sau (Back) xoay ngược sẵn 180 độ chờ lật lại */
-.wallet-card.back {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    transform: rotateY(180deg);
+/* Hiệu ứng chuyển động Dòng chảy Gradient */
+@keyframes auraGradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 50% 100%; }
 }
 
-/* Tùy chỉnh kính mờ cho Dark Mode */
-body.dark-theme .wallet-card {
-    background: rgba(0, 0, 0, 0.25) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+/* Hiệu ứng trôi nổi đa chiều của Quả cầu ánh sáng */
+@keyframes floatingOrb {
+    0% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(150px, 40px) scale(1.3); }
+    66% { transform: translate(250px, -20px) scale(0.8); }
+    100% { transform: translate(50px, 80px) scale(1.5); }
 }
 body.dark-theme .wallet-card::before { opacity: 0.4; }
 .card-header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; opacity: 0.9; margin-bottom: 12px; z-index: 1; position: relative; font-weight: 600; }
@@ -485,7 +445,8 @@ body.dark-theme .settings-item { border-bottom-color: #2d3748; background-color:
 body.dark-theme .settings-item:active { background-color: #2d3748; }
 /* Tùy chỉnh Kính mờ cho Dark Mode */
 body.dark-theme .wallet-card {
-    background: rgba(0, 0, 0, 0.25) !important;
+    /* Ép hạt Noise lên lớp kính đen mờ của chế độ tối */
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E"), rgba(0, 0, 0, 0.25) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
 }
@@ -611,4 +572,25 @@ body.dark-theme #formCard.theme-income:focus-within {
 @keyframes ambientPulseWarning {
     0% { box-shadow: 0 4px 15px rgba(243, 156, 18, 0.05); }
     100% { box-shadow: 0 8px 30px rgba(243, 156, 18, 0.25), 0 0 20px rgba(243, 156, 18, 0.15); }
+}
+/* =========================================
+   DYNAMIC STATE BACKGROUND (TRẠNG THÁI SỐ DƯ)
+   ========================================= */
+.wallet-card {
+    /* Thêm transition để khi số dư thay đổi, màu thẻ sẽ chuyển biến từ từ mượt mà */
+    transition: filter 0.8s ease, box-shadow 0.8s ease, border-color 0.8s ease; 
+}
+
+/* 1. Chế độ "Khô máu" (Dưới 100k) - Thẻ xám xịt, u ám */
+.wallet-card.broke-mode {
+    filter: grayscale(0.85) opacity(0.9);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1), inset 0 0 30px rgba(231, 76, 60, 0.15) !important;
+    border-color: rgba(231, 76, 60, 0.3) !important;
+}
+
+/* 2. Chế độ "Đại gia" (Trên 10 triệu) - Thẻ phát hào quang hoàng kim */
+.wallet-card.rich-mode {
+    filter: contrast(1.1) saturate(1.2);
+    box-shadow: 0 16px 32px rgba(255, 215, 0, 0.15), inset 0 0 30px rgba(255, 215, 0, 0.25), 0 0 20px rgba(255, 215, 0, 0.4) !important;
+    border-color: rgba(255, 215, 0, 0.6) !important;
 }

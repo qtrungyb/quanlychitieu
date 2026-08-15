@@ -798,6 +798,21 @@ function renderBalances() {
         if (tLent) tLent.innerText = (currentBalances.lent > 0 ? '+' : '') + formatter.format(currentBalances.lent || 0) + 'đ';
         if (tBor) tBor.innerText = (currentBalances.borrowed > 0 ? '-' : '') + formatter.format(currentBalances.borrowed || 0) + 'đ';
     }
+
+    // --- BẮT ĐẦU: CẢM BIẾN ĐỔI MÀU THẺ THEO SỐ DƯ ---
+    const walletCard = document.querySelector('.wallet-card');
+    if (walletCard) {
+        // Xóa các trạng thái cũ trước khi kiểm tra
+        walletCard.classList.remove('broke-mode', 'rich-mode');
+        
+        // Cập nhật trạng thái mới dựa trên Tổng số dư
+        if (currentBalances.total >= 0 && currentBalances.total < 100000) {
+            walletCard.classList.add('broke-mode'); // Dưới 100k -> Thẻ xám xịt
+        } else if (currentBalances.total >= 10000000) {
+            walletCard.classList.add('rich-mode');  // Trên 10 Triệu -> Hào quang Vàng
+        }
+    }
+    // --- KẾT THÚC CẢM BIẾN ---
 }
 
 // ==========================================
@@ -2456,13 +2471,10 @@ function initWalletThemes() {
 function applyWalletTheme(themeId, saveToDb = true) {
     const theme = WALLET_THEMES.find(t => t.id === themeId) || WALLET_THEMES[0];
     
-    // Gắn màu vào Biến CSS cục bộ của Khối Wrapper
-    const wrapper = document.getElementById('walletCardWrapper');
-    if (wrapper) wrapper.style.setProperty('--wallet-bg', theme.background);
-    
-    // Dự phòng (nếu lỗi HTML)
-    const oldCard = document.querySelector('.wallet-card');
-    if (oldCard && !wrapper) oldCard.style.setProperty('--wallet-bg', theme.background);
+    const walletCard = document.querySelector('.wallet-card');
+    if(walletCard) {
+        walletCard.style.setProperty('--wallet-bg', theme.background);
+    }
 
     localStorage.setItem('walletTheme', themeId);
     if (saveToDb && currentUser) {
@@ -5389,153 +5401,3 @@ window.buildGroupItemsHTML = function(dateStr) {
     });
     return itemsHtml;
 };
-// ==========================================
-// TÍNH NĂNG: HOLOGRAPHIC 3D TILT CARD (HIỆU ỨNG THẺ APPLE CARD)
-// ==========================================
-function init3DCardEffect() {
-    const card = document.querySelector('.wallet-card');
-    if (!card) return;
-
-    // Lắng nghe khi di chuyển chuột hoặc vuốt ngón tay
-    const handleMove = (e) => {
-        // Lấy tọa độ (Hỗ trợ cả máy tính và điện thoại di động)
-        let clientX, clientY;
-        if (e.type === 'touchmove') {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-        } else {
-            clientX = e.clientX;
-            clientY = e.clientY;
-        }
-
-        const rect = card.getBoundingClientRect();
-        // Tính toán tọa độ X, Y tương đối bên trong ranh giới của Thẻ
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
-
-        // Tính tọa độ tâm của Thẻ
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-
-        // Tính góc nghiêng (Giới hạn tối đa ±15 độ để không bị bẻ quá lố)
-        const rotateX = ((y - centerY) / centerY) * -15; 
-        const rotateY = ((x - centerX) / centerX) * 15;
-
-        // Tính % vị trí chuột để di chuyển luồng ánh sáng cầu vồng (Hologram)
-        const px = (x / rect.width) * 100;
-        const py = (y / rect.height) * 100;
-
-        // Gỡ class reset (để thẻ di chuyển bám sát ngón tay tức thì)
-        card.classList.remove('reset-3d');
-        
-        // Bơm biến số vào CSS
-        card.style.setProperty('--rx', `${rotateX}deg`);
-        card.style.setProperty('--ry', `${rotateY}deg`);
-        card.style.setProperty('--px', `${px}%`);
-        card.style.setProperty('--py', `${py}%`);
-        card.style.setProperty('--o', `1`); // Bật độ rực sáng
-    };
-
-    // Hàm trả thẻ về trạng thái tĩnh khi nhấc ngón tay ra
-    const handleLeave = () => {
-        card.classList.add('reset-3d'); // Bật class reset để thẻ từ từ nằm thẳng lại
-        card.style.setProperty('--rx', `0deg`);
-        card.style.setProperty('--ry', `0deg`);
-        card.style.setProperty('--px', `50%`);
-        card.style.setProperty('--py', `50%`);
-        card.style.setProperty('--o', `0`); // Tắt ánh sáng
-    };
-
-    // Gắn sự kiện Chuột (Dành cho PC)
-    card.addEventListener('mousemove', handleMove);
-    card.addEventListener('mouseleave', handleLeave);
-
-    // Gắn sự kiện Vuốt chạm (Dành cho Điện thoại)
-    card.addEventListener('touchmove', handleMove, {passive: true});
-    card.addEventListener('touchend', handleLeave);
-}
-
-// Kích hoạt khi trang đã tải xong
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(init3DCardEffect, 500); 
-});
-// ==========================================
-// TÍNH NĂNG: HOLOGRAPHIC 3D TILT QUYỆN CÙNG FLIP CARD (ĐÃ TỐI ƯU MOBILE)
-// ==========================================
-function init3DCardEffect() {
-    const wrapper = document.getElementById('walletCardWrapper');
-    if (!wrapper) return;
-
-    // Chặn hoàn toàn trình duyệt can thiệp thao tác cuộn trên thẻ
-    wrapper.style.touchAction = 'none';
-
-    let isTicking = false; // Cờ khóa trạng thái chống giật FPS
-
-    const handleMove = (e) => {
-        // Ngăn trình duyệt cuộn trang (Áp dụng cho điện thoại)
-        if (e.cancelable && e.type.includes('touch')) e.preventDefault();
-
-        // Thuật toán RequestAnimationFrame: Đảm bảo khung hình bám sát tay 60FPS
-        if (!isTicking) {
-            window.requestAnimationFrame(() => {
-                let clientX, clientY;
-                if (e.type.includes('touch')) {
-                    clientX = e.touches[0].clientX;
-                    clientY = e.touches[0].clientY;
-                } else {
-                    clientX = e.clientX;
-                    clientY = e.clientY;
-                }
-
-                const rect = wrapper.getBoundingClientRect();
-                const x = clientX - rect.left;
-                const y = clientY - rect.top;
-
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-
-                // Giảm biên độ nghiêng xuống ±12 độ để thẻ không bị bẻ quá méo trên màn nhỏ
-                const rotateX = ((y - centerY) / centerY) * -12; 
-                const rotateY = ((x - centerX) / centerX) * 12;
-
-                const px = (x / rect.width) * 100;
-                const py = (y / rect.height) * 100;
-
-                wrapper.classList.remove('reset-3d');
-                
-                wrapper.style.setProperty('--rx', `${rotateX}deg`);
-                wrapper.style.setProperty('--ry', `${rotateY}deg`);
-                wrapper.style.setProperty('--px', `${px}%`);
-                wrapper.style.setProperty('--py', `${py}%`);
-                wrapper.style.setProperty('--o', `1`);
-                
-                isTicking = false;
-            });
-            isTicking = true;
-        }
-    };
-
-    const handleLeave = () => {
-        wrapper.classList.add('reset-3d');
-        wrapper.style.setProperty('--rx', `0deg`);
-        wrapper.style.setProperty('--ry', `0deg`);
-        wrapper.style.setProperty('--px', `50%`);
-        wrapper.style.setProperty('--py', `50%`);
-        wrapper.style.setProperty('--o', `0`);
-    };
-
-    // Lắng nghe chuột (PC)
-    wrapper.addEventListener('mousemove', handleMove);
-    wrapper.addEventListener('mouseleave', handleLeave);
-    
-    // Lắng nghe ngón tay (Mobile) - Ép passive: false để có thể khóa cuộn trang
-    wrapper.addEventListener('touchstart', handleMove, {passive: false});
-    wrapper.addEventListener('touchmove', handleMove, {passive: false});
-    wrapper.addEventListener('touchend', handleLeave);
-    wrapper.addEventListener('touchcancel', handleLeave);
-}
-
-// Chờ ứng dụng load xong thì bật cảm biến
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(init3DCardEffect, 500); 
-});

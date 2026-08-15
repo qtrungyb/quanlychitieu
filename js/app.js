@@ -459,6 +459,9 @@ window.addEventListener('DOMContentLoaded', () => {
 auth.onAuthStateChanged(user => {
     if (user) {
         currentUser = user;
+		// Bơm mã số UID lên mặt sau của thẻ
+        const uidEl = document.getElementById('cardBackUid');
+        if (uidEl) uidEl.innerText = 'UID: ' + user.uid.substring(0, 8).toUpperCase();
         document.getElementById('authOverlay')?.classList.add('hide');
 		document.getElementById('registerOverlay')?.classList.add('hide');
         
@@ -488,6 +491,16 @@ auth.onAuthStateChanged(user => {
             } else {
                 tabAdminEl?.classList.add('hide');
             }
+
+            // Bơm "Member Since" ra mặt sau của thẻ Card
+            userRef.child('createdAt').once('value').then(timeSnap => {
+                const dateStr = timeSnap.val();
+                if (dateStr) {
+                    const d = new Date(dateStr);
+                    const backDateEl = document.getElementById('cardBackDate');
+                    if (backDateEl) backDateEl.innerText = `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+                }
+            });
         });
 
         catRef = db.ref(`users/${currentUser.uid}/categories`);
@@ -2442,10 +2455,15 @@ function initWalletThemes() {
 
 function applyWalletTheme(themeId, saveToDb = true) {
     const theme = WALLET_THEMES.find(t => t.id === themeId) || WALLET_THEMES[0];
-    const walletCard = document.querySelector('.wallet-card');
-    if(walletCard) {
-        walletCard.style.background = theme.background;
-    }
+    
+    // Gắn màu vào Biến CSS cục bộ của Khối Wrapper
+    const wrapper = document.getElementById('walletCardWrapper');
+    if (wrapper) wrapper.style.setProperty('--wallet-bg', theme.background);
+    
+    // Dự phòng (nếu lỗi HTML)
+    const oldCard = document.querySelector('.wallet-card');
+    if (oldCard && !wrapper) oldCard.style.setProperty('--wallet-bg', theme.background);
+
     localStorage.setItem('walletTheme', themeId);
     if (saveToDb && currentUser) {
         db.ref(`users/${currentUser.uid}/settings/walletTheme`).set(themeId);
@@ -5371,3 +5389,139 @@ window.buildGroupItemsHTML = function(dateStr) {
     });
     return itemsHtml;
 };
+// ==========================================
+// TÍNH NĂNG: HOLOGRAPHIC 3D TILT CARD (HIỆU ỨNG THẺ APPLE CARD)
+// ==========================================
+function init3DCardEffect() {
+    const card = document.querySelector('.wallet-card');
+    if (!card) return;
+
+    // Lắng nghe khi di chuyển chuột hoặc vuốt ngón tay
+    const handleMove = (e) => {
+        // Lấy tọa độ (Hỗ trợ cả máy tính và điện thoại di động)
+        let clientX, clientY;
+        if (e.type === 'touchmove') {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        const rect = card.getBoundingClientRect();
+        // Tính toán tọa độ X, Y tương đối bên trong ranh giới của Thẻ
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        // Tính tọa độ tâm của Thẻ
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        // Tính góc nghiêng (Giới hạn tối đa ±15 độ để không bị bẻ quá lố)
+        const rotateX = ((y - centerY) / centerY) * -15; 
+        const rotateY = ((x - centerX) / centerX) * 15;
+
+        // Tính % vị trí chuột để di chuyển luồng ánh sáng cầu vồng (Hologram)
+        const px = (x / rect.width) * 100;
+        const py = (y / rect.height) * 100;
+
+        // Gỡ class reset (để thẻ di chuyển bám sát ngón tay tức thì)
+        card.classList.remove('reset-3d');
+        
+        // Bơm biến số vào CSS
+        card.style.setProperty('--rx', `${rotateX}deg`);
+        card.style.setProperty('--ry', `${rotateY}deg`);
+        card.style.setProperty('--px', `${px}%`);
+        card.style.setProperty('--py', `${py}%`);
+        card.style.setProperty('--o', `1`); // Bật độ rực sáng
+    };
+
+    // Hàm trả thẻ về trạng thái tĩnh khi nhấc ngón tay ra
+    const handleLeave = () => {
+        card.classList.add('reset-3d'); // Bật class reset để thẻ từ từ nằm thẳng lại
+        card.style.setProperty('--rx', `0deg`);
+        card.style.setProperty('--ry', `0deg`);
+        card.style.setProperty('--px', `50%`);
+        card.style.setProperty('--py', `50%`);
+        card.style.setProperty('--o', `0`); // Tắt ánh sáng
+    };
+
+    // Gắn sự kiện Chuột (Dành cho PC)
+    card.addEventListener('mousemove', handleMove);
+    card.addEventListener('mouseleave', handleLeave);
+
+    // Gắn sự kiện Vuốt chạm (Dành cho Điện thoại)
+    card.addEventListener('touchmove', handleMove, {passive: true});
+    card.addEventListener('touchend', handleLeave);
+}
+
+// Kích hoạt khi trang đã tải xong
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(init3DCardEffect, 500); 
+});
+// ==========================================
+// TÍNH NĂNG: HOLOGRAPHIC 3D TILT QUYỆN CÙNG FLIP CARD
+// ==========================================
+function init3DCardEffect() {
+    const wrapper = document.getElementById('walletCardWrapper');
+    if (!wrapper) return;
+
+    // Lắng nghe khi di chuyển chuột hoặc vuốt ngón tay
+    const handleMove = (e) => {
+        let clientX, clientY;
+        if (e.type === 'touchmove') {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        const rect = wrapper.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        // Tính tọa độ tâm thẻ
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        // Tính góc bẻ cong (Giới hạn tối đa ±15 độ)
+        const rotateX = ((y - centerY) / centerY) * -15; 
+        const rotateY = ((x - centerX) / centerX) * 15;
+
+        // Tính % vị trí chuột để di chuyển luồng sáng Hologram
+        const px = (x / rect.width) * 100;
+        const py = (y / rect.height) * 100;
+
+        // Xóa reset để thẻ bám ngón tay tức thì
+        wrapper.classList.remove('reset-3d');
+        
+        // Bơm biến số vào CSS
+        wrapper.style.setProperty('--rx', `${rotateX}deg`);
+        wrapper.style.setProperty('--ry', `${rotateY}deg`);
+        wrapper.style.setProperty('--px', `${px}%`);
+        wrapper.style.setProperty('--py', `${py}%`);
+        wrapper.style.setProperty('--o', `1`); // Bật sáng Hologram
+    };
+
+    // Khi rút ngón tay ra, nhả thẻ về lại mặt phẳng
+    const handleLeave = () => {
+        wrapper.classList.add('reset-3d');
+        wrapper.style.setProperty('--rx', `0deg`);
+        wrapper.style.setProperty('--ry', `0deg`);
+        wrapper.style.setProperty('--px', `50%`);
+        wrapper.style.setProperty('--py', `50%`);
+        wrapper.style.setProperty('--o', `0`); // Tắt sáng
+    };
+
+    // Gắn sự kiện (Hoạt động cho cả Máy tính và Điện thoại)
+    wrapper.addEventListener('mousemove', handleMove);
+    wrapper.addEventListener('mouseleave', handleLeave);
+    wrapper.addEventListener('touchmove', handleMove, {passive: true});
+    wrapper.addEventListener('touchend', handleLeave);
+}
+
+// Chờ ứng dụng load xong thì bật cảm biến
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(init3DCardEffect, 500); 
+});

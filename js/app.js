@@ -5460,65 +5460,79 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(init3DCardEffect, 500); 
 });
 // ==========================================
-// TÍNH NĂNG: HOLOGRAPHIC 3D TILT QUYỆN CÙNG FLIP CARD
+// TÍNH NĂNG: HOLOGRAPHIC 3D TILT QUYỆN CÙNG FLIP CARD (ĐÃ TỐI ƯU MOBILE)
 // ==========================================
 function init3DCardEffect() {
     const wrapper = document.getElementById('walletCardWrapper');
     if (!wrapper) return;
 
-    // Lắng nghe khi di chuyển chuột hoặc vuốt ngón tay
+    // Chặn hoàn toàn trình duyệt can thiệp thao tác cuộn trên thẻ
+    wrapper.style.touchAction = 'none';
+
+    let isTicking = false; // Cờ khóa trạng thái chống giật FPS
+
     const handleMove = (e) => {
-        let clientX, clientY;
-        if (e.type === 'touchmove') {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-        } else {
-            clientX = e.clientX;
-            clientY = e.clientY;
+        // Ngăn trình duyệt cuộn trang (Áp dụng cho điện thoại)
+        if (e.cancelable && e.type.includes('touch')) e.preventDefault();
+
+        // Thuật toán RequestAnimationFrame: Đảm bảo khung hình bám sát tay 60FPS
+        if (!isTicking) {
+            window.requestAnimationFrame(() => {
+                let clientX, clientY;
+                if (e.type.includes('touch')) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+
+                const rect = wrapper.getBoundingClientRect();
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                // Giảm biên độ nghiêng xuống ±12 độ để thẻ không bị bẻ quá méo trên màn nhỏ
+                const rotateX = ((y - centerY) / centerY) * -12; 
+                const rotateY = ((x - centerX) / centerX) * 12;
+
+                const px = (x / rect.width) * 100;
+                const py = (y / rect.height) * 100;
+
+                wrapper.classList.remove('reset-3d');
+                
+                wrapper.style.setProperty('--rx', `${rotateX}deg`);
+                wrapper.style.setProperty('--ry', `${rotateY}deg`);
+                wrapper.style.setProperty('--px', `${px}%`);
+                wrapper.style.setProperty('--py', `${py}%`);
+                wrapper.style.setProperty('--o', `1`);
+                
+                isTicking = false;
+            });
+            isTicking = true;
         }
-
-        const rect = wrapper.getBoundingClientRect();
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
-
-        // Tính tọa độ tâm thẻ
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-
-        // Tính góc bẻ cong (Giới hạn tối đa ±15 độ)
-        const rotateX = ((y - centerY) / centerY) * -15; 
-        const rotateY = ((x - centerX) / centerX) * 15;
-
-        // Tính % vị trí chuột để di chuyển luồng sáng Hologram
-        const px = (x / rect.width) * 100;
-        const py = (y / rect.height) * 100;
-
-        // Xóa reset để thẻ bám ngón tay tức thì
-        wrapper.classList.remove('reset-3d');
-        
-        // Bơm biến số vào CSS
-        wrapper.style.setProperty('--rx', `${rotateX}deg`);
-        wrapper.style.setProperty('--ry', `${rotateY}deg`);
-        wrapper.style.setProperty('--px', `${px}%`);
-        wrapper.style.setProperty('--py', `${py}%`);
-        wrapper.style.setProperty('--o', `1`); // Bật sáng Hologram
     };
 
-    // Khi rút ngón tay ra, nhả thẻ về lại mặt phẳng
     const handleLeave = () => {
         wrapper.classList.add('reset-3d');
         wrapper.style.setProperty('--rx', `0deg`);
         wrapper.style.setProperty('--ry', `0deg`);
         wrapper.style.setProperty('--px', `50%`);
         wrapper.style.setProperty('--py', `50%`);
-        wrapper.style.setProperty('--o', `0`); // Tắt sáng
+        wrapper.style.setProperty('--o', `0`);
     };
 
-    // Gắn sự kiện (Hoạt động cho cả Máy tính và Điện thoại)
+    // Lắng nghe chuột (PC)
     wrapper.addEventListener('mousemove', handleMove);
     wrapper.addEventListener('mouseleave', handleLeave);
-    wrapper.addEventListener('touchmove', handleMove, {passive: true});
+    
+    // Lắng nghe ngón tay (Mobile) - Ép passive: false để có thể khóa cuộn trang
+    wrapper.addEventListener('touchstart', handleMove, {passive: false});
+    wrapper.addEventListener('touchmove', handleMove, {passive: false});
     wrapper.addEventListener('touchend', handleLeave);
+    wrapper.addEventListener('touchcancel', handleLeave);
 }
 
 // Chờ ứng dụng load xong thì bật cảm biến

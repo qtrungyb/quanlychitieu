@@ -104,67 +104,105 @@ body { background-color: var(--bg-color); color: var(--text-main); display: flex
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.6); 
     z-index: 10; 
     overflow: hidden; 
-	transform-style: preserve-3d;
-    will-change: transform;
 }
 
-/* Lớp màu nền: Được phóng to 300% và tạo dòng chảy liên tục (Aura Flow) */
+/* Lớp nền cơ bản cố định (Thay thế Aura để giảm tải GPU) */
 .wallet-card::before { 
     content: ''; 
     position: absolute; 
-    /* Mở rộng vùng nền để có không gian di chuyển */
-    top: -50%; left: -50%; width: 200%; height: 200%; 
+    top: 0; left: 0; right: 0; bottom: 0; 
     background: var(--wallet-bg, linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)); 
-    background-size: 300% 300%; /* Kéo giãn màu sắc hòa quyện vào nhau */
-    animation: auraGradientFlow 12s ease infinite alternate; /* Chuyển động lỏng */
-    opacity: 0.75; 
+    opacity: 0.8; 
     z-index: -2; 
 }
-
-/* 1. Lớp ánh kim Holographic (Phản chiếu theo góc nghiêng điện thoại) */
-.wallet-card::after { 
-    content: ''; 
-    position: absolute; 
-    top: 0; left: 0; right: 0; bottom: 0; 
-    border-radius: inherit;
-    background: radial-gradient(
-        circle at var(--px, 50%) var(--py, 50%), 
-        rgba(255, 255, 255, 0.8) 0%, 
-        rgba(255, 180, 255, 0.35) 25%, 
-        rgba(100, 220, 255, 0.2) 50%, 
-        transparent 75%
+/* =========================================
+   VỆT SÁNG KIM LOẠI TỰ ĐỘNG (AUTO-SWEEP GLARE)
+   ========================================= */
+.wallet-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -150%;
+    width: 100%; height: 100%;
+    
+    /* Tạo dải sáng trắng mờ chéo góc */
+    background: linear-gradient(
+        90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.05) 30%, 
+        rgba(255, 255, 255, 0.4) 50%, 
+        rgba(255, 255, 255, 0.05) 70%, 
+        transparent 100%
     );
-    opacity: var(--o, 0); 
-    transition: opacity 0.4s ease;
-    z-index: 5; 
-    pointer-events: none; 
-}
-/* 2. Quả cầu ánh sáng (Orb) trôi nổi đa chiều bên dưới lớp kính */
-.wallet-orb { 
-    content: ''; 
-    position: absolute; 
-    top: -20px; left: -20px; 
-    width: 150px; height: 150px; 
-    background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 70%); 
-    border-radius: 50%; 
-    z-index: 2; 
-    mix-blend-mode: overlay; /* Hòa trộn ánh sáng vào màu nền cực đẹp */
-    animation: floatingOrb 10s ease-in-out infinite alternate; 
-    pointer-events: none;
-}
-/* Hiệu ứng chuyển động Dòng chảy Gradient */
-@keyframes auraGradientFlow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 50% 100%; }
+    transform: skewX(-25deg); /* Làm nghiêng vệt sáng 25 độ */
+    animation: autoSweepGlare 8s infinite; /* Cứ 8 giây lướt 1 lần */
+    
+    pointer-events: none; /* Khóa va chạm để bấm xuyên qua được */
+    z-index: 5; /* Nằm trên lớp nền nhưng phải dưới các con số */
+    mix-blend-mode: overlay; /* Hòa trộn ánh sáng tiệp vào nền */
 }
 
-/* Hiệu ứng trôi nổi đa chiều của Quả cầu ánh sáng */
-@keyframes floatingOrb {
+/* Keyframes chớp sáng: Lướt nhanh trong 2 giây đầu, nghỉ ngơi 6 giây còn lại */
+@keyframes autoSweepGlare {
+    0% { left: -150%; opacity: 0; }
+    5% { opacity: 1; }
+    25% { left: 150%; opacity: 0; }
+    100% { left: 150%; opacity: 0; }
+}
+/* =========================================
+   HIỆU ỨNG THỦY TINH LỎNG (GOOEY BLOBS)
+   ========================================= */
+.liquid-blobs-container {
+    position: absolute;
+    top: -20px; left: -20px; right: -20px; bottom: -20px;
+    z-index: -1;
+    filter: url('#gooey'); /* Ép quang học: Kéo dãn và hòa trộn các giọt nước */
+    pointer-events: none;
+    mix-blend-mode: overlay; /* Hòa trộn ánh sáng rực rỡ với màu nền */
+}
+
+/* Các giọt chất lỏng */
+.blob {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    will-change: transform;
+}
+
+/* Giọt số 1: To và lượn góc trái */
+.blob-1 {
+    width: 140px; height: 140px;
+    top: 0%; left: 10%;
+    animation: gooMove1 8s infinite alternate ease-in-out;
+}
+
+/* Giọt số 2: Vừa và lượn góc phải đáy */
+.blob-2 {
+    width: 110px; height: 110px;
+    bottom: 10%; right: 5%;
+    background: rgba(255, 255, 255, 0.6);
+    animation: gooMove2 11s infinite alternate-reverse ease-in-out;
+}
+
+/* Giọt số 3: Đi tuần tra ở giữa để kết dính 2 giọt kia */
+.blob-3 {
+    width: 90px; height: 90px;
+    top: 30%; left: 40%;
+    background: rgba(255, 255, 255, 0.9);
+    animation: gooMove3 13s infinite alternate ease-in-out;
+}
+
+@keyframes gooMove1 {
     0% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(150px, 40px) scale(1.3); }
-    66% { transform: translate(250px, -20px) scale(0.8); }
-    100% { transform: translate(50px, 80px) scale(1.5); }
+    100% { transform: translate(60px, 50px) scale(1.2); }
+}
+@keyframes gooMove2 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-80px, -40px) scale(1.3); }
+}
+@keyframes gooMove3 {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(70px, -20px) scale(1.5); }
+    100% { transform: translate(-50px, 60px) scale(0.8); }
 }
 
 
@@ -616,4 +654,16 @@ body.dark-theme #formCard.theme-income:focus-within {
     filter: contrast(1.1) saturate(1.2);
     box-shadow: 0 16px 32px rgba(255, 215, 0, 0.15), inset 0 0 30px rgba(255, 215, 0, 0.25), 0 0 20px rgba(255, 215, 0, 0.4) !important;
     border-color: rgba(255, 215, 0, 0.6) !important;
+}
+/* =========================================
+   ĐƯỜNG SÓNG TỪ TRƯỜNG NGẦM (LIVE SPARKLINE)
+   ========================================= */
+.sparkline-container {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 65%; /* Sóng dâng cao 65% thẻ tính từ dưới đáy lên */
+    z-index: 0; /* Nằm trên nền Aura nhưng phải chìm DƯỚI các con số */
+    opacity: 0.5; /* Độ mờ vừa phải để tạo cảm giác thực thể ngầm */
+    pointer-events: none; /* Khóa click để không chạm nhầm */
+    mix-blend-mode: overlay; /* Hòa trộn ánh sáng siêu đẹp với luồng Aura nền */
 }

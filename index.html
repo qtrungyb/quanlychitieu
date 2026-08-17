@@ -388,8 +388,34 @@
     
     <!-- TAB 1: NHẬP LIỆU -->
     <div id="homeView" class="view-section active">
+        
+        <!-- BỘ LỌC QUANG HỌC GOOEY (ẨN) -->
+        <svg style="width:0; height:0; position:absolute;" aria-hidden="true" focusable="false">
+            <defs>
+                <filter id="gooey">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
+                    <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+                    <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+                </filter>
+            </defs>
+        </svg>
+
         <div class="wallet-card">
-			<div class="wallet-orb"></div>
+            
+            <!-- BẮT ĐẦU: HIỆU ỨNG THỦY TINH LỎNG -->
+            <div class="liquid-blobs-container">
+                <div class="blob blob-1"></div>
+                <div class="blob blob-2"></div>
+                <div class="blob blob-3"></div>
+            </div>
+            <!-- KẾT THÚC: THỦY TINH LỎNG -->
+            
+            <!-- BẮT ĐẦU: ĐƯỜNG SÓNG TỪ TRƯỜNG SPARKLINE NGẦM -->
+            <div class="sparkline-container">
+                <canvas id="cardSparkline"></canvas>
+            </div>
+            <!-- KẾT THÚC: SPARKLINE -->
+
             <div class="card-header">
                 <span>Tổng số dư</span>
                 <button class="btn-eye" id="btnToggleEye">

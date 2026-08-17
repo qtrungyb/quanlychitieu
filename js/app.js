@@ -5402,78 +5402,86 @@ window.buildGroupItemsHTML = function(dateStr) {
     return itemsHtml;
 };
 // ==========================================
-// TÍNH NĂNG: HOLOGRAPHIC GYROSCOPE SHIMMER
+// TÍNH NĂNG: ĐƯỜNG SÓNG TỪ TRƯỜNG NGẦM (LIVE SPARKLINE)
 // ==========================================
-function initGyroscopeShimmer() {
-    const card = document.querySelector('.wallet-card');
-    if (!card) return;
+function renderCardSparkline() {
+    const canvas = document.getElementById('cardSparkline');
+    if (!canvas) return;
 
-    let isPermissionGranted = false;
+    // 1. Tạo mảng 7 ngày gần nhất tính đến hôm nay
+    const dateList = [];
+    const today = new Date();
+    for(let i = 6; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        dateList.push(`${y}-${m}-${day}`);
+    }
 
-    // 1. Hàm xử lý tọa độ khi điện thoại nghiêng
-    const handleOrientation = (e) => {
-        const gamma = e.gamma; // Góc nghiêng trái-phải (-90 đến 90)
-        const beta = e.beta;   // Góc nghiêng trước-sau (-180 đến 180)
-
-        if (gamma === null || beta === null) return;
-
-        // Quy đổi góc nghiêng thành tọa độ % trên bề mặt thẻ (0% đến 100%)
-        // Thu hẹp biên độ để vệt sáng di chuyển mượt mà theo cổ tay
-        const px = Math.min(Math.max((gamma + 30) / 60 * 100, 0), 100);
-        const py = Math.min(Math.max((beta + 30) / 60 * 100, 0), 100);
-
-        card.style.setProperty('--px', `${px}%`);
-        card.style.setProperty('--py', `${py}%`);
-        card.style.setProperty('--o', `1`); // Bật sáng ánh kim
-    };
-
-    // 2. Kích hoạt cảm biến trên Mobile (Đặc biệt xử lý bảo mật cho iOS 13+)
-    const enableGyroscope = () => {
-        if (window.DeviceOrientationEvent) {
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                // iOS yêu cầu người dùng phải chạm 1 lần vào thẻ để cấp quyền đọc cảm biến
-                DeviceOrientationEvent.requestPermission()
-                    .then(response => {
-                        if (response === 'granted') {
-                            window.addEventListener('deviceorientation', handleOrientation);
-                            isPermissionGranted = true;
-                            showToast('Đã kích hoạt cảm biến ánh kim!');
-                        }
-                    })
-                    .catch(err => console.log('Lỗi cấp quyền Gyroscope:', err));
-            } else {
-                // Android và các thiết bị hỗ trợ trực tiếp không cần hỏi quyền
-                window.addEventListener('deviceorientation', handleOrientation);
-                isPermissionGranted = true;
-            }
-        }
-    };
-
-    // Cho phép người dùng chạm vào thẻ trên iOS để bật cảm biến
-    card.addEventListener('click', () => {
-        if (!isPermissionGranted) {
-            enableGyroscope();
+    // 2. Tính Số dư lũy kế làm vạch xuất phát (trước mốc 7 ngày)
+    let runningBalance = 0;
+    const startOf7Days = dateList[0];
+    transactions.forEach(t => {
+        if (t.date < startOf7Days) {
+            runningBalance += (t.type === 'income' ? t.amount : -t.amount);
         }
     });
 
-    // 3. Dự phòng cho Máy tính (PC): Dùng chuột rà qua lại để test hiệu ứng
-    card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        const px = ((e.clientX - rect.left) / rect.width) * 100;
-        const py = ((e.clientY - rect.top) / rect.height) * 100;
-        card.style.setProperty('--px', `${px}%`);
-        card.style.setProperty('--py', `${py}%`);
-        card.style.setProperty('--o', `1`);
+    // 3. Tính Số dư biến động nối tiếp trong 7 ngày
+    let sparklineData = [];
+    dateList.forEach(dateStr => {
+        const dayTxs = transactions.filter(t => t.date === dateStr);
+        let dIn = dayTxs.filter(t => t.type === 'income').reduce((s, t)=>s+t.amount, 0);
+        let dOut = dayTxs.filter(t => t.type === 'expense').reduce((s, t)=>s+t.amount, 0);
+        runningBalance += (dIn - dOut);
+        sparklineData.push(runningBalance);
     });
 
-    card.addEventListener('mouseleave', () => {
-        if (!isPermissionGranted) {
-            card.style.setProperty('--o', `0`);
+    // 4. Vẽ biểu đồ sương mù bằng Chart.js
+    if (window.cardSparklineInst) window.cardSparklineInst.destroy();
+    const ctx = canvas.getContext('2d');
+
+    // Tạo luồng sương mù đổ bóng từ đường sóng xuống đáy thẻ
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.parentElement.clientHeight);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    window.cardSparklineInst = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dateList,
+            datasets: [{
+                data: sparklineData,
+                borderColor: 'rgba(255, 255, 255, 0.9)', // Sợi chỉ trắng phát sáng
+                borderWidth: 2.5,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.4, // Bo cong sợi chỉ mềm mại y như nhịp thở
+                pointRadius: 0, // Xóa các nốt gồ ghề
+                pointHoverRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 1200, easing: 'easeOutExpo' }, // Animation dâng sóng cực êm
+            plugins: { legend: { display: false }, tooltip: { enabled: false } }, // Tắt chú thích
+            scales: {
+                x: { display: false }, // Tắt trục X
+                y: { display: false }  // Tắt trục Y
+            },
+            layout: { padding: 0 }
         }
     });
 }
 
-// Khởi chạy sau khi nạp trang
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(initGyroscopeShimmer, 500);
-});
+// 5. Móc nối ngầm: Tự động vẽ lại sóng mỗi khi giao dịch thay đổi
+if (typeof updateUI === 'function') {
+    const originalUpdateUIForSparkline = updateUI;
+    updateUI = function() {
+        originalUpdateUIForSparkline();
+        setTimeout(renderCardSparkline, 200); // Delay nhẹ 200ms chờ số dư tính xong
+    };
+}

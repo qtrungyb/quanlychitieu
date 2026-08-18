@@ -667,3 +667,203 @@ body.dark-theme #formCard.theme-income:focus-within {
     pointer-events: none; /* Khóa click để không chạm nhầm */
     mix-blend-mode: overlay; /* Hòa trộn ánh sáng siêu đẹp với luồng Aura nền */
 }
+/* =========================================
+   CÔNG TẮC THẠCH DẺO (JELLY TOGGLES)
+   ========================================= */
+.jelly-toggle {
+    position: relative;
+    width: 52px;
+    height: 32px;
+    pointer-events: none; /* Để cho div cha (settings-item) bắt sự kiện click */
+}
+
+/* Rãnh trượt (Nền công tắc) */
+.jelly-track {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #cbd5e1;
+    border-radius: 34px;
+    transition: background 0.4s ease, box-shadow 0.4s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Núm gạt (Hình tròn di chuyển) */
+.jelly-knob {
+    position: absolute;
+    top: 4px; left: 4px;
+    width: 24px; height: 24px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    display: flex; align-items: center; justify-content: center;
+    /* Hiệu ứng nảy (spring) cực mượt */
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), width 0.2s ease, border-radius 0.2s ease;
+}
+
+/* Icon bên trong núm */
+.jelly-knob svg {
+    width: 14px; height: 14px;
+    position: absolute;
+    transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.jelly-knob .icon-moon { opacity: 0; transform: rotate(-90deg) scale(0.5); color: #4361ee; }
+.jelly-knob .icon-sun { opacity: 1; transform: rotate(0) scale(1); color: #f39c12; }
+
+/* TRẠNG THÁI BẬT (ACTIVE - MÀU XANH) */
+.jelly-toggle.active .jelly-track {
+    background: var(--primary);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+.jelly-toggle.active .jelly-knob {
+    transform: translateX(20px);
+}
+.jelly-toggle.active .jelly-knob .icon-sun { opacity: 0; transform: rotate(90deg) scale(0.5); }
+.jelly-toggle.active .jelly-knob .icon-moon { opacity: 1; transform: rotate(0) scale(1); }
+
+/* HIỆU ỨNG THẠCH: Kéo dãn khi nhấn giữ ngón tay (Active state) */
+#btnSettingsDarkMode:active .jelly-knob {
+    width: 32px;
+    border-radius: 16px;
+}
+#btnSettingsDarkMode:active .jelly-toggle.active .jelly-knob {
+    width: 32px;
+    transform: translateX(12px); /* Kéo ngược lại để không bị tràn khung */
+}
+
+/* Tùy chỉnh màu rãnh trượt khi ở Dark Mode */
+body.dark-theme .jelly-toggle:not(.active) .jelly-track { background: #334155; }
+/* =========================================
+   VÒNG NĂNG LƯỢNG AVATAR (DYNAMIC HEALTH RING)
+   ========================================= */
+.avatar-btn {
+    position: relative;
+    border-radius: 50%;
+    z-index: 10;
+    overflow: visible !important; /* Mở khóa tràn viền để vòng sáng tỏa ra ngoài */
+}
+
+/* Ép ảnh đại diện luôn tròn và nằm trên vòng sáng */
+.avatar-btn img {
+    position: relative;
+    z-index: 2;
+    border-radius: 50%;
+    background: #fff; 
+    width: 100%; height: 100%; object-fit: cover;
+}
+
+/* Cấu trúc Vòng sáng nằm ngầm bên dưới ảnh */
+.avatar-btn::before {
+    content: '';
+    position: absolute;
+    top: -4px; left: -4px; right: -4px; bottom: -4px; /* Độ dày của vòng sáng: 4px */
+    border-radius: 50%;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+/* 1. Trạng thái KHỎE MẠNH (Xanh lá - Xoay êm ái) */
+.avatar-btn.health-good::before {
+    opacity: 1;
+    background: conic-gradient(from 0deg, transparent 0%, rgba(46, 204, 113, 0.1) 40%, rgba(46, 204, 113, 0.8) 80%, rgba(46, 204, 113, 1) 100%);
+    animation: ringSpinSmooth 3s linear infinite;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
+}
+
+/* 2. Trạng thái BÁO ĐỘNG (Đỏ - Xoay giật cục chập điện) */
+.avatar-btn.health-danger::before {
+    opacity: 1;
+    background: conic-gradient(from 0deg, transparent 0%, rgba(231, 76, 60, 0.2) 30%, rgba(231, 76, 60, 0.9) 70%, rgba(231, 76, 60, 1) 100%);
+    animation: ringSpinGlitch 0.6s steps(3, end) infinite;
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.5), inset 0 0 5px rgba(231, 76, 60, 0.5);
+}
+
+/* Keyframes cho vòng sáng quay */
+@keyframes ringSpinSmooth {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Keyframes cho hiệu ứng chập điện (Glitch) */
+@keyframes ringSpinGlitch {
+    0% { transform: rotate(0deg) scale(1); }
+    33% { transform: rotate(120deg) scale(1.1); filter: hue-rotate(-15deg); }
+    66% { transform: rotate(240deg) scale(0.9); filter: hue-rotate(15deg); }
+    100% { transform: rotate(360deg) scale(1.05); }
+}
+/* =========================================
+   KỆ THẺ LƯỚT 3D (APPLE WALLET CAROUSEL)
+   ========================================= */
+.wallet-carousel-wrapper {
+    position: relative;
+    width: 100%;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1200px; /* Độ sâu của không gian 3D */
+    touch-action: pan-y; /* Cho phép cuộn dọc bình thường nếu cần */
+    margin-top: 24px;
+}
+
+.wallet-carousel-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-style: preserve-3d;
+}
+
+/* Kiểu dáng từng thẻ Card nhỏ bên trong kệ */
+.carousel-card {
+    position: absolute;
+    width: 250px;
+    height: 155px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    /* Chuyển động mượt mà khi vuốt qua lại */
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease, filter 0.4s ease;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    will-change: transform;
+    border: 1px solid rgba(255,255,255,0.4);
+}
+
+/* Nút bấm xác nhận */
+.carousel-btn-apply {
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: 24px;
+    background: var(--primary);
+    color: #fff;
+    padding: 16px;
+    border-radius: 16px;
+    font-weight: 800;
+    font-size: 15px;
+    border: none;
+    box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.carousel-btn-apply:active {
+    transform: scale(0.95);
+}
+/* =========================================
+   HIỆU ỨNG CHUYỂN THEME MƯỢT MÀ (TỐI ƯU 60FPS)
+   ========================================= */
+.theme-transition,
+.theme-transition div,
+.theme-transition span,
+.theme-transition button,
+.theme-transition input,
+.theme-transition svg,
+.theme-transition path,
+.theme-transition rect,
+.theme-transition circle {
+    /* CHỈ chuyển đổi các thuộc tính màu sắc, tuyệt đối không đụng vào Layout */
+    transition: background-color 0.4s ease, background 0.4s ease, color 0.4s ease, border-color 0.4s ease, fill 0.4s ease, stroke 0.4s ease, box-shadow 0.4s ease !important;
+}

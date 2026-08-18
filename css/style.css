@@ -668,71 +668,6 @@ body.dark-theme #formCard.theme-income:focus-within {
     mix-blend-mode: overlay; /* Hòa trộn ánh sáng siêu đẹp với luồng Aura nền */
 }
 /* =========================================
-   CÔNG TẮC THẠCH DẺO (JELLY TOGGLES)
-   ========================================= */
-.jelly-toggle {
-    position: relative;
-    width: 52px;
-    height: 32px;
-    pointer-events: none; /* Để cho div cha (settings-item) bắt sự kiện click */
-}
-
-/* Rãnh trượt (Nền công tắc) */
-.jelly-track {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: #cbd5e1;
-    border-radius: 34px;
-    transition: background 0.4s ease, box-shadow 0.4s ease;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-}
-
-/* Núm gạt (Hình tròn di chuyển) */
-.jelly-knob {
-    position: absolute;
-    top: 4px; left: 4px;
-    width: 24px; height: 24px;
-    background: #fff;
-    border-radius: 50%;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    display: flex; align-items: center; justify-content: center;
-    /* Hiệu ứng nảy (spring) cực mượt */
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), width 0.2s ease, border-radius 0.2s ease;
-}
-
-/* Icon bên trong núm */
-.jelly-knob svg {
-    width: 14px; height: 14px;
-    position: absolute;
-    transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.jelly-knob .icon-moon { opacity: 0; transform: rotate(-90deg) scale(0.5); color: #4361ee; }
-.jelly-knob .icon-sun { opacity: 1; transform: rotate(0) scale(1); color: #f39c12; }
-
-/* TRẠNG THÁI BẬT (ACTIVE - MÀU XANH) */
-.jelly-toggle.active .jelly-track {
-    background: var(--primary);
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-}
-.jelly-toggle.active .jelly-knob {
-    transform: translateX(20px);
-}
-.jelly-toggle.active .jelly-knob .icon-sun { opacity: 0; transform: rotate(90deg) scale(0.5); }
-.jelly-toggle.active .jelly-knob .icon-moon { opacity: 1; transform: rotate(0) scale(1); }
-
-/* HIỆU ỨNG THẠCH: Kéo dãn khi nhấn giữ ngón tay (Active state) */
-#btnSettingsDarkMode:active .jelly-knob {
-    width: 32px;
-    border-radius: 16px;
-}
-#btnSettingsDarkMode:active .jelly-toggle.active .jelly-knob {
-    width: 32px;
-    transform: translateX(12px); /* Kéo ngược lại để không bị tràn khung */
-}
-
-/* Tùy chỉnh màu rãnh trượt khi ở Dark Mode */
-body.dark-theme .jelly-toggle:not(.active) .jelly-track { background: #334155; }
-/* =========================================
    VÒNG NĂNG LƯỢNG AVATAR (DYNAMIC HEALTH RING)
    ========================================= */
 .avatar-btn {
@@ -853,17 +788,202 @@ body.dark-theme .jelly-toggle:not(.active) .jelly-track { background: #334155; }
     transform: scale(0.95);
 }
 /* =========================================
-   HIỆU ỨNG CHUYỂN THEME MƯỢT MÀ (TỐI ƯU 60FPS)
+   MÔ PHỎNG ĐIỆN THOẠI THU NHỎ (MINI-SMARTPHONE THEME)
    ========================================= */
-.theme-transition,
-.theme-transition div,
-.theme-transition span,
-.theme-transition button,
-.theme-transition input,
-.theme-transition svg,
-.theme-transition path,
-.theme-transition rect,
-.theme-transition circle {
-    /* CHỈ chuyển đổi các thuộc tính màu sắc, tuyệt đối không đụng vào Layout */
-    transition: background-color 0.4s ease, background 0.4s ease, color 0.4s ease, border-color 0.4s ease, fill 0.4s ease, stroke 0.4s ease, box-shadow 0.4s ease !important;
+.app-screen-card {
+    position: absolute;
+    width: 130px; /* Thu hẹp lại */
+    height: 250px; /* Kéo dài ra thành hình điện thoại */
+    border-radius: 28px; /* Bo góc điện thoại */
+    border: 5px solid #1e293b; /* Viền bezel của điện thoại */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.2);
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease, filter 0.4s ease;
+    cursor: pointer;
+    user-select: none;
+    will-change: transform;
+    overflow: hidden; /* Cắt gọn mọi thứ tràn ra ngoài viền */
+    background-size: cover;
+    background-position: center;
+}
+
+/* Cụm Camera / Dynamic Island đặc trưng của Smartphone */
+.app-screen-card::before {
+    content: '';
+    position: absolute;
+    top: 6px; left: 50%;
+    transform: translateX(-50%);
+    width: 38px; height: 10px;
+    background: #1e293b;
+    border-radius: 10px;
+    z-index: 10;
+}
+/* =========================================
+   CHẾ ĐỘ XEM THỬ NỀN (LONG-PRESS LIVE PREVIEW)
+   ========================================= */
+#appThemeOverlay, 
+#appThemeModal {
+    /* Đảm bảo hiệu ứng mờ đi và nổi lên trơn tru */
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.modal-preview-hidden {
+    opacity: 0 !important;
+    /* Đã xóa dòng pointer-events để ngón tay không bị trượt khi giữ */
+    transform: scale(0.95) translateY(20px) !important; 
+}
+/* =========================================
+   HIỆU ỨNG XẾP TẦNG MENU AVATAR (STAGGERED SPRING)
+   ========================================= */
+
+/* 1. Mở khóa khung Menu và chọn điểm nở ra từ góc Avatar (Góc phải trên cùng) */
+.dropdown-menu {
+    display: block !important; /* Ghi đè lệnh ẩn giật cục của trình duyệt */
+    visibility: hidden;
+    opacity: 0;
+    transform-origin: top right; 
+    transform: scale(0.8) translateY(-15px); /* Thu nhỏ và kéo ngược lên trên */
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), visibility 0.3s;
+    pointer-events: none; /* Khóa chạm nhầm khi tàng hình */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1), 0 5px 15px rgba(0,0,0,0.05) !important; /* Nâng bóng đổ cho đẹp hơn */
+}
+
+/* 2. Trạng thái Menu đang mở: Nở bung ra */
+.dropdown-menu.show {
+    visibility: visible;
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    pointer-events: auto;
+}
+
+/* 3. Trạng thái chờ của các Nút bên trong: Ép tụt xuống dưới và mờ đi */
+.dropdown-menu > * {
+    opacity: 0;
+    transform: translateY(15px);
+    transition: opacity 0.15s ease, transform 0.15s ease; /* Thu lại cực nhanh khi người dùng đóng menu */
+}
+
+/* 4. HOẠT ẢNH XẾP TẦNG: Các nút nảy lên lệch nhau 0.05 giây tạo hiệu ứng lướt sóng */
+.dropdown-menu.show > *:nth-child(1) {
+    opacity: 1; transform: translateY(0);
+    transition: opacity 0.4s ease 0.05s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.05s;
+}
+.dropdown-menu.show > *:nth-child(2) {
+    opacity: 1; transform: translateY(0);
+    transition: opacity 0.4s ease 0.10s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.10s;
+}
+.dropdown-menu.show > *:nth-child(3) {
+    opacity: 1; transform: translateY(0);
+    transition: opacity 0.4s ease 0.15s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.15s;
+}
+.dropdown-menu.show > *:nth-child(4) {
+    opacity: 1; transform: translateY(0);
+    transition: opacity 0.4s ease 0.20s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.20s;
+}
+.dropdown-menu.show > *:nth-child(5) {
+    opacity: 1; transform: translateY(0);
+    transition: opacity 0.4s ease 0.25s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.25s;
+}
+/* Thêm vị trí số 6 (Nút Đăng xuất) và số 7 (Dự phòng) */
+.dropdown-menu.show > *:nth-child(6) {
+    opacity: 1; transform: translateY(0);
+    transition: opacity 0.4s ease 0.30s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.30s;
+}
+.dropdown-menu.show > *:nth-child(7) {
+    opacity: 1; transform: translateY(0);
+    transition: opacity 0.4s ease 0.35s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.35s;
+}
+/* =========================================
+   MENU KÍNH MỜ HỮU CƠ (ORGANIC GLASSMORPHISM)
+   ========================================= */
+
+/* 1. Biến khung Menu thành tấm kính quang học */
+.dropdown-menu {
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    overflow: hidden; /* Giữ Quả cầu ánh sáng không tràn ra ngoài viền menu */
+}
+
+/* 2. Quả cầu ánh sáng (Aura) lơ lửng phía sau tấm kính */
+.dropdown-menu::before {
+    content: '';
+    position: absolute;
+    top: -50px; left: -50px;
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(67, 97, 238, 0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: -1;
+    animation: menuAuraFloat 6s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+/* Hiệu ứng trôi nổi và đổi màu từ Xanh dương sang Tím mộng mơ */
+@keyframes menuAuraFloat {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { 
+        transform: translate(120px, 180px) scale(1.5); 
+        background: radial-gradient(circle, rgba(155, 89, 182, 0.4) 0%, transparent 70%); 
+    }
+}
+
+/* 3. Làm trong suốt các nút bấm bên trong để lộ lớp kính & Aura bên dưới */
+.dropdown-header {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+.dropdown-item {
+    background: transparent !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* 4. Ánh sáng tụ điểm (Spotlight) khi người dùng chạm ngón tay vào 1 dòng */
+.dropdown-item:active, 
+.dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.4) !important;
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* 5. Đồng bộ mượt mà Kính đen cho Chế độ Tối (Dark Mode) */
+body.dark-theme .dropdown-menu {
+    background: rgba(30, 41, 59, 0.65) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+body.dark-theme .dropdown-menu::before {
+    /* Trong chế độ tối, Aura sẽ nhạt hơn để không bị chói mắt */
+    background: radial-gradient(circle, rgba(130, 159, 255, 0.25) 0%, transparent 70%);
+}
+body.dark-theme .dropdown-header {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+}
+body.dark-theme .dropdown-item:active, 
+body.dark-theme .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: none;
+}
+/* =========================================
+   HIỆU ỨNG NHẬT THỰC THEME (ECLIPSE REVEAL)
+   ========================================= */
+.eclipse-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 99999; /* Đè lên tất cả mọi thứ */
+    pointer-events: none;
+    /* Tạo một điểm tròn tại vị trí ngón tay (biến --x, --y do JS cung cấp) */
+    clip-path: circle(0px at var(--x, 50%) var(--y, 50%));
+    -webkit-clip-path: circle(0px at var(--x, 50%) var(--y, 50%));
+    transition: clip-path 0.45s cubic-bezier(0.25, 1, 0.5, 1), -webkit-clip-path 0.45s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+}
+
+.eclipse-overlay.expand {
+    /* Nở tung ra 150% để nuốt trọn màn hình dù bấm ở góc xa nhất */
+    clip-path: circle(150% at var(--x, 50%) var(--y, 50%));
+    -webkit-clip-path: circle(150% at var(--x, 50%) var(--y, 50%));
+}
+
+.eclipse-overlay.fade-out {
+    opacity: 0; /* Tan biến đi khi hoàn thành */
 }

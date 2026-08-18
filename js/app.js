@@ -343,11 +343,39 @@ document.getElementById('btnSettingsLogout')?.addEventListener('click', () => {
         });
     }
 });
-document.getElementById('btnSettingsDarkMode')?.addEventListener('click', () => {
-    const newIsDark = !document.body.classList.contains('dark-theme');
-    applyDarkMode(newIsDark);
-    localStorage.setItem('darkMode', newIsDark);
-    if (document.getElementById('analyticsView')?.classList.contains('active')) renderCharts();
+document.getElementById('btnSettingsDarkMode')?.addEventListener('click', (e) => {
+    e.stopPropagation(); // 1. Chặn bong bóng sự kiện (event bubbling) để không giật menu
+
+    const jellyToggle = document.getElementById('jellyDarkMode');
+    const isDarkNow = document.body.classList.contains('dark-theme');
+    const newIsDark = !isDarkNow;
+
+    // 2. Gạt công tắc ngay lập tức trên UI (Zero lag)
+    if (jellyToggle) {
+        jellyToggle.classList.toggle('active', newIsDark);
+    }
+
+    // 3. Phủ lớp màng mượt mà lên toàn App (khớp với CSS)
+    document.body.classList.add('theme-transition');
+
+    // 4. TRÌ HOÃN tác vụ nặng ra khỏi Main Thread 
+    // Nhường đúng 150ms cho animation của nút gạt hoàn tất mượt mà rồi mới làm việc nặng
+    setTimeout(() => {
+        applyDarkMode(newIsDark);
+        localStorage.setItem('darkMode', newIsDark);
+        
+        // Sử dụng requestAnimationFrame để vẽ biểu đồ khớp với nhịp render của GPU
+        if (document.getElementById('analyticsView')?.classList.contains('active')) {
+            requestAnimationFrame(() => {
+                if (typeof renderCharts === 'function') renderCharts();
+            });
+        }
+
+        // 5. Gỡ lớp màng mượt đi sau khi transition kết thúc (tránh lag lúc cuộn trang)
+        setTimeout(() => {
+            document.body.classList.remove('theme-transition');
+        }, 350); 
+    }, 150); 
 });
 
 // ==========================================
@@ -2483,6 +2511,7 @@ function applyWalletTheme(themeId, saveToDb = true) {
 }
 
 function openWalletThemeModal() {
+    document.getElementById('dropdownMenu')?.classList.remove('show'); // THÊM DÒNG NÀY ĐỂ ĐÓNG MENU
     document.getElementById('walletThemeOverlay')?.classList.add('show');
     document.getElementById('walletThemeModal')?.classList.add('show');
 }
@@ -2575,6 +2604,7 @@ function applyAppTheme(themeId, saveToDb = true) {
 }
 
 function openAppThemeModal() {
+    document.getElementById('dropdownMenu')?.classList.remove('show'); // THÊM DÒNG NÀY ĐỂ ĐÓNG MENU
     document.getElementById('appThemeOverlay')?.classList.add('show');
     document.getElementById('appThemeModal')?.classList.add('show');
 }
@@ -5485,3 +5515,400 @@ if (typeof updateUI === 'function') {
         setTimeout(renderCardSparkline, 200); // Delay nhẹ 200ms chờ số dư tính xong
     };
 }
+// ==========================================
+// TÍNH NĂNG: VÒNG NĂNG LƯỢNG AVATAR (HEALTH RING)
+// ==========================================
+function updateAvatarHealthRing() {
+    const btnAvatar = document.getElementById('btnAvatar');
+    if (!btnAvatar) return;
+
+    // 1. Tính tổng Thu / Chi của riêng THÁNG HIỆN TẠI
+    const today = new Date();
+    const startOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+    const endOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-31`;
+
+    let thisMonthIncome = 0;
+    let thisMonthExpense = 0;
+
+    if (typeof transactions !== 'undefined') {
+        transactions.forEach(t => {
+            if (t.date >= startOfMonth && t.date <= endOfMonth) {
+                if (t.type === 'income') thisMonthIncome += t.amount;
+                if (t.type === 'expense') thisMonthExpense += t.amount;
+            }
+        });
+    }
+
+    // 2. Gỡ bỏ trạng thái màu cũ
+    btnAvatar.classList.remove('health-good', 'health-danger');
+
+    // 3. Đánh giá sức khỏe tài chính và kích hoạt màu
+    if (thisMonthExpense > 0 && thisMonthExpense > thisMonthIncome) {
+        // Cảnh báo: Tiêu nhiều hơn kiếm được
+        btnAvatar.classList.add('health-danger'); 
+    } else {
+        // An toàn: Cân bằng hoặc đang dư dả
+        btnAvatar.classList.add('health-good'); 
+    }
+}
+
+// 4. Móc ngầm vào hệ thống tải dữ liệu hiện tại
+if (typeof updateUI === 'function') {
+    const originalUpdateUIForHealthRing = updateUI;
+    updateUI = function() {
+        originalUpdateUIForHealthRing();
+        setTimeout(updateAvatarHealthRing, 250); // Delay nhẹ 250ms chờ số liệu tải xong
+    };
+}
+
+// Kích hoạt ngay lần đầu mở app
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(updateAvatarHealthRing, 1000); 
+});
+// ==========================================
+// TÍNH NĂNG: KỆ THẺ LƯỚT 3D (APPLE WALLET CAROUSEL)
+// ==========================================
+let carouselThemes = []; 
+let currentCarouselIndex = 0;
+
+function initWalletCarousel() {
+    // 1. Lấy dữ liệu màu thẻ (Sử dụng WALLET_THEMES có sẵn hoặc mảng dự phòng)
+    if (typeof WALLET_THEMES !== 'undefined' && WALLET_THEMES.length > 0) {
+        carouselThemes = WALLET_THEMES;
+    } else {
+        carouselThemes = [
+            { id: 'theme-1', name: 'Đại dương', background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' },
+            { id: 'theme-2', name: 'Hoàng hôn', background: 'linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%)' },
+            { id: 'theme-3', name: 'Bóng đêm', background: 'linear-gradient(135deg, #232526 0%, #414345 100%)' },
+            { id: 'theme-4', name: 'Rừng sâu', background: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)' }
+        ];
+    }
+
+    const track = document.getElementById('walletCarouselTrack');
+    if (!track) return;
+    track.innerHTML = '';
+    
+    // 2. Định vị xem người dùng đang dùng thẻ số mấy
+    const savedTheme = localStorage.getItem('walletTheme');
+    const foundIdx = carouselThemes.findIndex(t => t.id === savedTheme);
+    currentCarouselIndex = foundIdx > -1 ? foundIdx : 0;
+
+    // 3. Tạo các thẻ bài bằng HTML giả lập
+    carouselThemes.forEach((theme, idx) => {
+        const card = document.createElement('div');
+        card.className = 'carousel-card';
+        card.style.background = theme.background;
+        
+        // Vẽ thêm Con chip và sóng NFC cho giống thẻ tín dụng thật
+        card.innerHTML = `
+            <div style="position: absolute; top: 16px; left: 20px; width: 36px; height: 26px; background: rgba(255,255,255,0.8); border-radius: 4px; opacity: 0.9;"></div>
+            <div style="position: absolute; top: 18px; right: 20px; font-size: 14px; font-weight: 800; font-family: monospace; opacity: 0.9;">NFC</div>
+            <div style="position: absolute; bottom: 16px; left: 20px; font-size: 18px; letter-spacing: 3px; font-family: monospace; font-weight: 600;">**** ****</div>
+        `;
+        
+        // Cho phép bấm trực tiếp vào thẻ bên hông để cuộn nhanh
+        card.addEventListener('click', () => {
+            currentCarouselIndex = idx;
+            updateCarousel();
+        });
+        track.appendChild(card);
+    });
+
+    setupCarouselSwipe();
+    updateCarousel(); // Bắt đầu tính toán góc nghiêng 3D
+}
+
+// THUẬT TOÁN BẺ CONG KHÔNG GIAN (COVER FLOW)
+function updateCarousel() {
+    const track = document.getElementById('walletCarouselTrack');
+    if (!track) return;
+    const cards = track.querySelectorAll('.carousel-card');
+    const nameDisplay = document.getElementById('carouselThemeName');
+    
+    // Cập nhật tên của thẻ ở vị trí trung tâm
+    if (carouselThemes[currentCarouselIndex]) {
+        let themeId = carouselThemes[currentCarouselIndex].id;
+        let themeName = carouselThemes[currentCarouselIndex].name;
+        
+        // Nếu dữ liệu không có tên, tự động gán tên theo ID
+        if (!themeName) {
+            if (themeId === 'theme-default' || themeId === 'theme-1') themeName = 'Đại dương sâu thẳm';
+            else if (themeId === 'theme-2') themeName = 'Hoàng hôn rực rỡ';
+            else if (themeId === 'theme-3') themeName = 'Bóng đêm huyền bí';
+            else if (themeId === 'theme-4') themeName = 'Rừng xanh tĩnh lặng';
+            else if (themeId === 'theme-5') themeName = 'Hoàng kim sang trọng';
+            else themeName = 'Màu thẻ ' + themeId.replace('theme-', ''); // Tự động hiển thị nếu có màu lạ
+        }
+        
+        nameDisplay.innerText = themeName;
+    }
+
+    cards.forEach((card, i) => {
+        const offset = i - currentCarouselIndex; // Độ lệch so với thẻ trung tâm
+        const absOffset = Math.abs(offset);
+        
+        // Công thức vật lý 3D:
+        let translateX = offset * 80;    // Giãn cách mỗi thẻ là 80px
+        let translateZ = absOffset * -90; // Bị đẩy lùi sâu vào trong 90px nếu không ở giữa
+        let rotateY = offset * -35;      // Xoay nghiêng 35 độ
+        
+        let zIndex = 100 - absOffset;
+        let opacity = absOffset > 2 ? 0 : (1 - absOffset * 0.4); 
+        
+        if (offset === 0) {
+            // Thẻ đang chọn (Ở chính giữa)
+            translateX = 0;
+            translateZ = 40; // Nổi bật lên trước màn hình
+            rotateY = 0;     // Nằm thẳng
+            opacity = 1;
+            card.style.filter = 'blur(0px)';
+        } else {
+            // Các thẻ bị dạt sang 2 bên
+            card.style.filter = `blur(${absOffset * 1.5}px)`; // Xóa phông mờ dần
+        }
+
+        card.style.transform = `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg)`;
+        card.style.zIndex = zIndex;
+        card.style.opacity = opacity;
+    });
+}
+
+// BẮT CẢM BIẾN VUỐT CHẠM (SWIPE TO CHOOSE)
+function setupCarouselSwipe() {
+    const wrapper = document.getElementById('walletCarouselWrapper');
+    if (!wrapper || wrapper.dataset.swiped) return; 
+    wrapper.dataset.swiped = "true";
+
+    let startX = 0;
+    let isDragging = false;
+
+    const onStart = (e) => {
+        startX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+        isDragging = true;
+    };
+
+    const onMove = (e) => {
+        if (!isDragging) return;
+        const currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+        const diff = startX - currentX;
+
+        // Nếu vuốt quá 40px thì ra lệnh lật trang
+        if (Math.abs(diff) > 40) { 
+            if (diff > 0 && currentCarouselIndex < carouselThemes.length - 1) {
+                currentCarouselIndex++;
+                updateCarousel();
+                isDragging = false; 
+            } else if (diff < 0 && currentCarouselIndex > 0) {
+                currentCarouselIndex--;
+                updateCarousel();
+                isDragging = false;
+            }
+        }
+    };
+
+    const onEnd = () => { isDragging = false; };
+
+    wrapper.addEventListener('touchstart', onStart, {passive: true});
+    wrapper.addEventListener('touchmove', onMove, {passive: true});
+    wrapper.addEventListener('touchend', onEnd);
+    wrapper.addEventListener('mousedown', onStart);
+    wrapper.addEventListener('mousemove', onMove);
+    wrapper.addEventListener('mouseup', onEnd);
+    wrapper.addEventListener('mouseleave', onEnd);
+}
+
+// KÍCH HOẠT KHI MỞ POPUP CÀI ĐẶT MÀU THẺ
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // Gắn sự kiện cho nút "Áp dụng"
+    const btnApply = document.getElementById('btnApplyCarouselTheme');
+    if (btnApply) {
+        btnApply.addEventListener('click', () => {
+            const selectedTheme = carouselThemes[currentCarouselIndex];
+            if (selectedTheme && typeof applyWalletTheme === 'function') {
+                applyWalletTheme(selectedTheme.id, true);
+                
+                // Đóng Popup
+                if (typeof closeWalletThemeModal === 'function') {
+                    closeWalletThemeModal();
+                } else {
+                    document.getElementById('walletThemeOverlay').style.display = 'none';
+                    document.getElementById('walletThemeModal').classList.remove('show');
+                }
+                
+                if (typeof showToast === 'function') showToast('Đã áp dụng màu thẻ mới!');
+            }
+        });
+    }
+
+    // Gắn sự kiện cho Nút Cài đặt (Khi bấm thì khởi tạo Kệ 3D)
+    const btnOpenSettings = document.getElementById('btnSettingsWalletTheme');
+    if (btnOpenSettings) {
+        btnOpenSettings.addEventListener('click', () => {
+            setTimeout(initWalletCarousel, 50); // Đợi popup mở xong rồi nạp 3D
+        });
+    }
+});
+// ==========================================
+// TÍNH NĂNG: KỆ LƯỚT 3D CHO MÀU NỀN ỨNG DỤNG (APP THEME)
+// ==========================================
+let appCarouselThemes = []; 
+let currentAppCarouselIndex = 0;
+
+function initAppThemeCarousel() {
+    // 1. Lấy dữ liệu màu nền (Dùng APP_THEMES có sẵn hoặc mảng dự phòng)
+    if (typeof APP_THEMES !== 'undefined' && APP_THEMES.length > 0) {
+        appCarouselThemes = APP_THEMES;
+    } else {
+        // Cấu hình dự phòng nếu thiếu
+        appCarouselThemes = [
+            { id: 'theme-light', name: 'Sáng nhẹ (Mặc định)', background: '#f4f6f9' },
+            { id: 'theme-blue', name: 'Xanh thanh lịch', background: '#eef2ff' },
+            { id: 'theme-pink', name: 'Hồng Pastel', background: '#fdf2f8' },
+            { id: 'theme-dark', name: 'Đêm sâu', background: '#1e293b' }
+        ];
+    }
+
+    const track = document.getElementById('appCarouselTrack');
+    if (!track) return;
+    track.innerHTML = '';
+    
+    // 2. Tìm nền đang sử dụng
+    const savedTheme = localStorage.getItem('appTheme') || 'theme-light';
+    const foundIdx = appCarouselThemes.findIndex(t => t.id === savedTheme);
+    currentAppCarouselIndex = foundIdx > -1 ? foundIdx : 0;
+
+    // 3. Tạo các thẻ giả lập Giao diện App Mini
+    appCarouselThemes.forEach((theme, idx) => {
+        const card = document.createElement('div');
+        card.className = 'carousel-card';
+        card.style.background = theme.background;
+        card.style.border = '1px solid rgba(128, 128, 128, 0.2)';
+        
+        // Vẽ thêm các thanh xám giả lập Navbar, Card và Bottom Nav
+        card.innerHTML = `
+            <div style="position: absolute; top: 12px; left: 16px; right: 16px; height: 20px; background: rgba(128,128,128,0.2); border-radius: 6px;"></div>
+            <div style="position: absolute; top: 44px; left: 16px; right: 16px; height: 50px; background: rgba(128,128,128,0.15); border-radius: 12px;"></div>
+            <div style="position: absolute; bottom: 12px; left: 16px; right: 16px; height: 16px; background: rgba(128,128,128,0.2); border-radius: 4px;"></div>
+        `;
+        
+        card.addEventListener('click', () => {
+            currentAppCarouselIndex = idx;
+            updateAppCarousel();
+        });
+        track.appendChild(card);
+    });
+
+    setupAppCarouselSwipe();
+    updateAppCarousel();
+}
+
+// TÍNH TOÁN KHÔNG GIAN 3D
+function updateAppCarousel() {
+    const track = document.getElementById('appCarouselTrack');
+    if (!track) return;
+    const cards = track.querySelectorAll('.carousel-card');
+    const nameDisplay = document.getElementById('appCarouselThemeName');
+    
+    if (appCarouselThemes[currentAppCarouselIndex]) {
+        let themeId = appCarouselThemes[currentAppCarouselIndex].id;
+        let themeName = appCarouselThemes[currentAppCarouselIndex].name;
+
+        // Nếu dữ liệu không có tên, tự động gán tên theo ID
+        if (!themeName) {
+            if (themeId === 'theme-light') themeName = 'Sáng nhẹ (Mặc định)';
+            else if (themeId === 'theme-blue') themeName = 'Xanh thanh lịch';
+            else if (themeId === 'theme-pink') themeName = 'Hồng Pastel ngọt ngào';
+            else if (themeId === 'theme-dark') themeName = 'Giao diện Tối (Dark)';
+            else themeName = 'Giao diện ' + themeId.replace('theme-', '');
+        }
+
+        nameDisplay.innerText = themeName;
+    }
+
+    cards.forEach((card, i) => {
+        const offset = i - currentAppCarouselIndex; 
+        const absOffset = Math.abs(offset);
+        
+        let translateX = offset * 80;    
+        let translateZ = absOffset * -90; 
+        let rotateY = offset * -35;      
+        
+        let zIndex = 100 - absOffset;
+        let opacity = absOffset > 2 ? 0 : (1 - absOffset * 0.4); 
+        
+        if (offset === 0) {
+            translateX = 0; translateZ = 40; rotateY = 0; opacity = 1;
+            card.style.filter = 'blur(0px)';
+        } else {
+            card.style.filter = `blur(${absOffset * 1.5}px)`; 
+        }
+
+        card.style.transform = `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg)`;
+        card.style.zIndex = zIndex;
+        card.style.opacity = opacity;
+    });
+}
+
+// BẮT CẢM BIẾN VUỐT
+function setupAppCarouselSwipe() {
+    const wrapper = document.getElementById('appCarouselWrapper');
+    if (!wrapper || wrapper.dataset.swiped) return; 
+    wrapper.dataset.swiped = "true";
+
+    let startX = 0; let isDragging = false;
+    const onStart = (e) => { startX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX; isDragging = true; };
+    const onMove = (e) => {
+        if (!isDragging) return;
+        const currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+        const diff = startX - currentX;
+        if (Math.abs(diff) > 40) { 
+            if (diff > 0 && currentAppCarouselIndex < appCarouselThemes.length - 1) {
+                currentAppCarouselIndex++; updateAppCarousel(); isDragging = false; 
+            } else if (diff < 0 && currentAppCarouselIndex > 0) {
+                currentAppCarouselIndex--; updateAppCarousel(); isDragging = false;
+            }
+        }
+    };
+    const onEnd = () => { isDragging = false; };
+
+    wrapper.addEventListener('touchstart', onStart, {passive: true});
+    wrapper.addEventListener('touchmove', onMove, {passive: true});
+    wrapper.addEventListener('touchend', onEnd);
+    wrapper.addEventListener('mousedown', onStart);
+    wrapper.addEventListener('mousemove', onMove);
+    wrapper.addEventListener('mouseup', onEnd);
+    wrapper.addEventListener('mouseleave', onEnd);
+}
+
+// KÍCH HOẠT KHI MỞ POPUP CÀI ĐẶT NỀN
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // Nút Áp dụng
+    const btnApplyApp = document.getElementById('btnApplyAppThemeCarousel');
+    if (btnApplyApp) {
+        btnApplyApp.addEventListener('click', () => {
+            const selectedTheme = appCarouselThemes[currentAppCarouselIndex];
+            if (selectedTheme && typeof applyAppTheme === 'function') {
+                applyAppTheme(selectedTheme.id, true);
+                
+                // Đóng popup
+                if (typeof closeAppThemeModal === 'function') {
+                    closeAppThemeModal();
+                } else {
+                    document.getElementById('appThemeOverlay').style.display = 'none';
+                    document.getElementById('appThemeModal').classList.remove('show');
+                }
+                if (typeof showToast === 'function') showToast('Đã áp dụng màu nền mới!');
+            }
+        });
+    }
+
+    // Bắt lệnh bấm từ Menu "Màu nền background" để render 3D
+    const btnOpenAppSettings = document.getElementById('btnSettingsAppTheme');
+    if (btnOpenAppSettings) {
+        btnOpenAppSettings.addEventListener('click', () => {
+            setTimeout(initAppThemeCarousel, 50); 
+        });
+    }
+});

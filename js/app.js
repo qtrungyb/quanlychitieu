@@ -5756,11 +5756,9 @@ let appCarouselThemes = [];
 let currentAppCarouselIndex = 0;
 
 function initAppThemeCarousel() {
-    // 1. Lấy dữ liệu màu nền (Dùng APP_THEMES có sẵn hoặc mảng dự phòng)
     if (typeof APP_THEMES !== 'undefined' && APP_THEMES.length > 0) {
         appCarouselThemes = APP_THEMES;
     } else {
-        // Cấu hình dự phòng nếu thiếu
         appCarouselThemes = [
             { id: 'theme-light', name: 'Sáng nhẹ (Mặc định)', background: '#f4f6f9' },
             { id: 'theme-blue', name: 'Xanh thanh lịch', background: '#eef2ff' },
@@ -5773,29 +5771,96 @@ function initAppThemeCarousel() {
     if (!track) return;
     track.innerHTML = '';
     
-    // 2. Tìm nền đang sử dụng
     const savedTheme = localStorage.getItem('appTheme') || 'theme-light';
     const foundIdx = appCarouselThemes.findIndex(t => t.id === savedTheme);
     currentAppCarouselIndex = foundIdx > -1 ? foundIdx : 0;
 
-    // 3. Tạo các thẻ giả lập Giao diện App Mini
     appCarouselThemes.forEach((theme, idx) => {
         const card = document.createElement('div');
-        card.className = 'carousel-card';
-        card.style.background = theme.background;
-        card.style.border = '1px solid rgba(128, 128, 128, 0.2)';
+        // Đổi thành class điện thoại mini
+        card.className = 'app-screen-card'; 
         
-        // Vẽ thêm các thanh xám giả lập Navbar, Card và Bottom Nav
+        // --- BẮT ĐẦU FIX LỖI TÀNG HÌNH ---
+        // Nếu background rỗng (như bg-default), ép nó dùng màu nền của app
+        if (!theme.background || theme.background === '') {
+            card.style.background = 'var(--bg-color)';
+        } else {
+            card.style.background = theme.background;
+        }
+        
+        // VẼ GIAO DIỆN APP THU NHỎ
         card.innerHTML = `
-            <div style="position: absolute; top: 12px; left: 16px; right: 16px; height: 20px; background: rgba(128,128,128,0.2); border-radius: 6px;"></div>
-            <div style="position: absolute; top: 44px; left: 16px; right: 16px; height: 50px; background: rgba(128,128,128,0.15); border-radius: 12px;"></div>
-            <div style="position: absolute; bottom: 12px; left: 16px; right: 16px; height: 16px; background: rgba(128,128,128,0.2); border-radius: 4px;"></div>
+            <div style="position: absolute; top: 30px; left: 12px; width: 60%; height: 6px; background: var(--text-main); opacity: 0.7; border-radius: 4px;"></div>
+            <div style="position: absolute; top: 45px; left: 12px; right: 12px; height: 50px; background: var(--primary); border-radius: 12px; opacity: 0.9; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></div>
+            <div style="position: absolute; top: 105px; left: 12px; right: 12px; height: 20px; background: rgba(128,128,128,0.2); border-radius: 6px;"></div>
+            <div style="position: absolute; top: 132px; left: 12px; right: 12px; height: 20px; background: rgba(128,128,128,0.2); border-radius: 6px;"></div>
+            <div style="position: absolute; top: 159px; left: 12px; right: 12px; height: 20px; background: rgba(128,128,128,0.2); border-radius: 6px;"></div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 35px; background: var(--card-bg); border-radius: 0 0 20px 20px; display: flex; justify-content: space-evenly; align-items: center; padding-bottom: 5px; box-shadow: 0 -2px 5px rgba(0,0,0,0.05);">
+                <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--primary);"></div>
+                <div style="width: 14px; height: 14px; border-radius: 50%; background: rgba(128,128,128,0.3);"></div>
+                <div style="width: 14px; height: 14px; border-radius: 50%; background: rgba(128,128,128,0.3);"></div>
+            </div>
         `;
         
+        // --- BẮT ĐẦU: THUẬT TOÁN NHẤN GIỮ (LONG-PRESS PREVIEW) ĐÃ FIX LỖI ---
+        
+        // 1. SAO LƯU CHÍNH XÁC MÀU GỐC TRƯỚC KHI BỊ GHI ĐÈ
+        const originalThemeBackup = localStorage.getItem('appTheme') || 'theme-light';
+        let pressTimer;
+        let isPreviewing = false;
+
+        const startPress = (e) => {
+            pressTimer = setTimeout(() => {
+                isPreviewing = true;
+                
+                // Ẩn mờ Bảng chọn Modal đi
+                document.getElementById('appThemeModal')?.classList.add('modal-preview-hidden');
+                document.getElementById('appThemeOverlay')?.classList.add('modal-preview-hidden');
+                
+                // Áp dụng màu xem thử (lúc này bộ nhớ sẽ vô tình bị applyAppTheme ghi đè)
+                if(typeof applyAppTheme === 'function') applyAppTheme(theme.id);
+                
+                // Rung nhẹ
+                if (navigator.vibrate) navigator.vibrate(50);
+            }, 450); 
+        };
+
+        const cancelPress = () => {
+            clearTimeout(pressTimer); 
+            
+            if (isPreviewing) {
+                isPreviewing = false;
+                
+                // Hiện lại Bảng chọn Modal
+                document.getElementById('appThemeModal')?.classList.remove('modal-preview-hidden');
+                document.getElementById('appThemeOverlay')?.classList.remove('modal-preview-hidden');
+                
+                // 2. ÉP TRẢ LẠI MÀU GỐC TỪ "BIẾN SAO LƯU" CHỨ KHÔNG LẤY TỪ BỘ NHỚ NỮA
+                if(typeof applyAppTheme === 'function') applyAppTheme(originalThemeBackup);
+                
+                // 3. KHÔI PHỤC LẠI BỘ NHỚ LƯU TRỮ (Fix lỗi bị lưu đè)
+                localStorage.setItem('appTheme', originalThemeBackup);
+            }
+        };
+
+        // Gắn hệ thống cảm biến (Hoạt động cho cả Mobile và PC)
+        card.addEventListener('mousedown', startPress);
+        card.addEventListener('touchstart', startPress, {passive: true});
+        
+        card.addEventListener('mouseup', cancelPress);
+        card.addEventListener('mouseleave', cancelPress);
+        card.addEventListener('touchend', cancelPress);
+        card.addEventListener('touchmove', cancelPress, {passive: true}); // Hủy xem thử ngay nếu tay bị trượt (vuốt)
+
+        // Cú click thông thường (Chỉ lướt thẻ ra giữa)
         card.addEventListener('click', () => {
-            currentAppCarouselIndex = idx;
-            updateAppCarousel();
+            if (!isPreviewing) {
+                currentAppCarouselIndex = idx;
+                updateAppCarousel();
+            }
         });
+        // --- KẾT THÚC: THUẬT TOÁN NHẤN GIỮ ---
+
         track.appendChild(card);
     });
 
@@ -5803,26 +5868,25 @@ function initAppThemeCarousel() {
     updateAppCarousel();
 }
 
-// TÍNH TOÁN KHÔNG GIAN 3D
 function updateAppCarousel() {
     const track = document.getElementById('appCarouselTrack');
     if (!track) return;
-    const cards = track.querySelectorAll('.carousel-card');
+    
+    // TRỎ ĐẾN CLASS MỚI
+    const cards = track.querySelectorAll('.app-screen-card'); 
     const nameDisplay = document.getElementById('appCarouselThemeName');
     
     if (appCarouselThemes[currentAppCarouselIndex]) {
         let themeId = appCarouselThemes[currentAppCarouselIndex].id;
         let themeName = appCarouselThemes[currentAppCarouselIndex].name;
 
-        // Nếu dữ liệu không có tên, tự động gán tên theo ID
         if (!themeName) {
             if (themeId === 'theme-light') themeName = 'Sáng nhẹ (Mặc định)';
             else if (themeId === 'theme-blue') themeName = 'Xanh thanh lịch';
-            else if (themeId === 'theme-pink') themeName = 'Hồng Pastel ngọt ngào';
-            else if (themeId === 'theme-dark') themeName = 'Giao diện Tối (Dark)';
+            else if (themeId === 'theme-pink') themeName = 'Hồng Pastel';
+            else if (themeId === 'theme-dark') themeName = 'Giao diện Tối';
             else themeName = 'Giao diện ' + themeId.replace('theme-', '');
         }
-
         nameDisplay.innerText = themeName;
     }
 
@@ -5830,7 +5894,8 @@ function updateAppCarousel() {
         const offset = i - currentAppCarouselIndex; 
         const absOffset = Math.abs(offset);
         
-        let translateX = offset * 80;    
+        // Điều chỉnh lại cự ly vì điện thoại hẹp hơn thẻ card
+        let translateX = offset * 65;    
         let translateZ = absOffset * -90; 
         let rotateY = offset * -35;      
         

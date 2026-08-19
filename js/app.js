@@ -2654,10 +2654,16 @@ function applyAppTheme(themeId, saveToDb = true) {
         
         // Trả hệ thống về màu Xanh dương nguyên bản
         document.documentElement.style.setProperty('--primary', '#4361ee');
+        
+        // --- CHỐT CHẶN: Báo cho CSS biết đang dùng nền gốc ---
+        document.body.classList.add('theme-default');
     } else {
         document.body.style.background = theme.background;
         document.body.style.backgroundAttachment = 'fixed'; 
         document.body.style.backgroundSize = 'cover';
+
+        // --- CHỐT CHẶN: Gỡ lệnh nền gốc ---
+        document.body.classList.remove('theme-default');
 
         // --- THUẬT TOÁN TẮC KÈ HOA (DYNAMIC SYNC) ---
         let dominantColor = '#4361ee'; // Trở về xanh mặc định nếu không tìm thấy
@@ -2668,7 +2674,7 @@ function applyAppTheme(themeId, saveToDb = true) {
             dominantColor = match[0];
         }
         
-        // Bơm thẳng mã màu này vào rễ (Root) CSS. Toàn bộ app sẽ đổi màu theo!
+        // Bơm thẳng mã màu này vào rễ (Root) CSS
         document.documentElement.style.setProperty('--primary', dominantColor);
         // ----------------------------------------------
     }

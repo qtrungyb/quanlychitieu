@@ -1443,7 +1443,11 @@ function updateUI() {
     const listEl = document.getElementById('transactionList');
     const filteredSummary = document.getElementById('filteredSummary');
     if (!listEl) return;
-
+	// THÊM MỚI: Chụp lại trạng thái các ngày đang mở trước khi render
+    const openGroups = [];
+    listEl.querySelectorAll('.date-group:not(.collapsed)').forEach(el => {
+        openGroups.push(el.getAttribute('data-date'));
+    });
     const totalIncomeAll = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
     const totalExpenseAll = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
     currentBalances.total = totalIncomeAll - totalExpenseAll;
@@ -1545,7 +1549,7 @@ function updateUI() {
         else if (rawDate === formatD(yestD)) displayDateText = 'Hôm qua';
         else displayDateText = `${daysVN[dayOfWeek]}, ${d}/${m}`;
 
-        const collapsedClass = 'collapsed';
+        const collapsedClass = openGroups.includes(rawDate) ? '' : 'collapsed';
 
         let sparkbarHtml = '';
         if (data.out > 0) {

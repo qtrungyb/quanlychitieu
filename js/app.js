@@ -1433,7 +1433,7 @@ function updateUI() {
     const fStartDate = fStart ? fStart.value : '';
     const fEndDate = fEnd ? fEnd.value : '';
     const sText = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
-    // Lấy danh sách TẤT CẢ các danh mục đang được chọn
+    
     const activeCatPills = Array.from(document.querySelectorAll('#historyCategoryFilter .cat-pill.active'));
     const fCats = activeCatPills.map(p => p.getAttribute('data-filter')).filter(f => f !== '');
     
@@ -1461,7 +1461,6 @@ function updateUI() {
             else if (fStartDate) matchDate = t.date >= fStartDate;
             else if (fEndDate) matchDate = t.date <= fEndDate;
             
-            // Nếu có lọc danh mục, kiểm tra xem giao dịch có nằm trong mảng fCats không
             const matchCat = fCats.length > 0 ? (fCats.includes(t.categoryName) || fCats.includes(t.category)) : true;
             const amtString = t.amount.toString();
             const matchSearch = sText ? (
@@ -1504,14 +1503,9 @@ function updateUI() {
         if (t.type === 'expense') grouped[dateStr].out += t.amount;
     });
 
-    // BỔ SUNG LƯU BIẾN TOÀN CỤC CHO RECYCLER
     window.currentGroupedData = grouped; 
-
     const sortedDates = Object.keys(grouped).sort().reverse();
     
-    // ==========================================
-    // THUẬT TOÁN TÌM MỐC 100% CHO NỀN HÀO QUANG
-    // ==========================================
     let maxDailyExpenseGlobal = 0;
     for (let d in grouped) {
         if (grouped[d].out > maxDailyExpenseGlobal) maxDailyExpenseGlobal = grouped[d].out;
@@ -1538,7 +1532,6 @@ function updateUI() {
     for (const rawDate of paginatedDates) {
         const data = grouped[rawDate];
         
-        // --- BẮT ĐẦU ĐOẠN CODE THAY THẾ ---
         const dObj = new Date(rawDate);
         const dayOfWeek = dObj.getDay();
         const daysVN = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
@@ -1551,14 +1544,9 @@ function updateUI() {
         if (rawDate === formatD(todayD)) displayDateText = 'Hôm nay';
         else if (rawDate === formatD(yestD)) displayDateText = 'Hôm qua';
         else displayDateText = `${daysVN[dayOfWeek]}, ${d}/${m}`;
-        // --- KẾT THÚC ĐOẠN CODE THAY THẾ ---
 
-        // Đã xóa bỏ hoàn toàn biến groupIndex gây lỗi
         const collapsedClass = 'collapsed';
 
-        // ==========================================
-        // THUẬT TOÁN DẢI LỤA TỶ TRỌNG (INLINE SPARKBAR)
-        // ==========================================
         let sparkbarHtml = '';
         if (data.out > 0) {
             const catExpense = {};
@@ -1581,11 +1569,11 @@ function updateUI() {
         } else {
             sparkbarHtml = `<div class="daily-sparkbar"></div>`;
         }
-        // ==========================================
 
+        // FIX LỖI: Gọi trực tiếp dữ liệu HTML vào khung thay vì đợi IntersectionObserver
         listHTML += `
         <div class="date-group ${collapsedClass}" id="date_group_${rawDate}" data-date="${rawDate}">
-            <div class="date-group-header" onclick="toggleDateGroup('${rawDate}')" style="flex-direction: column; align-items: stretch; justify-content: center !important; gap: 8px; padding-bottom: 10px !important;">
+            <div class="date-group-header" onclick="document.getElementById('date_group_${rawDate}').classList.toggle('collapsed')" style="flex-direction: column; align-items: stretch; justify-content: center !important; gap: 8px; padding-bottom: 10px !important;">
                 
                 <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; gap: 8px;">
                     <div class="date-title" style="font-size: 14px; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0;">
@@ -1603,15 +1591,15 @@ function updateUI() {
                 
             </div>
             
-            <div class="date-group-items" id="items_${rawDate}"></div>
+            <div class="date-group-items" id="items_${rawDate}">
+                ${buildGroupItemsHTML(rawDate)}
+            </div>
         </div>
         `;
-        // Đã xóa dòng `groupIndex++;` gây lỗi ở đây
     }
 
     listHTML += `</div>`;
 
-    // QUAY LẠI NÚT TẢI THÊM TRUYỀN THỐNG (Khắc phục lỗi đơ khi cuộn tự động)
     if (sortedDates.length > currentDateLimit) {
         listHTML += `<button class="btn-load-more" onclick="currentDateLimit += ${DATES_PER_PAGE}; updateUI();">Xem thêm các ngày trước</button>`;
     } else if (sortedDates.length > 0) {
@@ -1620,47 +1608,11 @@ function updateUI() {
 
     listEl.innerHTML = listHTML;
 
-    // === TÁI CHẾ DOM (VIRTUAL SCROLLING) BẰNG INTERSECTION OBSERVER ===
-    if (window.domRecycler) window.domRecycler.disconnect();
-    
-    window.domRecycler = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            const group = entry.target;
-            const dateStr = group.getAttribute('data-date');
-            const itemsContainer = document.getElementById('items_' + dateStr);
-            if (!itemsContainer) return;
-
-            if (entry.isIntersecting) {
-                // VÀO KHUNG NHÌN: Bơm ruột HTML vào
-                if (!itemsContainer.hasAttribute('data-loaded')) {
-                    itemsContainer.innerHTML = buildGroupItemsHTML(dateStr);
-                    itemsContainer.setAttribute('data-loaded', 'true');
-                    itemsContainer.style.height = 'auto'; // Gỡ khóa chiều cao
-                }
-            } else {
-                // RA KHỎI KHUNG NHÌN: Hút sạch HTML để giải phóng RAM
-                if (itemsContainer.hasAttribute('data-loaded')) {
-                    // Chốt chiều cao hiện tại để thanh cuộn không bị giật
-                    const currentHeight = itemsContainer.getBoundingClientRect().height;
-                    if (currentHeight > 0) itemsContainer.style.height = currentHeight + 'px';
-                    
-                    itemsContainer.innerHTML = ''; // Hút cạn DOM
-                    itemsContainer.removeAttribute('data-loaded');
-                }
-            }
-        });
-    }, { rootMargin: '1000px 0px' }); // Bắt đầu load ngầm khi cách mép màn hình 1000px
-
-    // Gắn cảm biến vào các nhóm ngày
-    document.querySelectorAll('.date-group').forEach(g => window.domRecycler.observe(g));
-
     if(typeof renderBudgets === 'function') renderBudgets();
     if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
     if (typeof calculateStreak === 'function') calculateStreak();
 
-    // ==========================================
-    // VẼ BIỂU ĐỒ ĐƯỜNG KÉP CHO TAB LỊCH SỬ
-    // ==========================================
+    // VẼ BIỂU ĐỒ ĐƯỜNG KÉP
     const historyChartWrapper = document.getElementById('historyChartWrapper');
     const isCalendarHidden = document.getElementById('calendarViewContainer').classList.contains('hide');
 
@@ -1671,7 +1623,6 @@ function updateUI() {
         const chartIncData = [];
         const chartExpData = [];
 
-        // Đảo ngược mảng để vẽ biểu đồ tiến tới (từ cũ -> mới)
         const chartSortedDates = [...sortedDates].reverse();
 
         chartSortedDates.forEach(dateStr => {
@@ -1689,49 +1640,21 @@ function updateUI() {
             }
             const ctx = canvas.getContext('2d');
 
-            // === 1. TẠO MÀU SÓNG GRADIENT XANH/ĐỎ ===
-            // Sóng Thu (Màu Xanh lá)
             const incGradient = ctx.createLinearGradient(0, 0, 0, 180);
             incGradient.addColorStop(0, 'rgba(46, 204, 113, 0.4)');
             incGradient.addColorStop(1, 'rgba(46, 204, 113, 0.0)');
 
-            // Sóng Chi (Màu Đỏ)
             const expGradient = ctx.createLinearGradient(0, 0, 0, 180);
             expGradient.addColorStop(0, 'rgba(231, 76, 60, 0.4)');
             expGradient.addColorStop(1, 'rgba(231, 76, 60, 0.0)');
 
-            // === 2. VẼ BIỂU ĐỒ SÓNG ĐAN XEN ===
             window.histLineChartInst = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: chartLabels,
                     datasets: [
-                        {
-                            label: 'Tiền Thu',
-                            data: chartIncData,
-                            borderColor: '#2ecc71',
-                            backgroundColor: incGradient, // Đổ màu sóng Xanh
-                            borderWidth: 2.5,
-                            pointBackgroundColor: '#fff',
-                            pointBorderColor: '#2ecc71',
-                            pointRadius: 0, // Ẩn các chấm tròn gồ ghề
-                            pointHoverRadius: 6, // Chỉ hiện khi vuốt qua
-                            fill: true,
-                            tension: 0.4 // Bo cong mềm mại
-                        },
-                        {
-                            label: 'Tiền Chi',
-                            data: chartExpData,
-                            borderColor: '#e74c3c',
-                            backgroundColor: expGradient, // Đổ màu sóng Đỏ
-                            borderWidth: 2.5,
-                            pointBackgroundColor: '#fff',
-                            pointBorderColor: '#e74c3c',
-                            pointRadius: 0,
-                            pointHoverRadius: 6,
-                            fill: true,
-                            tension: 0.4
-                        }
+                        { label: 'Tiền Thu', data: chartIncData, borderColor: '#2ecc71', backgroundColor: incGradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, fill: true, tension: 0.4 },
+                        { label: 'Tiền Chi', data: chartExpData, borderColor: '#e74c3c', backgroundColor: expGradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, fill: true, tension: 0.4 }
                     ]
                 },
                 options: {
@@ -1739,32 +1662,10 @@ function updateUI() {
                     maintainAspectRatio: false,
                     interaction: { intersect: false, mode: 'index' },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} },
-                            grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' }
-                        }
+                        y: { beginAtZero: true, ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} }, grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } },
+                        x: { grid: { display: false }, ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' } }
                     },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff',
-                            titleColor: document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b',
-                            bodyColor: document.body.classList.contains('dark-theme') ? '#f1f5f9' : '#0f172a',
-                            borderColor: document.body.classList.contains('dark-theme') ? '#334155' : '#e2e8f0',
-                            borderWidth: 1,
-                            usePointStyle: true,
-                            callbacks: {
-                                label: function(c) {
-                                    return ' ' + c.dataset.label + ': ' + formatter.format(c.parsed.y) + 'đ';
-                                }
-                            }
-                        }
-                    }
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff', titleColor: document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b', bodyColor: document.body.classList.contains('dark-theme') ? '#f1f5f9' : '#0f172a', borderColor: document.body.classList.contains('dark-theme') ? '#334155' : '#e2e8f0', borderWidth: 1, usePointStyle: true, callbacks: { label: function(c) { return ' ' + c.dataset.label + ': ' + formatter.format(c.parsed.y) + 'đ'; } } } }
                 }
             });
         }
@@ -5106,26 +5007,7 @@ if (typeof updateUI === 'function') {
         checkFilterStatus();              // Chạy thêm thuật toán chấm đỏ
     };
 }
-// ==========================================
-// TÍNH NĂNG: GẬP/MỞ LỊCH SỬ (TÍCH HỢP TẢI LƯỜI BIẾNG)
-// ==========================================
-window.toggleDateGroup = function(dateStr) {
-    const groupEl = document.getElementById('date_group_' + dateStr);
-    if (groupEl) {
-        // TẢI LƯỜI BIẾNG (Lazy Load): Tiết kiệm RAM tuyệt đối!
-        // Chỉ vẽ thẻ HTML khi người dùng THỰC SỰ BẤM MỞ xem ngày hôm đó
-        const itemsContainer = document.getElementById('items_' + dateStr);
-        if (itemsContainer && !itemsContainer.hasAttribute('data-loaded')) {
-            if (typeof buildGroupItemsHTML === 'function') {
-                itemsContainer.innerHTML = buildGroupItemsHTML(dateStr);
-                itemsContainer.setAttribute('data-loaded', 'true');
-            }
-        }
-        
-        // Đảo trạng thái gập/mở
-        groupEl.classList.toggle('collapsed');
-    }
-};
+
 // ==========================================
 // TÍNH NĂNG: BÀN PHÍM MÁY TÍCH HỢP (CUSTOM NUMPAD)
 // ==========================================
@@ -5469,7 +5351,7 @@ Chart.register({
     }
 });
 // ==========================================
-// TÍNH NĂNG: TÁI CHẾ DOM (VIRTUAL SCROLLING HELPER)
+// TÍNH NĂNG: VẼ DANH SÁCH GIAO DỊCH (FIX LỖI CRASH)
 // ==========================================
 window.buildGroupItemsHTML = function(dateStr) {
     if (!window.currentGroupedData || !window.currentGroupedData[dateStr]) return '';
@@ -5481,8 +5363,11 @@ window.buildGroupItemsHTML = function(dateStr) {
         const isInc = t.type === 'income';
         const cName = t.categoryName || t.category;
         const catObj = categories.find(c => c.id === t.categoryId);
-        const iconSvg = catObj ? SVG_LIB[catObj.icon] : (SVG_LIB[t.icon] || SVG_LIB['other']);
-        const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
+        
+        // BẢO VỆ CHỐNG CRASH TỐI ĐA (Tránh lỗi undefined làm tịt cả danh sách)
+        const themeObj = (catObj && catObj.color && THEMES[catObj.color]) ? THEMES[catObj.color] : THEMES['theme-gray'];
+        const iconStr = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
+        const innerSvg = iconStr.replace(/<svg[^>]*>|<\/svg>/g, '');
         const safeName = cName.replace(/'/g, "\\'");
 
         itemsHtml += `
@@ -5498,7 +5383,9 @@ window.buildGroupItemsHTML = function(dateStr) {
                 </div>
                 <div class="transaction-item timeline-item swipe-front" onclick="openActionSheet(${t.id}, '${safeName}', ${t.amount})">
                     <div class="t-left">
-                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">${iconSvg}</div>
+                        <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${innerSvg}</svg>
+                        </div>
                         <div class="t-info">
                             <div class="t-title" style="font-size: 15px;">${cName}</div>
                             <div class="t-note" style="font-size: 12px;">${t.note || '...'}</div>

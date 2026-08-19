@@ -1084,6 +1084,11 @@ body.dark-theme {
     -webkit-backdrop-filter: blur(24px) saturate(150%);
     border: 1px solid var(--sync-glass-border) !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05) !important;
+    
+    /* TỐI ƯU HIỆU NĂNG: Ép GPU xử lý Kính mờ (Hardware Acceleration) */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: transform, backdrop-filter;
 }
 
 /* 3. Xóa nền trắng của các thành phần con để lộ lớp Kính tuyệt đẹp bên dưới */
@@ -1107,9 +1112,11 @@ body.dark-theme {
     backdrop-filter: blur(12px) saturate(120%);
     -webkit-backdrop-filter: blur(12px) saturate(120%);
     border-bottom: 1px solid var(--sync-glass-border) !important;
-}
-body.dark-theme .date-group-header {
-    background-color: color-mix(in srgb, var(--primary) 8%, rgba(18, 18, 18, 0.8)) !important;
+    
+    /* TỐI ƯU HIỆU NĂNG: Chống giật lag khi cuộn trang */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: transform;
 }
 /* =========================================
    1. THANH ĐIỀU HƯỚNG ĐÁY "VIÊN THUỐC LƠ LỬNG"
@@ -1118,13 +1125,17 @@ body.dark-theme .date-group-header {
     position: fixed;
     bottom: 20px !important;
     left: 50% !important;
-    transform: translateX(-50%);
-    width: calc(100% - 32px) !important; /* Thụt vào mỗi bên 16px */
-    max-width: 448px; /* Tương thích với max-width của điện thoại */
-    height: 70px !important;
-    border-radius: 35px !important; /* Bo tròn cong 100% thành viên thuốc */
     
-    /* Áp dụng Kính pha lê Tắc kè hoa */
+    /* TỐI ƯU HIỆU NĂNG: Kết hợp căn giữa (translateX) và bật GPU (translateZ) */
+    transform: translateX(-50%) translateZ(0);
+    -webkit-transform: translateX(-50%) translateZ(0);
+    will-change: transform, backdrop-filter;
+
+    width: calc(100% - 32px) !important;
+    max-width: 448px;
+    height: 70px !important;
+    border-radius: 35px !important;
+    
     background: var(--sync-glass-bg) !important;
     backdrop-filter: blur(24px) saturate(150%);
     -webkit-backdrop-filter: blur(24px) saturate(150%);

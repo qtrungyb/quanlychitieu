@@ -864,10 +864,24 @@
     </div>
 </div> 
 
-<!-- NÚT THÊM NHANH (FAB) -->
-<button class="fab-button hide" id="fabAddTransaction" title="Thêm giao dịch mới">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-</button>
+<!-- NÚT THÊM NHANH THỦY NGÂN (LIQUID FAB) -->
+<div class="fab-container hide" id="fabContainer">
+    <!-- Bộ lọc màng chất lỏng -->
+    <div class="fab-gooey-wrapper">
+        <!-- Nút con: Tiền Chi -->
+        <button class="fab-child fab-expense" onclick="openQuickForm('expense')" title="Tiền chi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+        </button>
+        <!-- Nút con: Tiền Thu -->
+        <button class="fab-child fab-income" onclick="openQuickForm('income')" title="Tiền thu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        </button>
+        <!-- Nút Chính -->
+        <button class="fab-main" id="fabMainBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+    </div>
+</div>
 
 <!-- BOTTOM NAVIGATION -->
 <div class="bottom-nav">

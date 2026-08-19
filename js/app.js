@@ -1468,9 +1468,10 @@ function updateUI() {
     currentBalances.expense = totalExpenseAll;
     renderBalances();
 
-        let displayData = [...transactions];
+            let displayData = [...transactions];
     const isFiltering = (!isQuickAll && (fStartDate || fEndDate)) || sText || fCats.length > 0;
 
+    // Phải đưa các biến này ra ngoài khối if để không bị lỗi ReferenceError
     let fInc = 0;
     let fExp = 0;
     const grouped = {};
@@ -1498,7 +1499,7 @@ function updateUI() {
         filteredSummary?.classList.add('hide');
     }
 
-    // TỐI ƯU HIỆU NĂNG: Gộp vòng lặp O(N) duy nhất
+    // TỐI ƯU HIỆU NĂNG: Gộp tính tổng và gom nhóm vào 1 vòng lặp duy nhất
     for (let i = 0; i < displayData.length; i++) {
         const t = displayData[i];
         
@@ -1531,8 +1532,8 @@ function updateUI() {
         }
     }
 
-
     window.currentGroupedData = grouped; 
+ 
     const sortedDates = Object.keys(grouped).sort().reverse();
     
     let maxDailyExpenseGlobal = 0;
@@ -2197,7 +2198,7 @@ function renderCharts() {
             });
         }
     }
-
+}
 // ==========================================
 // 8. ACTION SHEET & GIAO DỊCH (SỬA / XÓA)
 // ==========================================
@@ -3287,18 +3288,18 @@ function renderAdminTxList() {
                                 y: { beginAtZero: true, ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} }, grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } },
                                 x: { grid: { display: false }, ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' } }
                             },
-                                                        plugins: { legend: { display: false } }
+                                                                                    plugins: { legend: { display: false } }
                         }
                     });
                 }
             }
-        } // Đóng if (sortedDates.length > 0)
+        } // Đóng if (sortedDates)
     }, 100); // Đóng setTimeout
-} // Đóng hàm renderAdminTxList() (VÔ CÙNG QUAN TRỌNG)
+} // <--- THÊM DẤU NÀY ĐỂ ĐÓNG HÀM renderAdminTxList()
 
 // ==========================================
 // 13. ADMIN XEM THỐNG KÊ CỦA USER
-// ==========================================
+
 
 
 // --- BẮT ĐẦU ĐOẠN CODE CẦN THÊM VÀO ---
@@ -3739,7 +3740,7 @@ function renderAdmCharts() {
             });
         }
     }
-
+}
 // ==========================================
 // 14. TÍNH NĂNG ADMIN: TẠO TÀI KHOẢN MỚI
 // ==========================================

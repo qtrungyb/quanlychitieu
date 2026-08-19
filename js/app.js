@@ -3288,14 +3288,19 @@ function renderAdminTxList() {
                                 y: { beginAtZero: true, ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} }, grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } },
                                 x: { grid: { display: false }, ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' } }
                             },
-                            plugins: { legend: { display: false } }
+                                                        plugins: { legend: { display: false } }
                         }
                     });
                 }
             }
+        } // Đóng if (sortedDates.length > 0)
+    }, 100); // Đóng setTimeout
+} // Đóng hàm renderAdminTxList() (VÔ CÙNG QUAN TRỌNG)
+
 // ==========================================
 // 13. ADMIN XEM THỐNG KÊ CỦA USER
 // ==========================================
+
 
 // --- BẮT ĐẦU ĐOẠN CODE CẦN THÊM VÀO ---
 

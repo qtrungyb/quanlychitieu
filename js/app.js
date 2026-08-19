@@ -2538,6 +2538,9 @@ function applyDarkMode(isDark) {
 
 const savedDarkMode = localStorage.getItem('darkMode') === 'true';
 applyDarkMode(savedDarkMode);
+// THÊM: Đọc và áp dụng ngay màu nền gốc để tắt Kính mờ trước khi web tải xong
+const savedAppTheme = localStorage.getItem('appTheme') || 'bg-default';
+applyAppTheme(savedAppTheme, false);
 
 function initWalletThemes() {
     const grid = document.getElementById('walletThemeGrid');
@@ -2655,28 +2658,25 @@ function applyAppTheme(themeId, saveToDb = true) {
         // Trả hệ thống về màu Xanh dương nguyên bản
         document.documentElement.style.setProperty('--primary', '#4361ee');
         
-        // --- CHỐT CHẶN: Báo cho CSS biết đang dùng nền gốc ---
+        // --- CHỐT CHẶN: Báo cho CSS biết đang dùng nền gốc để tắt Kính mờ ---
         document.body.classList.add('theme-default');
     } else {
         document.body.style.background = theme.background;
         document.body.style.backgroundAttachment = 'fixed'; 
         document.body.style.backgroundSize = 'cover';
-
-        // --- CHỐT CHẶN: Gỡ lệnh nền gốc ---
+        
+        // --- CHỐT CHẶN: Báo cho CSS bật lại Kính mờ ---
         document.body.classList.remove('theme-default');
 
         // --- THUẬT TOÁN TẮC KÈ HOA (DYNAMIC SYNC) ---
         let dominantColor = '#4361ee'; // Trở về xanh mặc định nếu không tìm thấy
         
-        // Dùng Regex "bắt" mã màu Hex đầu tiên xuất hiện trong chuỗi Background
         let match = theme.background.match(/#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})/);
         if (match) {
             dominantColor = match[0];
         }
         
-        // Bơm thẳng mã màu này vào rễ (Root) CSS
         document.documentElement.style.setProperty('--primary', dominantColor);
-        // ----------------------------------------------
     }
     
     localStorage.setItem('appTheme', themeId);

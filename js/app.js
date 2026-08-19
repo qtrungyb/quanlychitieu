@@ -864,40 +864,48 @@ document.getElementById('btnToggleEye')?.addEventListener('click', () => {
     renderBalances();
 });
 
-function renderBalances() {
-    const tBal = document.getElementById('totalBalance');
-    const tInc = document.getElementById('totalIncome');
-    const tExp = document.getElementById('totalExpense');
-    const tLent = document.getElementById('totalLent');
-    const tBor = document.getElementById('totalBorrowed');
+// TỐI ƯU HIỆU NĂNG: Khởi tạo bộ nhớ đệm (Cache) bên ngoài hàm
+const DOM_CACHE = {
+    tBal: null, tInc: null, tExp: null, tLent: null, tBor: null, walletCard: null
+};
 
+// Chạy 1 lần duy nhất khi trang vừa load xong để nạp DOM vào Cache
+window.addEventListener('DOMContentLoaded', () => {
+    DOM_CACHE.tBal = document.getElementById('totalBalance');
+    DOM_CACHE.tInc = document.getElementById('totalIncome');
+    DOM_CACHE.tExp = document.getElementById('totalExpense');
+    DOM_CACHE.tLent = document.getElementById('totalLent');
+    DOM_CACHE.tBor = document.getElementById('totalBorrowed');
+    DOM_CACHE.walletCard = document.querySelector('.wallet-card');
+});
+
+// Hàm render nay chỉ việc lấy từ Cache ra dùng, tốc độ xử lý là O(1)
+function renderBalances() {
     if(isBalanceHidden) {
-        if (tBal) tBal.innerText = '******';
-        if (tInc) tInc.innerText = '******';
-        if (tExp) tExp.innerText = '******';
-        if (tLent) tLent.innerText = '******';
-        if (tBor) tBor.innerText = '******';
+        if (DOM_CACHE.tBal) DOM_CACHE.tBal.innerText = '******';
+        if (DOM_CACHE.tInc) DOM_CACHE.tInc.innerText = '******';
+        if (DOM_CACHE.tExp) DOM_CACHE.tExp.innerText = '******';
+        if (DOM_CACHE.tLent) DOM_CACHE.tLent.innerText = '******';
+        if (DOM_CACHE.tBor) DOM_CACHE.tBor.innerText = '******';
     } else {
-        // Thay currencyFormatter bằng formatter để không bị double ký tự 'đ'
-        if (tBal) tBal.innerText = formatter.format(currentBalances.total || 0) + 'đ';
-        if (tInc) tInc.innerText = '+' + formatter.format(currentBalances.income || 0) + 'đ';
-        if (tExp) tExp.innerText = '-' + formatter.format(currentBalances.expense || 0) + 'đ';
+        if (DOM_CACHE.tBal) DOM_CACHE.tBal.innerText = formatter.format(currentBalances.total || 0) + 'đ';
+        if (DOM_CACHE.tInc) DOM_CACHE.tInc.innerText = '+' + formatter.format(currentBalances.income || 0) + 'đ';
+        if (DOM_CACHE.tExp) DOM_CACHE.tExp.innerText = '-' + formatter.format(currentBalances.expense || 0) + 'đ';
         
-        if (tLent) tLent.innerText = (currentBalances.lent > 0 ? '+' : '') + formatter.format(currentBalances.lent || 0) + 'đ';
-        if (tBor) tBor.innerText = (currentBalances.borrowed > 0 ? '-' : '') + formatter.format(currentBalances.borrowed || 0) + 'đ';
+        if (DOM_CACHE.tLent) DOM_CACHE.tLent.innerText = (currentBalances.lent > 0 ? '+' : '') + formatter.format(currentBalances.lent || 0) + 'đ';
+        if (DOM_CACHE.tBor) DOM_CACHE.tBor.innerText = (currentBalances.borrowed > 0 ? '-' : '') + formatter.format(currentBalances.borrowed || 0) + 'đ';
     }
 
     // --- BẮT ĐẦU: CẢM BIẾN ĐỔI MÀU THẺ THEO SỐ DƯ ---
-    const walletCard = document.querySelector('.wallet-card');
-    if (walletCard) {
+    if (DOM_CACHE.walletCard) {
         // Xóa các trạng thái cũ trước khi kiểm tra
-        walletCard.classList.remove('broke-mode', 'rich-mode');
+        DOM_CACHE.walletCard.classList.remove('broke-mode', 'rich-mode');
         
         // Cập nhật trạng thái mới dựa trên Tổng số dư
         if (currentBalances.total >= 0 && currentBalances.total < 100000) {
-            walletCard.classList.add('broke-mode'); // Dưới 100k -> Thẻ xám xịt
+            DOM_CACHE.walletCard.classList.add('broke-mode'); // Dưới 100k -> Thẻ xám xịt
         } else if (currentBalances.total >= 10000000) {
-            walletCard.classList.add('rich-mode');  // Trên 10 Triệu -> Hào quang Vàng
+            DOM_CACHE.walletCard.classList.add('rich-mode');  // Trên 10 Triệu -> Hào quang Vàng
         }
     }
     // --- KẾT THÚC CẢM BIẾN ---
@@ -1012,8 +1020,10 @@ function renderCategoryUI() {
 
     const incList = document.getElementById('incomeCatList');
     const expList = document.getElementById('expenseCatList');
-    if (incList) incList.innerHTML = ''; 
-    if (expList) expList.innerHTML = '';
+    
+    // TỐI ƯU: Gom chuỗi thay vì nhét thẳng vào DOM
+    let incHTML = '';
+    let expHTML = '';
     
     categories.forEach(c => {
         const theme = THEMES[c.color] || THEMES['theme-gray'];
@@ -1033,9 +1043,12 @@ function renderCategoryUI() {
                 </div>
             </div>
         `;
-        if(c.type === 'income' && incList) incList.innerHTML += itemHTML;
-        else if(c.type === 'expense' && expList) expList.innerHTML += itemHTML;
+        if(c.type === 'income') incHTML += itemHTML;
+        else if(c.type === 'expense') expHTML += itemHTML;
     });
+
+    if (incList) incList.innerHTML = incHTML;
+    if (expList) expList.innerHTML = expHTML;
 
     initSortable();
 }
@@ -1477,10 +1490,32 @@ function updateUI() {
             return matchDate && matchCat && matchSearch;
         });
 
-        filteredSummary?.classList.remove('hide');
-        const fInc = displayData.filter(t => t.type === 'income').reduce((a,b)=>a+b.amount,0);
-        const fExp = displayData.filter(t => t.type === 'expense').reduce((a,b)=>a+b.amount,0);
+        // TỐI ƯU HIỆU NĂNG: Gộp tính tổng và gom nhóm vào 1 vòng lặp duy nhất
+    let fInc = 0;
+    let fExp = 0;
+    const grouped = {};
+
+    for (let i = 0; i < displayData.length; i++) {
+        const t = displayData[i];
         
+        // 1. Tính tổng (chỉ cần tính nếu đang bật bộ lọc)
+        if (isFiltering) {
+            if (t.type === 'income') fInc += t.amount;
+            else if (t.type === 'expense') fExp += t.amount;
+        }
+
+        // 2. Gom nhóm theo ngày
+        const dateStr = t.date; 
+        if (!grouped[dateStr]) grouped[dateStr] = { items: [], in: 0, out: 0 };
+        
+        grouped[dateStr].items.push(t);
+        if (t.type === 'income') grouped[dateStr].in += t.amount;
+        else if (t.type === 'expense') grouped[dateStr].out += t.amount;
+    }
+
+    // 3. Render giao diện tổng kết
+    if (isFiltering) {
+        filteredSummary?.classList.remove('hide');
         const fTxCount = document.getElementById('filterTxCount');
         const fSumInc = document.getElementById('filterSumInc');
         const fSumExp = document.getElementById('filterSumExp');
@@ -1497,15 +1532,6 @@ function updateUI() {
     } else {
         filteredSummary?.classList.add('hide');
     }
-
-    const grouped = {};
-    displayData.forEach(t => {
-        const dateStr = t.date; 
-        if (!grouped[dateStr]) grouped[dateStr] = { items: [], in: 0, out: 0 };
-        grouped[dateStr].items.push(t);
-        if (t.type === 'income') grouped[dateStr].in += t.amount;
-        if (t.type === 'expense') grouped[dateStr].out += t.amount;
-    });
 
     window.currentGroupedData = grouped; 
     const sortedDates = Object.keys(grouped).sort().reverse();
@@ -1716,7 +1742,9 @@ function renderCalendar() {
 
     const grid = document.getElementById('calendarGrid');
     if(!grid) return;
-    grid.innerHTML = '';
+    
+    // TỐI ƯU: Khởi tạo biến chuỗi để gom HTML
+    let gridHTML = '';
 
     const firstDay = new Date(y, m, 1).getDay();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
@@ -1724,8 +1752,9 @@ function renderCalendar() {
     let emptyDays = firstDay - 1;
     if (emptyDays === -1) emptyDays = 6;
 
+    // Cộng dồn HTML vào biến chuỗi
     for (let i = 0; i < emptyDays; i++) {
-        grid.innerHTML += `<div class="cal-day empty"></div>`;
+        gridHTML += `<div class="cal-day empty"></div>`;
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
@@ -1736,7 +1765,6 @@ function renderCalendar() {
         const dayTxs = transactions.filter(t => t.date === dateStr);
         let hasIn = false; let hasOut = false;
         
-        // CẢI TIẾN: Tính tổng tiền chi trong ngày để làm Bản đồ nhiệt
         let dailyExpense = 0;
 
         dayTxs.forEach(t => {
@@ -1747,11 +1775,10 @@ function renderCalendar() {
             }
         });
 
-        // Xếp loại "Độ nóng" của ví tiền
         let heatClass = '';
-        if (dailyExpense > 0 && dailyExpense <= 100000) heatClass = 'heat-1'; // Dưới 100k
-        else if (dailyExpense > 100000 && dailyExpense <= 500000) heatClass = 'heat-2'; // 100k - 500k
-        else if (dailyExpense > 500000) heatClass = 'heat-3'; // Lớn hơn 500k
+        if (dailyExpense > 0 && dailyExpense <= 100000) heatClass = 'heat-1'; 
+        else if (dailyExpense > 100000 && dailyExpense <= 500000) heatClass = 'heat-2'; 
+        else if (dailyExpense > 500000) heatClass = 'heat-3'; 
 
         let dotsHtml = '';
         if(hasIn || hasOut) {
@@ -1761,16 +1788,19 @@ function renderCalendar() {
             </div>`;
         }
 
-        // Nhét class bản đồ nhiệt vào HTML
         const classes = `cal-day ${isToday ? 'today' : ''} ${isSelected ? 'active' : ''} ${heatClass}`;
         
-        grid.innerHTML += `
+        // Cộng dồn HTML vào biến chuỗi
+        gridHTML += `
             <div class="${classes}" onclick="selectCalendarDate('${dateStr}')">
                 ${day}
                 ${dotsHtml}
             </div>
         `;
     }
+
+    // TỐI ƯU: Gán vào DOM đúng 1 lần duy nhất sau khi đã gom xong
+    grid.innerHTML = gridHTML;
 
     renderCalendarDetails(selectedCalDateStr);
 }
@@ -2013,7 +2043,6 @@ function renderCharts() {
         txByCat[cName].amount += t.amount;
     });
 
-    if(pieChartInstance) pieChartInstance.destroy();
     const pieCanvas = document.getElementById('pieChart');
     const pieEmptyState = document.getElementById('pieEmptyState');
     const pieEmptyText = document.getElementById('pieEmptyText');
@@ -2027,38 +2056,41 @@ function renderCharts() {
         if (pieCanvas) pieCanvas.style.display = 'block';
         pieEmptyState?.classList.add('hide');
         
-        // Tự động nhận diện màu viền nền theo Giao diện Sáng/Tối
         const bgColor = document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff';
 
         if (pieCanvas) {
-            pieChartInstance = new Chart(pieCanvas.getContext('2d'), {
-                type: 'doughnut',
-                data: { 
-                    labels: pieLabels, 
-                    datasets: [{ 
-                        data: pieLabels.map(k => txByCat[k].amount), 
-                        backgroundColor: pieLabels.map(k => txByCat[k].colorHex), 
-                        borderWidth: 3, // Viền dày tạo khoảng cách
-                        borderColor: bgColor, // Viền tiệp màu nền
-                        hoverOffset: 6, // Hiệu ứng nảy to ra khi lướt ngón tay
-                        borderRadius: 4 // Bo tròn các lát cắt cực kỳ hiện đại
-                    }] 
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    cutout: '75%', // Khoét lỗ giữa to ra để nhét chữ
-                    plugins: { 
-                        legend: { 
-                            position: 'right', 
-                            labels: { usePointStyle: true, padding: 20, font: {size: 12, weight: '600'} } 
-                        }, 
-                        tooltip: { 
-                            enabled: false // TẮT TOOLTIP MẶC ĐỊNH ĐỂ NHƯỜNG CHỖ CHO TÂM ĐIỂM ĐỘNG
+            // TỐI ƯU HIỆU NĂNG: Cập nhật thay vì đập đi xây lại
+            if (pieChartInstance) {
+                pieChartInstance.data.labels = pieLabels;
+                pieChartInstance.data.datasets[0].data = pieLabels.map(k => txByCat[k].amount);
+                pieChartInstance.data.datasets[0].backgroundColor = pieLabels.map(k => txByCat[k].colorHex);
+                pieChartInstance.data.datasets[0].borderColor = bgColor; // Cập nhật màu viền theo giao diện
+                pieChartInstance.update();
+            } else {
+                pieChartInstance = new Chart(pieCanvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: { 
+                        labels: pieLabels, 
+                        datasets: [{ 
+                            data: pieLabels.map(k => txByCat[k].amount), 
+                            backgroundColor: pieLabels.map(k => txByCat[k].colorHex), 
+                            borderWidth: 3, 
+                            borderColor: bgColor, 
+                            hoverOffset: 6, 
+                            borderRadius: 4 
+                        }] 
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        cutout: '75%', 
+                        plugins: { 
+                            legend: { position: 'right', labels: { usePointStyle: true, padding: 20, font: {size: 12, weight: '600'} } }, 
+                            tooltip: { enabled: false } 
                         } 
-                    } 
-                }
-            });
+                    }
+                });
+            }
         }
     }
 
@@ -2087,118 +2119,85 @@ function renderCharts() {
     });
 
     const barCanvas = document.getElementById('barChart');
-    if(barChartInstance) barChartInstance.destroy();
     if (barCanvas) {
-        barChartInstance = new Chart(barCanvas.getContext('2d'), {
-            type: 'bar',
-            data: { labels: barLabels, datasets: [{ label: 'Tiền Thu', data: inData, backgroundColor: '#2ecc71', borderRadius: 4 }, { label: 'Tiền Chi', data: outData, backgroundColor: '#e74c3c', borderRadius: 4 }] },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                scales: { 
-                    y: { 
-                        beginAtZero: true, 
-                        ticks: { callback: function(v) { return v === 0 ? 0 : (v/1000) + 'K'; } }, 
-                        grid: { borderDash: [4, 4] } 
+        // TỐI ƯU HIỆU NĂNG: Cập nhật thay vì đập đi xây lại
+        if (barChartInstance) {
+            barChartInstance.data.labels = barLabels;
+            barChartInstance.data.datasets[0].data = inData; // Data Tiền Thu
+            barChartInstance.data.datasets[1].data = outData; // Data Tiền Chi
+            barChartInstance.update();
+        } else {
+            barChartInstance = new Chart(barCanvas.getContext('2d'), {
+                type: 'bar',
+                data: { labels: barLabels, datasets: [{ label: 'Tiền Thu', data: inData, backgroundColor: '#2ecc71', borderRadius: 4 }, { label: 'Tiền Chi', data: outData, backgroundColor: '#e74c3c', borderRadius: 4 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { callback: function(v) { return v === 0 ? 0 : (v/1000) + 'K'; } }, grid: { borderDash: [4, 4] } }, 
+                        x: { grid: { display: false }, ticks: { maxTicksLimit: 15 } } 
                     }, 
-                    x: { 
-                        grid: { display: false }, 
-                        ticks: { maxTicksLimit: 15 } 
+                    plugins: { 
+                        legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: {size: 12} } }, 
+                        tooltip: { callbacks: { title: function(context) { return context[0].label; }, label: function(context) { return ' ' + currencyFormatter.format(context.parsed.y); } } } 
                     } 
-                }, 
-                plugins: { 
-                    legend: { 
-                        position: 'top', 
-                        align: 'end', 
-                        labels: { usePointStyle: true, boxWidth: 8, font: {size: 12} } 
-                    }, 
-                    tooltip: { 
-                        callbacks: { 
-                            title: function(context) { return context[0].label; },
-                            label: function(context) { return ' ' + currencyFormatter.format(context.parsed.y); } 
-                        } 
-                    } 
-                } 
-            }
-        });
+                }
+            });
+        }
     }
 
     const lineCanvas = document.getElementById('lineChart');
-    if(lineChartInstance) lineChartInstance.destroy();
     if (lineCanvas) {
-        const lineCtx = lineCanvas.getContext('2d');
+        // TỐI ƯU HIỆU NĂNG: Cập nhật thay vì đập đi xây lại
+        if (lineChartInstance) {
+            lineChartInstance.data.labels = lineLabels;
+            lineChartInstance.data.datasets[0].data = lineData;
+            
+            // Cập nhật lại màu sắc Tooltip đề phòng đổi Dark/Light mode
+            const isDark = document.body.classList.contains('dark-theme');
+            lineChartInstance.options.plugins.tooltip.backgroundColor = isDark ? '#1e293b' : '#ffffff';
+            lineChartInstance.options.plugins.tooltip.titleColor = isDark ? '#94a3b8' : '#64748b';
+            lineChartInstance.options.plugins.tooltip.bodyColor = isDark ? '#f1f5f9' : '#0f172a';
+            lineChartInstance.options.plugins.tooltip.borderColor = isDark ? '#334155' : '#e2e8f0';
+            lineChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
+            
+            lineChartInstance.update();
+        } else {
+            const lineCtx = lineCanvas.getContext('2d');
+            const lineGradient = lineCtx.createLinearGradient(0, 0, 0, 260);
+            lineGradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)');
+            lineGradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
 
-        // === 1. TẠO MÀU DÒNG CHẢY (GRADIENT) ===
-        const lineGradient = lineCtx.createLinearGradient(0, 0, 0, 260);
-        lineGradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)');
-        lineGradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
-
-        // === 2. VẼ BIỂU ĐỒ DÒNG CHẢY MỚI ===
-        lineChartInstance = new Chart(lineCtx, {
-            type: 'line',
-            data: {
-                labels: lineLabels, // Dữ liệu ngày tháng gốc
-                datasets: [{
-                    label: 'Số dư',
-                    data: lineData, // Dữ liệu số dư gốc
-                    
-                    borderColor: '#4361ee',
-                    backgroundColor: lineGradient,
-                    borderWidth: 2.5,
-                    
-                    fill: true,
-                    tension: 0.4, // Bo cong mềm mại
-                    
-                    pointRadius: 0, // Tàng hình điểm neo
-                    pointHoverRadius: 6, // Hiện khi vuốt qua
-                    pointBackgroundColor: '#ffffff',
-                    pointBorderColor: '#4361ee',
-                    pointBorderWidth: 2,
-                    pointHoverBorderWidth: 3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false, // Hiển thị tooltips mượt mà
+            lineChartInstance = new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: lineLabels, 
+                    datasets: [{
+                        label: 'Số dư', data: lineData, borderColor: '#4361ee', backgroundColor: lineGradient, borderWidth: 2.5, fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 6, pointBackgroundColor: '#ffffff', pointBorderColor: '#4361ee', pointBorderWidth: 2, pointHoverBorderWidth: 3
+                    }]
                 },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff',
-                        titleColor: document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b',
-                        bodyColor: document.body.classList.contains('dark-theme') ? '#f1f5f9' : '#0f172a',
-                        borderColor: document.body.classList.contains('dark-theme') ? '#334155' : '#e2e8f0',
-                        borderWidth: 1,
-                        padding: 12,
-                        boxPadding: 6,
-                        usePointStyle: true,
-                        callbacks: {
-                            label: function(context) {
-                                return ' Số dư: ' + new Intl.NumberFormat('vi-VN').format(context.raw) + 'đ';
-                            }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff',
+                            titleColor: document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b',
+                            bodyColor: document.body.classList.contains('dark-theme') ? '#f1f5f9' : '#0f172a',
+                            borderColor: document.body.classList.contains('dark-theme') ? '#334155' : '#e2e8f0',
+                            borderWidth: 1, padding: 12, boxPadding: 6, usePointStyle: true,
+                            callbacks: { label: function(context) { return ' Số dư: ' + new Intl.NumberFormat('vi-VN').format(context.raw) + 'đ'; } }
                         }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false, drawBorder: false },
-                        ticks: { maxTicksLimit: 6, color: '#94a3b8' }
                     },
-                    y: {
-                        grid: {
-                            color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-                            drawBorder: false
-                        },
-                        ticks: { display: false } // Ẩn số trục Y
+                    scales: {
+                        x: { grid: { display: false, drawBorder: false }, ticks: { maxTicksLimit: 6, color: '#94a3b8' } },
+                        y: { grid: { color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', drawBorder: false }, ticks: { display: false } }
                     }
                 }
-            }
-        });
+            });
+        }
     }
-}
 
 // ==========================================
 // 8. ACTION SHEET & GIAO DỊCH (SỬA / XÓA)
@@ -3078,22 +3077,31 @@ function renderAdminTxList() {
     const subEl = document.getElementById('adminUserTxSubtitle');
     if (subEl) subEl.innerText = `Kết quả: ${displayData.length} giao dịch`;
 
-    const totalInc = displayData.filter(t => t.type === 'income').reduce((a,b)=>a+b.amount,0);
-    const totalExp = displayData.filter(t => t.type === 'expense').reduce((a,b)=>a+b.amount,0);
-    
+    // TỐI ƯU HIỆU NĂNG ADMIN: Gộp vòng lặp O(N)
+    let totalInc = 0;
+    let totalExp = 0;
+    const grouped = {};
+
+    for (let i = 0; i < displayData.length; i++) {
+        const t = displayData[i];
+        
+        // 1. Tính tổng Thu/Chi
+        if (t.type === 'income') totalInc += t.amount;
+        else if (t.type === 'expense') totalExp += t.amount;
+
+        // 2. Gom nhóm theo ngày
+        const dateStr = t.date; 
+        if (!grouped[dateStr]) grouped[dateStr] = { items: [], in: 0, out: 0 };
+        
+        grouped[dateStr].items.push(t);
+        if (t.type === 'income') grouped[dateStr].in += t.amount;
+        else if (t.type === 'expense') grouped[dateStr].out += t.amount;
+    }
+
     const aIncEl = document.getElementById('adminTxSumInc');
     const aExpEl = document.getElementById('adminTxSumExp');
     if (aIncEl) aIncEl.innerText = '+' + formatter.format(totalInc) + 'đ';
     if (aExpEl) aExpEl.innerText = '-' + formatter.format(totalExp) + 'đ';
-
-    const grouped = {};
-    displayData.forEach(t => {
-        const dateStr = t.date; 
-        if (!grouped[dateStr]) grouped[dateStr] = { items: [], in: 0, out: 0 };
-        grouped[dateStr].items.push(t);
-        if (t.type === 'income') grouped[dateStr].in += t.amount;
-        if (t.type === 'expense') grouped[dateStr].out += t.amount;
-    });
 
     const sortedDates = Object.keys(grouped).sort().reverse();
 
@@ -3231,9 +3239,6 @@ function renderAdminTxList() {
         if (sortedDates.length > 0) {
             const canvas = document.getElementById('admHistoryLineChart');
             if (canvas) {
-                if (window.admHistLineChartInst) window.admHistLineChartInst.destroy();
-                const ctx = canvas.getContext('2d');
-                
                 const chartLabels = [];
                 const chartIncData = [];
                 const chartExpData = [];
@@ -3248,40 +3253,46 @@ function renderAdminTxList() {
                     chartExpData.push(d.out);
                 });
 
-                const incGradient = ctx.createLinearGradient(0, 0, 0, 180);
-                incGradient.addColorStop(0, 'rgba(46, 204, 113, 0.4)');
-                incGradient.addColorStop(1, 'rgba(46, 204, 113, 0.0)');
+                // TỐI ƯU: Chỉ cập nhật data nếu biểu đồ đã tồn tại
+                if (window.admHistLineChartInst) {
+                    window.admHistLineChartInst.data.labels = chartLabels;
+                    window.admHistLineChartInst.data.datasets[0].data = chartIncData;
+                    window.admHistLineChartInst.data.datasets[1].data = chartExpData;
+                    
+                    const isDark = document.body.classList.contains('dark-theme');
+                    window.admHistLineChartInst.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
+                    
+                    window.admHistLineChartInst.update();
+                } else {
+                    const ctx = canvas.getContext('2d');
+                    const incGradient = ctx.createLinearGradient(0, 0, 0, 180);
+                    incGradient.addColorStop(0, 'rgba(46, 204, 113, 0.4)');
+                    incGradient.addColorStop(1, 'rgba(46, 204, 113, 0.0)');
 
-                const expGradient = ctx.createLinearGradient(0, 0, 0, 180);
-                expGradient.addColorStop(0, 'rgba(231, 76, 60, 0.4)');
-                expGradient.addColorStop(1, 'rgba(231, 76, 60, 0.0)');
+                    const expGradient = ctx.createLinearGradient(0, 0, 0, 180);
+                    expGradient.addColorStop(0, 'rgba(231, 76, 60, 0.4)');
+                    expGradient.addColorStop(1, 'rgba(231, 76, 60, 0.0)');
 
-                window.admHistLineChartInst = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: chartLabels,
-                        datasets: [
-                            { label: 'Tiền Thu', data: chartIncData, borderColor: '#2ecc71', backgroundColor: incGradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, fill: true, tension: 0.4 },
-                            { label: 'Tiền Chi', data: chartExpData, borderColor: '#e74c3c', backgroundColor: expGradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, fill: true, tension: 0.4 }
-                        ]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' },
-                        scales: {
-                            y: { beginAtZero: true, ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} }, grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } },
-                            x: { grid: { display: false }, ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' } }
+                    window.admHistLineChartInst = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: chartLabels,
+                            datasets: [
+                                { label: 'Tiền Thu', data: chartIncData, borderColor: '#2ecc71', backgroundColor: incGradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, fill: true, tension: 0.4 },
+                                { label: 'Tiền Chi', data: chartExpData, borderColor: '#e74c3c', backgroundColor: expGradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, fill: true, tension: 0.4 }
+                            ]
                         },
-                        plugins: { legend: { display: false } }
-                    }
-                });
+                        options: {
+                            responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} }, grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } },
+                                x: { grid: { display: false }, ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' } }
+                            },
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                }
             }
-        }
-    }, 100);
-}
-
-// ==========================================
-// 13. ADMIN XEM THỐNG KÊ CỦA USER
-// ==========================================
 // ==========================================
 // 13. ADMIN XEM THỐNG KÊ CỦA USER
 // ==========================================
@@ -3558,9 +3569,7 @@ function renderAdmCharts() {
         txByCat[cName].amount += t.amount;
     });
 
-    if(admPieChartInst) admPieChartInst.destroy();
     const pieLabels = Object.keys(txByCat);
-    
     const pCanvas = document.getElementById('adm_pieChart');
     const pEmpty = document.getElementById('adm_pieEmptyState');
     
@@ -3574,29 +3583,30 @@ function renderAdmCharts() {
         const bgColor = document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff';
 
         if (pCanvas) {
-            admPieChartInst = new Chart(pCanvas.getContext('2d'), {
-                type: 'doughnut',
-                data: { 
-                    labels: pieLabels, 
-                    datasets: [{ 
-                        data: pieLabels.map(k => txByCat[k].amount), 
-                        backgroundColor: pieLabels.map(k => txByCat[k].colorHex), 
-                        borderWidth: 3, 
-                        borderColor: bgColor, 
-                        hoverOffset: 6, 
-                        borderRadius: 4 
-                    }] 
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    cutout: '75%', 
-                    plugins: { 
-                        legend: { position: 'right', labels: { usePointStyle: true, padding: 20, font: {size: 12, weight: '600'} } }, 
-                        tooltip: { enabled: false } 
-                    } 
-                }
-            });
+            // TỐI ƯU HIỆU NĂNG
+            if (admPieChartInst) {
+                admPieChartInst.data.labels = pieLabels;
+                admPieChartInst.data.datasets[0].data = pieLabels.map(k => txByCat[k].amount);
+                admPieChartInst.data.datasets[0].backgroundColor = pieLabels.map(k => txByCat[k].colorHex);
+                admPieChartInst.data.datasets[0].borderColor = bgColor;
+                admPieChartInst.update();
+            } else {
+                admPieChartInst = new Chart(pCanvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: { 
+                        labels: pieLabels, 
+                        datasets: [{ 
+                            data: pieLabels.map(k => txByCat[k].amount), 
+                            backgroundColor: pieLabels.map(k => txByCat[k].colorHex), 
+                            borderWidth: 3, borderColor: bgColor, hoverOffset: 6, borderRadius: 4 
+                        }] 
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, cutout: '75%', 
+                        plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 20, font: {size: 12, weight: '600'} } }, tooltip: { enabled: false } } 
+                    }
+                });
+            }
         }
     }
 
@@ -3663,77 +3673,68 @@ function renderAdmCharts() {
     });
 
     const bCanvas = document.getElementById('adm_barChart');
-    if(admBarChartInst) admBarChartInst.destroy();
     if (bCanvas) {
-        admBarChartInst = new Chart(bCanvas.getContext('2d'), {
-            type: 'bar',
-            data: { labels: barLabels, datasets: [{ label: 'Thu', data: inData, backgroundColor: '#2ecc71', borderRadius: 4 }, { label: 'Chi', data: outData, backgroundColor: '#e74c3c', borderRadius: 4 }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => (v===0?0:v/1000+'K') } }, x: { grid: { display: false } } } }
-        });
+        // TỐI ƯU BIỂU ĐỒ CỘT ADMIN
+        if (admBarChartInst) {
+            admBarChartInst.data.labels = barLabels;
+            admBarChartInst.data.datasets[0].data = inData;
+            admBarChartInst.data.datasets[1].data = outData;
+            admBarChartInst.update();
+        } else {
+            admBarChartInst = new Chart(bCanvas.getContext('2d'), {
+                type: 'bar',
+                data: { labels: barLabels, datasets: [{ label: 'Thu', data: inData, backgroundColor: '#2ecc71', borderRadius: 4 }, { label: 'Chi', data: outData, backgroundColor: '#e74c3c', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => (v===0?0:v/1000+'K') } }, x: { grid: { display: false } } } }
+            });
+        }
     }
 
     const lCanvas = document.getElementById('adm_lineChart');
-    if(admLineChartInst) admLineChartInst.destroy();
     if (lCanvas) {
-        const ctxLine = lCanvas.getContext('2d');
-        const lineGradient = ctxLine.createLinearGradient(0, 0, 0, 260);
-        lineGradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)');
-        lineGradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
+        // TỐI ƯU BIỂU ĐỒ ĐƯỜNG ADMIN
+        if (admLineChartInst) {
+            admLineChartInst.data.labels = barLabels;
+            admLineChartInst.data.datasets[0].data = lineData;
+            
+            const isDark = document.body.classList.contains('dark-theme');
+            admLineChartInst.options.plugins.tooltip.backgroundColor = isDark ? '#1e293b' : '#ffffff';
+            admLineChartInst.options.plugins.tooltip.titleColor = isDark ? '#94a3b8' : '#64748b';
+            admLineChartInst.options.plugins.tooltip.bodyColor = isDark ? '#f1f5f9' : '#0f172a';
+            admLineChartInst.options.plugins.tooltip.borderColor = isDark ? '#334155' : '#e2e8f0';
+            admLineChartInst.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
+            
+            admLineChartInst.update();
+        } else {
+            const ctxLine = lCanvas.getContext('2d');
+            const lineGradient = ctxLine.createLinearGradient(0, 0, 0, 260);
+            lineGradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)');
+            lineGradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
 
-        admLineChartInst = new Chart(ctxLine, {
-            type: 'line',
-            data: { 
-                labels: barLabels, 
-                datasets: [{ 
-                    label: 'Số dư', 
-                    data: lineData, 
-                    borderColor: '#4361ee', 
-                    backgroundColor: lineGradient, 
-                    borderWidth: 2.5, 
-                    fill: true, 
-                    tension: 0.4, 
-                    pointRadius: 0, 
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: '#ffffff',
-                    pointBorderColor: '#4361ee',
-                    pointBorderWidth: 2,
-                    pointHoverBorderWidth: 3
-                }] 
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                interaction: { intersect: false, mode: 'index' }, 
-                scales: { 
-                    y: { 
-                        ticks: { display: false }, 
-                        grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } 
+            admLineChartInst = new Chart(ctxLine, {
+                type: 'line',
+                data: { 
+                    labels: barLabels, 
+                    datasets: [{ 
+                        label: 'Số dư', data: lineData, borderColor: '#4361ee', backgroundColor: lineGradient, borderWidth: 2.5, fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 6, pointBackgroundColor: '#ffffff', pointBorderColor: '#4361ee', pointBorderWidth: 2, pointHoverBorderWidth: 3
+                    }] 
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' }, 
+                    scales: { 
+                        y: { ticks: { display: false }, grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } }, 
+                        x: { grid: { display: false }, ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' } } 
                     }, 
-                    x: { 
-                        grid: { display: false }, 
-                        ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' } 
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff', titleColor: document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b', bodyColor: document.body.classList.contains('dark-theme') ? '#f1f5f9' : '#0f172a', borderColor: document.body.classList.contains('dark-theme') ? '#334155' : '#e2e8f0', borderWidth: 1, padding: 12, boxPadding: 6, usePointStyle: true,
+                            callbacks: { label: function(context) { return ' Số dư: ' + new Intl.NumberFormat('vi-VN').format(context.raw) + 'đ'; } }
+                        } 
                     } 
-                }, 
-                plugins: { 
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff',
-                        titleColor: document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b',
-                        bodyColor: document.body.classList.contains('dark-theme') ? '#f1f5f9' : '#0f172a',
-                        borderColor: document.body.classList.contains('dark-theme') ? '#334155' : '#e2e8f0',
-                        borderWidth: 1,
-                        padding: 12,
-                        boxPadding: 6,
-                        usePointStyle: true,
-                        callbacks: {
-                            label: function(context) { return ' Số dư: ' + new Intl.NumberFormat('vi-VN').format(context.raw) + 'đ'; }
-                        }
-                    } 
-                } 
-            }
-        });
+                }
+            });
+        }
     }
-}
 
 // ==========================================
 // 14. TÍNH NĂNG ADMIN: TẠO TÀI KHOẢN MỚI
@@ -3931,10 +3932,10 @@ function renderDebtUI() {
     if(summaryAmt) summaryAmt.innerText = formatter.format(totalPending) + 'đ';
     if(countEl) countEl.innerText = searchText ? `(Đã lọc: ${pending.length} khoản)` : `(${pending.length} khoản / ${groupedArray.length} người)`;
 
-    // Render danh sách Đang treo
-    listEl.innerHTML = '';
+    // TỐI ƯU 1: Render danh sách Đang treo bằng biến chuỗi
+    let listHTML = '';
     if(groupedArray.length === 0) {
-        listEl.innerHTML = searchText 
+        listHTML = searchText 
             ? '<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size:13px;">Không tìm thấy kết quả phù hợp.</div>'
             : '<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size:13px;">Tuyệt vời! Không có khoản nợ nào.</div>';
     } else {
@@ -3950,6 +3951,7 @@ function renderDebtUI() {
             let hasOverdue = false; 
 
             group.items.forEach(d => {
+                // ... (Giữ nguyên logic bên trong group.items.forEach)
                 const remain = d.amount - (d.paidAmount || 0);
                 let dueHtml = '';
                 let borderStyle = '1px solid #e2e8f0';
@@ -3996,12 +3998,10 @@ function renderDebtUI() {
             });
 
             const groupBorder = hasOverdue ? '1px solid var(--danger)' : '1px solid #e2e8f0';
-
-            // UX Cải tiến: Mở sẵn nhóm nợ nếu người dùng đang dùng tìm kiếm
             const displayStyle = searchText ? 'block' : 'none';
             const rotation = searchText ? 'rotate(180deg)' : 'rotate(0deg)';
 
-            listEl.innerHTML += `
+            listHTML += `
                 <div class="transaction-item" style="padding: 0; flex-direction: column; align-items: stretch; border: ${groupBorder}; border-radius: 16px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
                     <div onclick="toggleDebtGroup('${groupId}')" style="padding: 16px; display: flex; justify-content: space-between; align-items: center; background: #fff; cursor: pointer;">
                         <div style="display: flex; align-items: center; gap: 12px;">
@@ -4026,6 +4026,33 @@ function renderDebtUI() {
             `;
         });
     }
+    listEl.innerHTML = listHTML; // Gán 1 lần
+
+    // TỐI ƯU 2: Render danh sách Đã thanh toán bằng biến chuỗi
+    let paidHTML = '';
+    if(paid.length === 0) {
+        paidHTML = searchText 
+            ? '<div style="text-align:center; padding: 10px; color: var(--text-muted); font-size:13px;">Không tìm thấy lịch sử.</div>'
+            : '<div style="text-align:center; padding: 10px; color: var(--text-muted); font-size:13px;">Chưa có lịch sử.</div>';
+    } else {
+        paid.forEach(d => {
+            paidHTML += `
+                <div class="transaction-item" style="padding: 12px; cursor: default; opacity: 0.7;">
+                    <div class="t-info">
+                        <div class="t-title" style="text-decoration: line-through; color: var(--text-muted); font-size: 14px;">${d.person}</div>
+                        <div class="t-note" style="font-size: 11px;">Tất toán: ${formatNiceDate(d.paidDate || d.date).replace('Hôm nay, ','')}</div>
+                    </div>
+                    <div class="t-action" style="display: flex; align-items: center; gap: 12px;">
+                        <div class="t-amount" style="color: var(--text-muted); font-size: 14px;">${formatter.format(d.amount)}đ</div>
+                        <button onclick="deletePaidDebt('${d.id}')" style="background: transparent; border: none; color: var(--danger); cursor: pointer; padding: 4px; display: flex;" title="Xóa lịch sử">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    paidListEl.innerHTML = paidHTML; // Gán 1 lần
 
     // Render danh sách Đã thanh toán
     paidListEl.innerHTML = '';
@@ -4288,7 +4315,9 @@ function openBudgetManager() {
         return;
     }
 
-    // In danh sách các danh mục - CẬP NHẬT: Tất cả nằm trên 1 hàng ngang (Flex-row)
+    // TỐI ƯU: Gom chuỗi thay vì DOM repaint liên tục
+    let budgetHTML = '';
+
     expenseCats.forEach(c => {
         const theme = THEMES[c.color] || THEMES['theme-gray'];
         const iconSvg = SVG_LIB[c.icon] || SVG_LIB['other'];
@@ -4298,10 +4327,9 @@ function openBudgetManager() {
         const innerSvg = iconSvg.replace(/<svg[^>]*>|<\/svg>/g, '');
         const saveIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>`;
 
-        listEl.innerHTML += `
+        budgetHTML += `
             <div class="transaction-item" style="padding: 12px; cursor: default; display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff;">
                 
-                <!-- Trái: Icon + Tên Danh mục -->
                 <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
                     <div style="width: 36px; height: 36px; border-radius: 10px; background: ${theme.bg}; color: ${theme.color}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${innerSvg}</svg>
@@ -4309,7 +4337,6 @@ function openBudgetManager() {
                     <div style="font-weight: 700; font-size: 14px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.name}</div>
                 </div>
                 
-                <!-- Phải: Ô nhập tiền & Nút lưu (Thu nhỏ lại) -->
                 <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0; width: 170px;">
                     <div class="amount-wrapper" style="height: 36px; flex: 1; background: #f8f9fa; border: 1px solid transparent; transition: 0.3s; border-radius: 8px; margin-bottom: 0;">
                         <input type="text" class="form-control input-amount budget-input-display" data-id="${c.id}" placeholder="Vô hạn" value="${budgetVal}" style="font-size: 14px; background: transparent; border: none; text-align: right; font-weight: 700; width: 100%; height: 100%; padding: 0 24px 0 8px;">
@@ -4324,6 +4351,9 @@ function openBudgetManager() {
             </div>
         `;
     });
+    
+    // Gán 1 lần
+    listEl.innerHTML = budgetHTML;
     
     document.querySelectorAll('.budget-input-display').forEach(input => {
         input.addEventListener('input', function() {

@@ -4597,8 +4597,11 @@ function initSwipeActions() {
 
     // 1. Chạm ngón tay vào màn hình
     list.addEventListener('touchstart', e => {
+        // [ĐÃ FIX] Mở khóa click ngay lập tức cho mọi thao tác chạm mới
+        isClickCanceled = false; 
+
         const swipeFront = e.target.closest('.swipe-front');
-        if (!swipeFront) return;
+        if (!swipeFront) return; // Lúc này dù có thoát sớm thì cờ cũng đã được reset
 
         // Tự động đóng các giao dịch khác đang mở
         document.querySelectorAll('.swipe-front.swiped').forEach(el => {
@@ -4610,7 +4613,6 @@ function initSwipeActions() {
 
         startX = e.touches[0].clientX;
         isSwiping = true;
-        isClickCanceled = false;
         swipedElement = swipeFront;
         swipedElement.style.transition = 'none'; // Tắt hiệu ứng mượt để ngón tay kéo đi ngay lập tức
     }, {passive: true});

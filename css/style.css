@@ -1398,3 +1398,12 @@ body.dark-theme .numpad-grid .np-btn.np-back {
     from { transform: scale(0.92); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
+/* =========================================
+   FIX LỖI CHỮ THANH ĐIỀU HƯỚNG BỊ XUỐNG DÒNG
+   ========================================= */
+.nav-item span {
+    white-space: nowrap !important; /* Lệnh thép: Cấm tuyệt đối việc tự bẻ xuống dòng */
+    font-size: 11px !important;     /* Thu nhỏ chữ đi 1px để nằm vừa vặn hơn */
+    letter-spacing: -0.2px;         /* Ép các khoảng cách chữ sát lại một chút xíu */
+    margin-top: 2px;                /* Đẩy chữ xa icon ra một chút cho thoáng */
+}

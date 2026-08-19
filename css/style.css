@@ -1407,3 +1407,59 @@ body.dark-theme .numpad-grid .np-btn.np-back {
     letter-spacing: -0.2px;         /* Ép các khoảng cách chữ sát lại một chút xíu */
     margin-top: 2px;                /* Đẩy chữ xa icon ra một chút cho thoáng */
 }
+/* =========================================
+   KHÔI PHỤC NỀN TRẮNG ĐẶC CHO THEME MẶC ĐỊNH (LIGHT MODE)
+   ========================================= */
+
+/* Khi dùng hình nền Gốc ở chế độ Sáng: Tắt hoàn toàn Kính mờ, trả về khối đặc trắng tinh khôi */
+body.theme-default:not(.dark-theme) .modern-card,
+body.theme-default:not(.dark-theme) .card,
+body.theme-default:not(.dark-theme) .settings-card,
+body.theme-default:not(.dark-theme) .history-filters-card,
+body.theme-default:not(.dark-theme) .chart-card,
+body.theme-default:not(.dark-theme) .date-group-items,
+body.theme-default:not(.dark-theme) .auth-card,
+body.theme-default:not(.dark-theme) .budget-item {
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(0,0,0,0.04) !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+}
+
+/* Các Ô nhập liệu (Input / Box) về lại nền xám nhạt/trắng */
+body.theme-default:not(.dark-theme) .form-control,
+body.theme-default:not(.dark-theme) .modern-date-wrapper,
+body.theme-default:not(.dark-theme) #filteredSummary .box-bal {
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid #e2e8f0 !important;
+}
+body.theme-default:not(.dark-theme) .search-box input {
+    background-color: #f1f5f9 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* Trả Tiêu đề ngày tháng (Trượt dọc) về nguyên bản */
+body.theme-default:not(.dark-theme) .date-group-header {
+    background-color: rgba(244, 246, 249, 0.95) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* Fix nền thẻ giao dịch khi vuốt sang ngang */
+body.theme-default:not(.dark-theme) .transaction-item.swipe-front {
+    background-color: #ffffff !important;
+}
+
+/* Biến Thanh Viên Thuốc dưới đáy về lại khối sứ trắng bo tròn */
+body.theme-default:not(.dark-theme) .bottom-nav {
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid #f1f5f9 !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
+}

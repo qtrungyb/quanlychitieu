@@ -258,49 +258,109 @@ const settingsView = document.getElementById('settingsView');
 
 let userFullName = ""; 
 
-function switchTab(tabName) {
-    [tabHome, tabHistory, tabStats, tabDebt, tabAdmin, tabSettings].forEach(t => t?.classList.remove('active'));
-    [homeView, historyView, analyticsView, debtView, adminView, settingsView].forEach(v => v?.classList.remove('active'));
-    
-    const topNavTitle = document.querySelector('.top-nav h1');
-    const userMenu = document.getElementById('userMenu');
-    const dropdownMenu = document.getElementById('dropdownMenu'); 
+// Khai báo một bộ nhớ siêu nhỏ để App biết bạn đang ở đâu
+let currentActiveTabStr = 'home';
 
-    if (tabName === 'home') {
-        tabHome?.classList.add('active'); homeView?.classList.add('active');
-        if (topNavTitle) topNavTitle.innerText = 'QUẢN LÝ CHI TIÊU';
-        if (userMenu) userMenu.style.display = 'block'; 
-    } else {
-        if (userMenu) userMenu.style.display = 'none'; 
-        if (dropdownMenu) dropdownMenu.classList.remove('show'); 
+// HÀM CHUYỂN TAB ĐƯỢC TÍCH HỢP VIEW TRANSITIONS API (FIXED REDUNDANT CLICKS)
+function switchTab(tabName) {
+    // 🛡️ CHỐT CHẶN UX: Nếu bấm lại chính Tab đang mở -> Từ chối thực thi
+    if (currentActiveTabStr === tabName) return;
+    
+    // Ghi nhớ Tab bạn vừa bấm để dùng cho lần sau
+    currentActiveTabStr = tabName;
+
+    // Đóng FAB nếu đang mở
+    document.getElementById('fabContainer')?.classList.remove('active');
+    document.getElementById('fabMainBtn')?.classList.remove('active');
+
+    // Hàm lõi thực thi việc đổi Tab
+    const performSwitch = () => {
+        [tabHome, tabHistory, tabStats, tabDebt, tabAdmin, tabSettings].forEach(t => t?.classList.remove('active'));
+        [homeView, historyView, analyticsView, debtView, adminView, settingsView].forEach(v => v?.classList.remove('active'));
         
-        if (tabName === 'history') {
-            tabHistory?.classList.add('active'); historyView?.classList.add('active');
-            if (topNavTitle) topNavTitle.innerText = 'LỊCH SỬ THU/CHI';
-            
-        } else if (tabName === 'stats') {
-            tabStats?.classList.add('active'); analyticsView?.classList.add('active');
-            if (topNavTitle) topNavTitle.innerText = 'THỐNG KÊ';
-            // Chờ hiệu ứng chuyển tab hoàn tất rồi mới vẽ biểu đồ (Tránh giật lag)
-            setTimeout(() => { requestAnimationFrame(() => renderCharts()); }, 50);
-            
-        } else if (tabName === 'debt') {
-            tabDebt?.classList.add('active'); debtView?.classList.add('active');
-            if (topNavTitle) topNavTitle.innerText = 'SỔ VAY & NỢ';
-            if(typeof renderDebtUI === 'function') renderDebtUI();
-            
-        } else if (tabName === 'admin') {
-            tabAdmin?.classList.add('active'); adminView?.classList.add('active');
-            if (topNavTitle) topNavTitle.innerText = 'QUẢN TRỊ HỆ THỐNG';
-            loadAllUsers();
-            
-        } else if (tabName === 'settings') {
-            tabSettings?.classList.add('active'); settingsView?.classList.add('active');
-            if (topNavTitle) topNavTitle.innerText = userFullName ? userFullName.toUpperCase() : 'CÀI ĐẶT';
+        const topNavTitle = document.querySelector('.top-nav h1');
+        const userMenu = document.getElementById('userMenu');
+        const dropdownMenu = document.getElementById('dropdownMenu'); 
+        const fab = document.getElementById('fabContainer');
+
+        // Logic ẩn/hiện FAB Thủy ngân
+        if (fab) {
+            if (tabName === 'home') fab.classList.add('hide');
+            else fab.classList.remove('hide');
         }
+
+        if (tabName === 'home') {
+            tabHome?.classList.add('active'); homeView?.classList.add('active');
+            if (topNavTitle) topNavTitle.innerText = 'QUẢN LÝ CHI TIÊU';
+            if (userMenu) userMenu.style.display = 'block'; 
+        } else {
+            if (userMenu) userMenu.style.display = 'none'; 
+            if (dropdownMenu) dropdownMenu.classList.remove('show'); 
+            
+            if (tabName === 'history') {
+                tabHistory?.classList.add('active'); historyView?.classList.add('active');
+                if (topNavTitle) topNavTitle.innerText = 'LỊCH SỬ THU/CHI';
+            } else if (tabName === 'stats') {
+                tabStats?.classList.add('active'); analyticsView?.classList.add('active');
+                if (topNavTitle) topNavTitle.innerText = 'THỐNG KÊ';
+                // Đảm bảo Biểu đồ được vẽ ngay lập tức để chụp ảnh API
+                if (typeof renderCharts === 'function') renderCharts();
+            } else if (tabName === 'debt') {
+                tabDebt?.classList.add('active'); debtView?.classList.add('active');
+                if (topNavTitle) topNavTitle.innerText = 'SỔ VAY & NỢ';
+                if(typeof renderDebtUI === 'function') renderDebtUI();
+            } else if (tabName === 'admin') {
+                tabAdmin?.classList.add('active'); adminView?.classList.add('active');
+                if (topNavTitle) topNavTitle.innerText = 'QUẢN TRỊ HỆ THỐNG';
+                loadAllUsers();
+            } else if (tabName === 'settings') {
+                tabSettings?.classList.add('active'); settingsView?.classList.add('active');
+                if (topNavTitle) topNavTitle.innerText = userFullName ? userFullName.toUpperCase() : 'CÀI ĐẶT';
+            }
+        }
+        
+        // Snap thẳng lên Top để máy ảnh API chụp nét 100%
+        window.scrollTo(0, 0); 
+    };
+
+    // Bật Khiên Không Gian (View Transitions API) nếu trình duyệt hỗ trợ
+    if (document.startViewTransition) {
+        document.startViewTransition(() => {
+            performSwitch();
+        });
+    } else {
+        performSwitch(); 
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+// LOGIC HOẠT ĐỘNG CỦA NÚT THỦY NGÂN (LIQUID FAB)
+const fabContainer = document.getElementById('fabContainer');
+const fabMainBtn = document.getElementById('fabMainBtn');
+
+if (fabMainBtn) {
+    fabMainBtn.addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate(10);
+        fabContainer.classList.toggle('active');
+        fabMainBtn.classList.toggle('active');
+    });
+}
+
+// Hàm được gọi khi bấm vào Giọt thủy ngân con
+window.openQuickForm = function(type) {
+    fabContainer.classList.remove('active');
+    fabMainBtn.classList.remove('active');
+    
+    // Đợi giọt nước thu về rồi mới chuyển Tab
+    setTimeout(() => {
+        switchTab('home');
+        if (typeof resetFormState === 'function') resetFormState();
+        switchType(type); // Ép mở đúng loại form Thu hoặc Chi
+        
+        setTimeout(() => {
+            document.getElementById('mainAmountWrapper')?.click(); // Mở bàn phím
+        }, 300);
+    }, 250);
+};
 
 tabHome?.addEventListener('click', () => switchTab('home'));
 tabHistory?.addEventListener('click', () => switchTab('history'));
@@ -2591,11 +2651,28 @@ function applyAppTheme(themeId, saveToDb = true) {
     if (theme.id === 'bg-default') {
         document.body.style.background = '';
         document.body.style.backgroundAttachment = '';
+        
+        // Trả hệ thống về màu Xanh dương nguyên bản
+        document.documentElement.style.setProperty('--primary', '#4361ee');
     } else {
         document.body.style.background = theme.background;
         document.body.style.backgroundAttachment = 'fixed'; 
         document.body.style.backgroundSize = 'cover';
+
+        // --- THUẬT TOÁN TẮC KÈ HOA (DYNAMIC SYNC) ---
+        let dominantColor = '#4361ee'; // Trở về xanh mặc định nếu không tìm thấy
+        
+        // Dùng Regex "bắt" mã màu Hex đầu tiên xuất hiện trong chuỗi Background
+        let match = theme.background.match(/#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})/);
+        if (match) {
+            dominantColor = match[0];
+        }
+        
+        // Bơm thẳng mã màu này vào rễ (Root) CSS. Toàn bộ app sẽ đổi màu theo!
+        document.documentElement.style.setProperty('--primary', dominantColor);
+        // ----------------------------------------------
     }
+    
     localStorage.setItem('appTheme', themeId);
 
     if (saveToDb && currentUser) {
@@ -5975,5 +6052,21 @@ document.addEventListener('DOMContentLoaded', () => {
         btnOpenAppSettings.addEventListener('click', () => {
             setTimeout(initAppThemeCarousel, 50); 
         });
+    }
+});
+// ==========================================
+// TÍNH NĂNG: CẢM BIẾN CUỘN CHO TOP-NAV
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const topNav = document.querySelector('.top-nav');
+    if (topNav) {
+        window.addEventListener('scroll', () => {
+            // Khi người dùng cuộn xuống quá 20px, phủ sương mù lên Top Nav
+            if (window.scrollY > 20) {
+                topNav.classList.add('scrolled');
+            } else {
+                topNav.classList.remove('scrolled');
+            }
+        }, { passive: true }); // Tối ưu GPU khi cuộn trang
     }
 });

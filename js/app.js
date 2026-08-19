@@ -1468,8 +1468,12 @@ function updateUI() {
     currentBalances.expense = totalExpenseAll;
     renderBalances();
 
-    let displayData = [...transactions];
+        let displayData = [...transactions];
     const isFiltering = (!isQuickAll && (fStartDate || fEndDate)) || sText || fCats.length > 0;
+
+    let fInc = 0;
+    let fExp = 0;
+    const grouped = {};
 
     if (isFiltering) {
         displayData = transactions.filter(t => {
@@ -1489,22 +1493,20 @@ function updateUI() {
             
             return matchDate && matchCat && matchSearch;
         });
+        filteredSummary?.classList.remove('hide');
+    } else {
+        filteredSummary?.classList.add('hide');
+    }
 
-        // TỐI ƯU HIỆU NĂNG: Gộp tính tổng và gom nhóm vào 1 vòng lặp duy nhất
-    let fInc = 0;
-    let fExp = 0;
-    const grouped = {};
-
+    // TỐI ƯU HIỆU NĂNG: Gộp vòng lặp O(N) duy nhất
     for (let i = 0; i < displayData.length; i++) {
         const t = displayData[i];
         
-        // 1. Tính tổng (chỉ cần tính nếu đang bật bộ lọc)
         if (isFiltering) {
             if (t.type === 'income') fInc += t.amount;
             else if (t.type === 'expense') fExp += t.amount;
         }
 
-        // 2. Gom nhóm theo ngày
         const dateStr = t.date; 
         if (!grouped[dateStr]) grouped[dateStr] = { items: [], in: 0, out: 0 };
         
@@ -1513,9 +1515,7 @@ function updateUI() {
         else if (t.type === 'expense') grouped[dateStr].out += t.amount;
     }
 
-    // 3. Render giao diện tổng kết
     if (isFiltering) {
-        filteredSummary?.classList.remove('hide');
         const fTxCount = document.getElementById('filterTxCount');
         const fSumInc = document.getElementById('filterSumInc');
         const fSumExp = document.getElementById('filterSumExp');
@@ -1529,9 +1529,8 @@ function updateUI() {
             elBal.innerText = (bal > 0 ? '+' : '') + formatter.format(bal) + 'đ';
             elBal.style.color = bal >= 0 ? 'var(--success)' : 'var(--danger)';
         }
-    } else {
-        filteredSummary?.classList.add('hide');
     }
+
 
     window.currentGroupedData = grouped; 
     const sortedDates = Object.keys(grouped).sort().reverse();

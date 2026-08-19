@@ -987,3 +987,414 @@ body.dark-theme .dropdown-item:hover {
 .eclipse-overlay.fade-out {
     opacity: 0; /* Tan biến đi khi hoàn thành */
 }
+/* =========================================
+   ĐỒNG BỘ NỀN KÍNH MỜ QUANG HỌC (GLASSMORPHISM CARDS)
+   ========================================= */
+
+/* 1. Định nghĩa độ trong suốt cho Kính Sáng và Kính Tối */
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.75); /* Kính trắng mờ 75% */
+    --glass-border: rgba(255, 255, 255, 0.6); /* Viền sáng hắt bóng */
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}
+
+body.dark-theme {
+    --glass-bg: rgba(30, 41, 59, 0.65) !important; /* Kính đen mờ 65% */
+    --glass-border: rgba(255, 255, 255, 0.08) !important; /* Viền tối */
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 2. Ép tất cả các thẻ Card, Khung, Ô nhập liệu biến thành Kính */
+.modern-card, 
+.card, 
+.history-filters-card, 
+.chart-card, 
+.settings-card, 
+.date-group-items, 
+.auth-card,
+.budget-item,
+.form-control,
+.modern-date-wrapper,
+.search-box input,
+#filteredSummary .box-bal,
+.numpad-grid .np-btn {
+    background-color: var(--glass-bg) !important;
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--glass-shadow) !important;
+}
+
+/* 3. Tinh chỉnh các thành phần con để không bị chồng chéo kính làm giật lag */
+.transaction-item, 
+.cat-item, 
+.mini-tx-item,
+.settings-item {
+    background-color: transparent !important; /* Cho phép xuyên thấu xuống thẻ cha */
+    border-color: rgba(148, 163, 184, 0.15) !important;
+}
+
+.transaction-item.swipe-front {
+    background-color: var(--glass-bg) !important;
+}
+
+/* 4. Làm mờ luôn Tiêu đề ngày tháng trượt (Sticky Header) */
+.date-group-header {
+    background-color: rgba(244, 246, 249, 0.65) !important;
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+    border-bottom: 1px solid var(--glass-border) !important;
+}
+body.dark-theme .date-group-header {
+    background-color: rgba(18, 18, 18, 0.65) !important;
+}
+/* =========================================
+   ĐỒNG BỘ NỀN KÍNH MỜ QUANG HỌC (CHAMELEON GLASS CARDS)
+   ========================================= */
+
+/* 1. Tạo Kính pha màu Tắc kè hoa (Dùng hàm color-mix hiện đại) */
+:root {
+    /* Trộn 8% màu chủ đạo vào 92% kính trắng mờ */
+    --sync-glass-bg: color-mix(in srgb, var(--primary) 8%, rgba(255, 255, 255, 0.85));
+    --sync-glass-border: color-mix(in srgb, var(--primary) 15%, rgba(255, 255, 255, 0.6));
+}
+
+body.dark-theme {
+    /* Trộn 12% màu chủ đạo vào 88% kính đen mờ */
+    --sync-glass-bg: color-mix(in srgb, var(--primary) 12%, rgba(30, 41, 59, 0.75)) !important;
+    --sync-glass-border: color-mix(in srgb, var(--primary) 20%, rgba(255, 255, 255, 0.08)) !important;
+}
+
+/* 2. Ép toàn bộ các thẻ Card, Khung, Cài đặt biến thành Kính */
+.modern-card,
+.card,
+.settings-card,
+.history-filters-card,
+.chart-card,
+.date-group-items,
+.auth-card,
+.budget-item,
+.form-control,
+.modern-date-wrapper,
+.search-box input,
+#filteredSummary .box-bal,
+.numpad-grid .np-btn {
+    background-color: var(--sync-glass-bg) !important;
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid var(--sync-glass-border) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 3. Xóa nền trắng của các thành phần con để lộ lớp Kính tuyệt đẹp bên dưới */
+.settings-item,
+.transaction-item,
+.cat-item,
+.mini-tx-item,
+.bottom-sheet {
+    background-color: transparent !important;
+    border-color: color-mix(in srgb, var(--primary) 10%, rgba(148, 163, 184, 0.15)) !important;
+}
+
+/* Fix riêng cho thẻ giao dịch khi được vuốt ngang */
+.transaction-item.swipe-front {
+    background-color: var(--sync-glass-bg) !important;
+}
+
+/* 4. Làm mờ luôn Thanh tiêu đề ngày tháng trượt (Sticky Header) */
+.date-group-header {
+    background-color: color-mix(in srgb, var(--primary) 4%, rgba(244, 246, 249, 0.8)) !important;
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+    border-bottom: 1px solid var(--sync-glass-border) !important;
+}
+body.dark-theme .date-group-header {
+    background-color: color-mix(in srgb, var(--primary) 8%, rgba(18, 18, 18, 0.8)) !important;
+}
+/* =========================================
+   1. THANH ĐIỀU HƯỚNG ĐÁY "VIÊN THUỐC LƠ LỬNG"
+   ========================================= */
+.bottom-nav {
+    position: fixed;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%);
+    width: calc(100% - 32px) !important; /* Thụt vào mỗi bên 16px */
+    max-width: 448px; /* Tương thích với max-width của điện thoại */
+    height: 70px !important;
+    border-radius: 35px !important; /* Bo tròn cong 100% thành viên thuốc */
+    
+    /* Áp dụng Kính pha lê Tắc kè hoa */
+    background: var(--sync-glass-bg) !important;
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid var(--sync-glass-border) !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.3) !important;
+    
+    display: flex; justify-content: space-around; align-items: center;
+    z-index: 900; padding: 0 8px;
+}
+body.dark-theme .bottom-nav {
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.05) !important;
+}
+
+/* Nâng Nút Thêm Nhanh (FAB) lên để không bị đè vào Viên thuốc */
+.fab-button {
+    bottom: 105px !important; 
+}
+
+
+/* =========================================
+   2. TIÊU ĐỀ LINH ĐỘNG & XÓA NỀN TOP-NAV
+   ========================================= */
+.top-nav {
+    position: fixed !important;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100%; max-width: 480px; 
+    padding: 24px 16px;
+    z-index: 850; /* Nằm dưới các Popup Cài đặt */
+    background: transparent; /* Xóa sổ nền trắng nguyên khối ban đầu */
+    transition: background 0.3s ease, padding 0.3s ease, backdrop-filter 0.3s ease, border-color 0.3s ease;
+    border-bottom: 1px solid transparent;
+}
+.top-nav h1 {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    transform-origin: left center;
+    margin: 0;
+}
+
+/* Điều chỉnh lại Khung nền để nội dung trượt qua bên dưới Nav và Dock */
+.app-container {
+    padding-top: 80px !important; 
+    padding-bottom: 110px !important; 
+}
+
+/* Hiệu ứng Kính mờ trượt xuống khi cuộn ngón tay (JS kích hoạt) */
+.top-nav.scrolled {
+    padding: 12px 16px;
+    background: var(--sync-glass-bg);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border-bottom: 1px solid var(--sync-glass-border);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+.top-nav.scrolled h1 {
+    transform: scale(0.85); /* Chữ thu nhỏ lại 1 chút */
+    opacity: 0.9;
+}
+
+
+/* =========================================
+   3. KHUNG XƯƠNG TẢI ẢO (SKELETON SHIMMER LOADING)
+   ========================================= */
+/* Thay vì đổi JS, ta "Vẽ" đè CSS lên thẳng chữ đang tải */
+.transaction-list .loading-text,
+#budgetList .loading-text,
+#adminUserList .loading-text {
+    color: transparent !important; /* Xóa chữ "Đang tải dữ liệu..." */
+    height: 150px;
+    position: relative;
+    overflow: hidden;
+    pointer-events: none;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Dùng Gradient Vẽ ra các khối hình Avatar tròn và Thanh thẳng */
+.transaction-list .loading-text::before,
+#budgetList .loading-text::before,
+#adminUserList .loading-text::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    --sk-color: rgba(148, 163, 184, 0.2);
+    
+    background-image: 
+        /* Item 1: Tròn + 2 dòng ngang */
+        radial-gradient(circle 20px at 30px 35px, var(--sk-color) 99%, transparent 100%),
+        linear-gradient(var(--sk-color) 100%, transparent 0),
+        linear-gradient(var(--sk-color) 100%, transparent 0),
+        
+        /* Item 2: Tròn + 2 dòng ngang */
+        radial-gradient(circle 20px at 30px 105px, var(--sk-color) 99%, transparent 100%),
+        linear-gradient(var(--sk-color) 100%, transparent 0),
+        linear-gradient(var(--sk-color) 100%, transparent 0);
+        
+    background-size: 
+        100% 70px, 40% 12px, 60% 10px, 
+        100% 70px, 50% 12px, 70% 10px;
+        
+    background-position: 
+        0 0, 70px 20px, 70px 42px, 
+        0 70px, 70px 90px, 70px 112px;
+        
+    background-repeat: no-repeat;
+}
+
+/* Ánh sáng chạy ngang (Shimmer Effect) */
+.transaction-list .loading-text::after,
+#budgetList .loading-text::after,
+#adminUserList .loading-text::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -150%; right: 0; bottom: 0;
+    background-image: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+    animation: shimmerSkeleton 1.5s infinite ease-in-out;
+}
+
+body.dark-theme .transaction-list .loading-text::before,
+body.dark-theme #budgetList .loading-text::before,
+body.dark-theme #adminUserList .loading-text::before {
+    --sk-color: rgba(255, 255, 255, 0.08); /* Đổi màu xương cho ban đêm */
+}
+
+body.dark-theme .transaction-list .loading-text::after,
+body.dark-theme #budgetList .loading-text::after,
+body.dark-theme #adminUserList .loading-text::after {
+    background-image: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0) 100%);
+}
+
+@keyframes shimmerSkeleton {
+    100% { transform: translateX(250%); }
+}
+/* =========================================
+   KHÔI PHỤC BÀN PHÍM VỀ TRẠNG THÁI GỐC (CHỐNG LỖI KÍNH MỜ)
+   ========================================= */
+
+/* 1. Trả lại nền đặc cho khung Bảng chọn dưới đáy (Bottom Sheet) */
+.bottom-sheet {
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+}
+body.dark-theme .bottom-sheet {
+    background-color: var(--card-bg) !important; 
+}
+
+/* 2. Trả lại nền đặc và bóng đổ cho các nút bấm Số */
+.numpad-grid .np-btn {
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important;
+    color: var(--text-main) !important;
+}
+body.dark-theme .numpad-grid .np-btn {
+    background-color: var(--card-bg) !important; 
+    color: var(--text-main) !important; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
+}
+
+/* 3. Khôi phục màu sắc đặc trưng của các nút Phép Tính (+ - * /) */
+.numpad-grid .np-btn.np-op {
+    background-color: #eef2ff !important;
+    color: var(--primary) !important;
+}
+body.dark-theme .numpad-grid .np-btn.np-op {
+    background-color: rgba(67, 97, 238, 0.15) !important;
+    color: #829fff !important;
+}
+
+/* 4. Khôi phục nút Xóa lùi (Backspace) */
+.numpad-grid .np-btn.np-back {
+    background-color: #fceceb !important;
+    color: var(--danger) !important;
+}
+body.dark-theme .numpad-grid .np-btn.np-back {
+    background-color: rgba(231, 76, 60, 0.15) !important;
+    color: #ff7668 !important;
+}
+
+/* 5. Khôi phục nút XONG (Màu Primary) */
+.numpad-grid .np-btn.np-done {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+}
+/* =========================================
+   NÚT NĂNG LƯỢNG THỦY NGÂN (LIQUID MORPHING FAB)
+   ========================================= */
+.fab-container {
+    position: fixed;
+    bottom: 105px; right: 20px;
+    width: 60px; height: 200px; /* Vùng không gian để thủy ngân nảy lên */
+    z-index: 999;
+    pointer-events: none; /* Xuyên thấu vùng trống */
+    transition: opacity 0.3s, transform 0.3s;
+}
+.fab-container.hide { transform: scale(0) rotate(-90deg); opacity: 0; }
+
+.fab-gooey-wrapper {
+    position: absolute; bottom: 0; right: 0;
+    width: 100%; height: 100%;
+    filter: url('#gooey'); /* Sử dụng lại bộ lọc thủy tinh lỏng đã có ở thẻ Card */
+    pointer-events: auto;
+}
+
+.fab-main, .fab-child {
+    position: absolute; bottom: 0; right: 0;
+    border: none; border-radius: 50%;
+    color: white; display: flex; align-items: center; justify-content: center;
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), background 0.3s;
+    cursor: pointer;
+}
+
+.fab-main {
+    width: 56px; height: 56px;
+    background: var(--primary);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 3;
+}
+.fab-main.active { transform: rotate(135deg) scale(0.9); background: var(--text-main); }
+.fab-main svg { width: 26px; height: 26px; transition: 0.3s; }
+
+.fab-child {
+    width: 48px; height: 48px; right: 4px; bottom: 4px;
+    z-index: 2; opacity: 1; /* Phải để opacity 1 thì mới có hiệu ứng dính */
+}
+.fab-expense { background: var(--danger); }
+.fab-income { background: var(--success); }
+
+/* Khi click, các giọt nước bắn lên trên */
+.fab-container.active .fab-expense { transform: translateY(-70px) scale(1); }
+.fab-container.active .fab-income { transform: translateY(-130px) scale(1); }
+
+
+/* =========================================
+   DỊCH CHUYỂN KHÔNG GIAN NGUYÊN KHỐI (VIEW TRANSITIONS API) - FIXED
+   ========================================= */
+/* Cố định Header và Dock để chúng lơ lửng không bị ảnh hưởng */
+.top-nav { view-transition-name: main-header; }
+.bottom-nav { view-transition-name: main-dock; }
+
+/* FIX LỖI: Gộp chung 1 Tên Không gian duy nhất cho Tab nào đang bật */
+.view-section.active {
+    view-transition-name: active-page-morph;
+}
+
+/* Tùy chỉnh tốc độ mượt mà như kẹo kéo cho tổng thể */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.35s;
+    animation-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* TẠO HIỆU ỨNG BAY BỔNG (MATERIAL ZOOM) */
+::view-transition-old(active-page-morph) {
+    animation: 0.3s cubic-bezier(0.4, 0, 0.2, 1) both material-zoom-out;
+}
+::view-transition-new(active-page-morph) {
+    animation: 0.4s cubic-bezier(0.4, 0, 0.2, 1) both material-zoom-in;
+}
+
+@keyframes material-zoom-out {
+    from { transform: scale(1); opacity: 1; filter: blur(0px); }
+    to { transform: scale(1.05); opacity: 0; filter: blur(4px); }
+}
+@keyframes material-zoom-in {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}

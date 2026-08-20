@@ -15,6 +15,8 @@
     --c-green: #10ac84;  --bg-green: #e7f7f3;
     --c-gray: #8395a7;   --bg-gray: #f2f4f6;
     --c-red: #e74c3c;    --bg-red: #fceceb;
+	/* UX APP GỐC: Gia tốc lò xo nảy của iOS */
+    --spring-ios: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 * { 
@@ -87,7 +89,7 @@ body {
 /* =========================================
    3. TOAST NOTIFICATION & HEADER AVATAR
    ========================================= */
-.toast { position: fixed; top: 20px; right: 20px; transform: translateX(150%); background: rgba(43, 45, 66, 0.95); color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 100001; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); display: flex; align-items: center; gap: 8px; }
+.toast { position: fixed; top: 20px; right: 20px; transform: translateX(150%); background: rgba(43, 45, 66, 0.95); color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 100001; transition: transform 0.4s var(--spring-ios); display: flex; align-items: center; gap: 8px; }
 .toast.show { transform: translateX(0); }
 .toast.success { background: var(--success); }
 .toast.error { background: var(--danger); }
@@ -399,7 +401,7 @@ body.dark-theme .kpi-card { background-color: var(--card-bg) !important; border:
 .history-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 900; opacity: 0; visibility: hidden; transition: 0.3s ease; }
 .history-overlay.show { opacity: 1; visibility: visible; }
 
-.history-modal { position: fixed; bottom: 0; left: 0; width: 100%; height: 92vh; background: var(--bg-color); border-radius: 24px 24px 0 0; z-index: 901; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); }
+.history-modal { position: fixed; bottom: 0; left: 0; width: 100%; height: 92vh; background: var(--bg-color); border-radius: 24px 24px 0 0; z-index: 901; transform: translateY(100%); transition: transform 0.4s var(--spring-ios); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); }
 .history-modal.show { transform: translateY(0); }
 
 .history-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 16px 20px; background: #fff; z-index: 2; flex-shrink: 0;}
@@ -448,7 +450,7 @@ body.dark-theme .kpi-card { background-color: var(--card-bg) !important; border:
    ========================================= */
 .sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 998; opacity: 0; visibility: hidden; transition: 0.3s ease; }
 .sheet-overlay.show { opacity: 1; visibility: visible; }
-.bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; border-radius: 24px 24px 0 0; padding: 24px 20px 40px 20px; transform: translateY(100%); z-index: 999; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; gap: 12px; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); }
+.bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; border-radius: 24px 24px 0 0; padding: 24px 20px 40px 20px; transform: translateY(100%); z-index: 999; transition: transform 0.4s var(--spring-ios); display: flex; flex-direction: column; gap: 12px; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); }
 .bottom-sheet.show { transform: translateY(0); }
 .sheet-header { text-align: center; font-weight: 700; font-size: 16px; margin-bottom: 8px; color: var(--text-muted);}
 .sheet-indicator { width: 40px; height: 4px; background: #e2e8f0; border-radius: 4px; margin: 0 auto 16px auto; }
@@ -459,7 +461,33 @@ body.dark-theme .kpi-card { background-color: var(--card-bg) !important; border:
 .btn-sheet-cancel { background: #f1f3f5; color: var(--text-main); margin-top: 8px; }
 .hide { display: none !important; }
 .loading-text { text-align: center; color: var(--primary); font-weight: 600; padding: 20px; }
+/* =========================================
+   TỐI ƯU UX: CUỘN TỪ TÍNH (MAGNETIC SCROLL SNAPPING)
+   ========================================= */
 
+/* 1. Kích hoạt từ trường cho các vùng chứa (Container) */
+.category-scroll, 
+.quick-filters-scroll,
+.quick-amounts { 
+    /* Trục X, bắt buộc hít khít (mandatory) */
+    scroll-snap-type: x mandatory; 
+    scroll-behavior: smooth; 
+    
+    /* Tối ưu quán tính cuộn (momentum scrolling) cho các máy iOS */
+    -webkit-overflow-scrolling: touch; 
+}
+
+/* 2. Định nghĩa nam châm tâm điểm cho từng nút bấm (Items) */
+.cat-pill, 
+.btn-quick-filter,
+.btn-quick { 
+    /* Ép tất cả các nút bấm khi dừng lại phải hít đúng vào tâm màn hình */
+    scroll-snap-align: center; 
+    
+    /* Chống giật khung hình khi đang bị nam châm hút */
+    transform: translateZ(0); 
+    will-change: transform;
+}
 /* =========================================
    12. DARK MODE (CHẾ ĐỘ TỐI) CHUYÊN SÂU
    ========================================= */

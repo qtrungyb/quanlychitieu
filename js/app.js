@@ -2034,15 +2034,23 @@ function renderCharts() {
             top5Txs.forEach(t => {
                 const catObj = categories.find(c => c.id === t.categoryId);
                 const themeObj = catObj ? THEMES[catObj.color] : THEMES['theme-gray'];
-                const shortDate = `${t.date.split('-')[2]}/${t.date.split('-')[1]}/${t.date.split('-')[0].substring(2)}`;
                 
+                // Lấy bóng icon từ SVG_LIB
+                const iconHtml = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
+                
+                const shortDate = `${t.date.split('-')[2]}/${t.date.split('-')[1]}/${t.date.split('-')[0].substring(2)}`;
                 const amountClass = currentPieType === 'expense' ? 'text-danger' : 'text-success';
                 const amountPrefix = currentPieType === 'expense' ? '-' : '+';
 
                 top5HTML += `
                     <div class="transaction-item" style="padding: 12px 0; cursor: default;">
                         <div class="t-left">
-                            <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">${catObj ? SVG_LIB[catObj.icon] : SVG_LIB['other']}</div>
+                            <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">
+                                <!-- BỌC THÊM THẺ SVG VÀO ĐÂY ĐỂ HIỆN ICON -->
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    ${iconHtml}
+                                </svg>
+                            </div>
                             <div class="t-info">
                                 <div class="t-title" style="font-size: 15px;">${t.categoryName || t.category}</div>
                                 <div class="t-note" style="font-size: 12px;">${shortDate} ${t.note ? ' • ' + t.note : ''}</div>
@@ -2172,12 +2180,10 @@ function renderCharts() {
 
     const lineCanvas = document.getElementById('lineChart');
     if (lineCanvas) {
-        // TỐI ƯU HIỆU NĂNG: Cập nhật thay vì đập đi xây lại
         if (lineChartInstance) {
             lineChartInstance.data.labels = lineLabels;
-            lineChartInstance.data.datasets[0].data = lineData;
+            lineChartInstance.data.datasets[0].data = lineData; // TRẢ VỀ DÙNG LINEDATA GỐC
             
-            // Cập nhật lại màu sắc Tooltip đề phòng đổi Dark/Light mode
             const isDark = document.body.classList.contains('dark-theme');
             lineChartInstance.options.plugins.tooltip.backgroundColor = isDark ? '#1e293b' : '#ffffff';
             lineChartInstance.options.plugins.tooltip.titleColor = isDark ? '#94a3b8' : '#64748b';
@@ -2192,26 +2198,18 @@ function renderCharts() {
             lineGradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)');
             lineGradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
 
-            // TỐI ƯU HIỆU NĂNG (TURBO MODE): Format sẵn data theo tọa độ {x, y}
-            const optimizedLineData = lineLabels.map((label, index) => ({
-                x: label,
-                y: lineData[index]
-            }));
-
             lineChartInstance = new Chart(lineCtx, {
                 type: 'line',
                 data: {
+                    labels: lineLabels, 
                     datasets: [{
                         label: 'Số dư', 
-                        data: optimizedLineData, // Nhét mảng Object đã tối ưu vào đây
+                        data: lineData, // TRẢ VỀ DÙNG LINEDATA GỐC
                         borderColor: '#4361ee', backgroundColor: lineGradient, borderWidth: 2.5, fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 6, pointBackgroundColor: '#ffffff', pointBorderColor: '#4361ee', pointBorderWidth: 2, pointHoverBorderWidth: 3
                     }]
                 },
                 options: {
-                    // TẮT PARSING: Báo cho Chart.js biết ta đã lo liệu data, không cần phân tích nữa!
-                    parsing: false,
-                    normalized: true, // Data đã được sắp xếp ngày tháng chuẩn
-                    
+                    // ĐÃ XÓA PARSING: FALSE ĐỂ CHART.JS TỰ ĐỘNG MAP TRỤC X
                     responsive: true, maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     plugins: {
@@ -3660,11 +3658,11 @@ function renderAdmCharts() {
             topListEl.innerHTML = `<div style="text-align:center; padding: 20px 0; color: var(--text-muted); font-size: 13px;">Không có dữ liệu</div>`;
         } else {
             top5Txs.forEach(t => {
-                
-                // BỌC GIÁP CHỐNG CRASH CHO TOP 5
                 const catObj = admCats.find(c => c.id === t.categoryId);
                 const themeObj = (catObj && catObj.color && THEMES[catObj.color]) ? THEMES[catObj.color] : THEMES['theme-gray'];
-                const innerSvg = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
+                
+                // Lấy bóng icon từ SVG_LIB
+                const iconHtml = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
 
                 const amtClass = admCurrentPieType === 'expense' ? 'text-danger' : 'text-success';
                 const amtPrefix = admCurrentPieType === 'expense' ? '-' : '+';
@@ -3676,7 +3674,10 @@ function renderAdmCharts() {
                     <div class="transaction-item" style="padding: 12px 0; cursor: default;">
                         <div class="t-left">
                             <div class="t-icon" style="background-color: ${themeObj.bg}; color: ${themeObj.color}; width: 40px; height: 40px;">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${innerSvg}</svg>
+                                <!-- BỌC THÊM THẺ SVG VÀO ĐÂY ĐỂ HIỆN ICON -->
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    ${iconHtml}
+                                </svg>
                             </div>
                             <div class="t-info">
                                 <div class="t-title" style="font-size: 15px;">${t.categoryName || t.category}</div>

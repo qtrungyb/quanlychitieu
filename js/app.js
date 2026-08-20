@@ -454,9 +454,15 @@ document.getElementById('btnSettingsDarkMode')?.addEventListener('click', (e) =>
 // ==========================================
 // 3. LOGIC AUTH & TẢI DỮ LIỆU ĐỘNG
 // ==========================================
-let transactions = [];
-let categories = [];
+// TỐI ƯU HIỆU NĂNG: Lôi dữ liệu từ Cache ra dùng ngay lập tức (0ms Latency)
+let transactions = JSON.parse(localStorage.getItem('cache_txs') || '[]');
+let categories = JSON.parse(localStorage.getItem('cache_cats') || '[]');
 let editingId = null; 
+
+// Kích hoạt render ngay giao diện nếu đã có sẵn Cache (Không cần đợi Firebase)
+if (transactions.length > 0 || categories.length > 0) {
+    if (typeof scheduleAppRender === 'function') scheduleAppRender();
+}
 let selectedSheetId = null;
 let editingCatId = null; 
 
@@ -616,7 +622,11 @@ auth.onAuthStateChanged(user => {
                 renderCategoryUI();
                 const typeInput = document.getElementById('typeInput');
                 if (typeInput) switchType(typeInput.value);
-                if(transactions.length > 0) { updateUI(); renderCharts(); }
+                
+                // LƯU CACHE DANH MỤC LẠI
+                localStorage.setItem('cache_cats', JSON.stringify(categories));
+                
+                if(transactions.length > 0) { scheduleAppRender(); }
             }
         });
 
@@ -634,6 +644,10 @@ auth.onAuthStateChanged(user => {
                 }
             }
             transactions = loadedTransactions;
+            
+            // LƯU CACHE GIAO DỊCH LẠI
+            localStorage.setItem('cache_txs', JSON.stringify(transactions));
+            
             scheduleAppRender();
         });
 		// LOAD DỮ LIỆU SỔ VAY NỢ VÀ TÍNH TỔNG LÊN MÀN HÌNH CHÍNH
@@ -659,8 +673,11 @@ auth.onAuthStateChanged(user => {
             
             currentBalances.lent = totalLentPending;
             currentBalances.borrowed = totalBorrowedPending;
+            
+            // LƯU CACHE SỔ NỢ LẠI
+            localStorage.setItem('cache_debts', JSON.stringify(debtsData));
+            
             renderBalances();
-
             if(document.getElementById('debtView')?.classList.contains('active')) renderDebtUI();
         });
         const settingsRef = db.ref(`users/${currentUser.uid}/settings`);
@@ -3896,7 +3913,7 @@ if ('serviceWorker' in navigator) {
 // ==========================================
 // TÍNH NĂNG: SỔ VAY & NỢ (DEBTS & LOANS)
 // ==========================================
-let debtsData = [];
+let debtsData = JSON.parse(localStorage.getItem('cache_debts') || '[]');
 let currentDebtTab = 'lent'; 
 
 function switchDebtTab(type) {
@@ -5123,7 +5140,10 @@ npOverlay?.addEventListener('click', closeNumpad);
 
 // 3. Xử lý logic khi bấm nút
 document.querySelectorAll('#numpadGrid .np-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    // TỐI ƯU UX: Dùng pointerdown để nảy số ngay khi ngón tay vừa chạm mặt kính (0ms delay)
+    btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault(); // Chặn sự kiện click phát sinh theo sau để không bị nảy số 2 lần
+        
         if (navigator.vibrate) navigator.vibrate(15); // Rung phản hồi haptic
         
         const val = btn.getAttribute('data-val');

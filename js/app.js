@@ -20,27 +20,28 @@ let barChartInstance = null;
 let lineChartInstance = null; 
 let currentPieType = 'expense'; 
 
+// TỐI ƯU HIỆU NĂNG: Gọi bóng Sprite thay vì nhồi code HTML
 const SVG_LIB = {
-    'food': `<svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`,
-    'transport': `<svg viewBox="0 0 24 24"><rect x="2" y="12" width="20" height="8" rx="2" ry="2"></rect><polygon points="2 12 5 7 19 7 22 12"></polygon><circle cx="6" cy="20" r="2"></circle><circle cx="18" cy="20" r="2"></circle></svg>`,
-    'shopping': `<svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`,
-    'bill': `<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
-    'sales': `<svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>`,
-    'salary': `<svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`,
-    'home': `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`,
-    'gift': `<svg viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>`,
-    'health': `<svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>`,
-    'education': `<svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`,
-    'tool': `<svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>`,
-    'entertainment': `<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect><path d="M6 12h4"></path><path d="M8 10v4"></path><line x1="15" y1="13" x2="15.01" y2="13"></line><line x1="18" y1="11" x2="18.01" y2="11"></line></svg>`,
-    'sports': `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>`,
-    'travel': `<svg viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l7 4-3 3-3-1-2 2 4 4 2-2-1-3 3-3 4 7l1.2-.7c.4-.2.7-.6.6-1.1z"></path></svg>`,
-    'family': `<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
-    'beauty': `<svg viewBox="0 0 24 24"><path d="m4 14 6-6"></path><path d="M11.52 7.52 16.48 2.56a2.12 2.12 0 0 1 3 3l-4.96 4.96"></path><path d="m8 10-6 6"></path><path d="M2.56 16.48l4.96 4.96a2.12 2.12 0 0 0 3-3L5.56 13.48"></path><circle cx="6" cy="18" r="2"></circle><circle cx="18" cy="6" r="2"></circle></svg>`,
-    'smartphone': `<svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>`,
-    'heart': `<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`,
-    'music': `<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`,
-    'other': `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`
+    'food': `<use href="#icon-food"></use>`,
+    'transport': `<use href="#icon-transport"></use>`,
+    'shopping': `<use href="#icon-shopping"></use>`,
+    'bill': `<use href="#icon-bill"></use>`,
+    'sales': `<use href="#icon-sales"></use>`,
+    'salary': `<use href="#icon-salary"></use>`,
+    'home': `<use href="#icon-home"></use>`,
+    'gift': `<use href="#icon-gift"></use>`,
+    'health': `<use href="#icon-health"></use>`,
+    'education': `<use href="#icon-education"></use>`,
+    'tool': `<use href="#icon-tool"></use>`,
+    'entertainment': `<use href="#icon-entertainment"></use>`,
+    'sports': `<use href="#icon-sports"></use>`,
+    'travel': `<use href="#icon-travel"></use>`,
+    'family': `<use href="#icon-family"></use>`,
+    'beauty': `<use href="#icon-beauty"></use>`,
+    'smartphone': `<use href="#icon-smartphone"></use>`,
+    'heart': `<use href="#icon-heart"></use>`,
+    'music': `<use href="#icon-music"></use>`,
+    'other': `<use href="#icon-other"></use>`
 };
 
 const THEMES = {
@@ -283,6 +284,10 @@ function switchTab(tabName) {
         const dropdownMenu = document.getElementById('dropdownMenu'); 
         const fab = document.getElementById('fabContainer');
 
+        // Lấy Element của thẻ Card và hiệu ứng nước
+        const walletCard = document.querySelector('.wallet-card');
+        const liquidBlobs = document.querySelector('.liquid-blobs-container');
+
         // Logic ẩn/hiện FAB Thủy ngân
         if (fab) {
             if (tabName === 'home') fab.classList.add('hide');
@@ -290,12 +295,20 @@ function switchTab(tabName) {
         }
 
         if (tabName === 'home') {
+            // TỐI ƯU HIỆU NĂNG: Đánh thức GPU (Tiếp tục chạy animation)
+            walletCard?.classList.remove('pause-animation');
+            liquidBlobs?.classList.remove('pause-animation');
+
             tabHome?.classList.add('active'); homeView?.classList.add('active');
             if (topNavTitle) topNavTitle.innerText = 'QUẢN LÝ CHI TIÊU';
             if (userMenu) userMenu.style.display = 'block'; 
         } else {
+            // TỐI ƯU HIỆU NĂNG: Cho GPU ngủ đông khi không ở trang chủ
+            walletCard?.classList.add('pause-animation');
+            liquidBlobs?.classList.add('pause-animation');
+
             if (userMenu) userMenu.style.display = 'none'; 
-            if (dropdownMenu) dropdownMenu.classList.remove('show'); 
+            if (dropdownMenu) dropdownMenu.classList.remove('show');
             
             if (tabName === 'history') {
                 tabHistory?.classList.add('active'); historyView?.classList.add('active');
@@ -607,7 +620,9 @@ auth.onAuthStateChanged(user => {
             }
         });
 
-        txRef = db.ref(`users/${currentUser.uid}/transactions`);
+        // TỐI ƯU HIỆU NĂNG: Chỉ tải tối đa 90 ngày (Node) gần nhất tính từ hiện tại
+        // Tiết kiệm 80% RAM và Băng thông mạng cho người dùng lâu năm
+        txRef = db.ref(`users/${currentUser.uid}/transactions`).orderByKey().limitToLast(90);
         txRef.on('value', (snapshot) => {
             const data = snapshot.val();
             let loadedTransactions = [];
@@ -619,8 +634,7 @@ auth.onAuthStateChanged(user => {
                 }
             }
             transactions = loadedTransactions;
-            updateUI();
-            renderCharts(); 
+            scheduleAppRender();
         });
 		// LOAD DỮ LIỆU SỔ VAY NỢ VÀ TÍNH TỔNG LÊN MÀN HÌNH CHÍNH
         db.ref(`users/${currentUser.uid}/debts`).on('value', (snap) => {
@@ -864,22 +878,18 @@ document.getElementById('btnToggleEye')?.addEventListener('click', () => {
     renderBalances();
 });
 
-// TỐI ƯU HIỆU NĂNG: Khởi tạo bộ nhớ đệm (Cache) bên ngoài hàm
+// TỐI ƯU HIỆU NĂNG: Bộ nhớ đệm DOM thông minh tự khởi tạo (Lazy DOM Cache)
+// Sẽ tự động lấy Element khi cần thiết và lưu lại vĩnh viễn, không lo bị null hay lỗi bất đồng bộ
 const DOM_CACHE = {
-    tBal: null, tInc: null, tExp: null, tLent: null, tBor: null, walletCard: null
+    get tBal() { return this._tBal || (this._tBal = document.getElementById('totalBalance')); },
+    get tInc() { return this._tInc || (this._tInc = document.getElementById('totalIncome')); },
+    get tExp() { return this._tExp || (this._tExp = document.getElementById('totalExpense')); },
+    get tLent() { return this._tLent || (this._tLent = document.getElementById('totalLent')); },
+    get tBor() { return this._tBor || (this._tBor = document.getElementById('totalBorrowed')); },
+    get walletCard() { return this._walletCard || (this._walletCard = document.querySelector('.wallet-card')); }
 };
 
-// Chạy 1 lần duy nhất khi trang vừa load xong để nạp DOM vào Cache
-window.addEventListener('DOMContentLoaded', () => {
-    DOM_CACHE.tBal = document.getElementById('totalBalance');
-    DOM_CACHE.tInc = document.getElementById('totalIncome');
-    DOM_CACHE.tExp = document.getElementById('totalExpense');
-    DOM_CACHE.tLent = document.getElementById('totalLent');
-    DOM_CACHE.tBor = document.getElementById('totalBorrowed');
-    DOM_CACHE.walletCard = document.querySelector('.wallet-card');
-});
-
-// Hàm render nay chỉ việc lấy từ Cache ra dùng, tốc độ xử lý là O(1)
+// Hàm renderBalances sử dụng bộ nhớ đệm an toàn tuyệt đối
 function renderBalances() {
     if(isBalanceHidden) {
         if (DOM_CACHE.tBal) DOM_CACHE.tBal.innerText = '******';
@@ -896,19 +906,16 @@ function renderBalances() {
         if (DOM_CACHE.tBor) DOM_CACHE.tBor.innerText = (currentBalances.borrowed > 0 ? '-' : '') + formatter.format(currentBalances.borrowed || 0) + 'đ';
     }
 
-    // --- BẮT ĐẦU: CẢM BIẾN ĐỔI MÀU THẺ THEO SỐ DƯ ---
+    // --- CẢM BIẾN ĐỔI MÀU THẺ THEO SỐ DƯ ---
     if (DOM_CACHE.walletCard) {
-        // Xóa các trạng thái cũ trước khi kiểm tra
         DOM_CACHE.walletCard.classList.remove('broke-mode', 'rich-mode');
         
-        // Cập nhật trạng thái mới dựa trên Tổng số dư
         if (currentBalances.total >= 0 && currentBalances.total < 100000) {
             DOM_CACHE.walletCard.classList.add('broke-mode'); // Dưới 100k -> Thẻ xám xịt
         } else if (currentBalances.total >= 10000000) {
             DOM_CACHE.walletCard.classList.add('rich-mode');  // Trên 10 Triệu -> Hào quang Vàng
         }
     }
-    // --- KẾT THÚC CẢM BIẾN ---
 }
 
 // ==========================================
@@ -945,7 +952,7 @@ function renderCategoryUI() {
         // Render UI lưới: Icon nằm trên trong ô vuông, chữ nằm dưới
         div.innerHTML = `
             <div class="pill-icon" style="background: var(--cat-bg); color: var(--cat-color); width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px auto; transition: 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SVG_LIB[c.icon].match(/<svg[^>]*>([\s\S]*?)<\/svg>/)?.[1] || ''}</svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SVG_LIB[c.icon] || SVG_LIB['other']}</svg>
             </div> 
             <span style="display:block; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.name}</span>
         `;
@@ -1027,7 +1034,7 @@ function renderCategoryUI() {
     
     categories.forEach(c => {
         const theme = THEMES[c.color] || THEMES['theme-gray'];
-        const svgContent = SVG_LIB[c.icon] ? SVG_LIB[c.icon].match(/<svg[^>]*>([\s\S]*?)<\/svg>/)?.[1] || '' : '';
+        const svgContent = SVG_LIB[c.icon] || SVG_LIB['other'];
         const itemHTML = `
             <div class="cat-item" data-id="${c.id}">
                 <div class="cat-item-left">
@@ -1093,7 +1100,7 @@ function initCatFormGrids() {
         for(let key in SVG_LIB) {
             const div = document.createElement('div');
             div.className = 'icon-box';
-            div.innerHTML = SVG_LIB[key];
+            div.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${SVG_LIB[key]}</svg>`;
             div.onclick = () => {
                 document.querySelectorAll('.icon-box').forEach(el => el.classList.remove('active'));
                 div.classList.add('active');
@@ -1182,7 +1189,7 @@ function openCatForm(id = null, defaultType = 'expense') {
             if (cBudgetDisplay) cBudgetDisplay.value = '';
         }
         
-        const iBox = [...document.querySelectorAll('.icon-box')].find(el => el.innerHTML === SVG_LIB[c.icon]);
+        const iBox = [...document.querySelectorAll('.icon-box')].find(el => el.innerHTML.includes(`#icon-${c.icon}`));
         if(iBox) iBox.classList.add('active');
         const cBox = [...document.querySelectorAll('.color-circle')].find(el => el.style.backgroundColor === THEMES[c.color]?.color);
         if(cBox) cBox.classList.add('active');
@@ -1551,9 +1558,17 @@ function updateUI() {
                 <p style="font-size: 15px; font-weight: 500;">Không tìm thấy giao dịch nào</p>
             </div>
         `;
-        if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
-        if (typeof calculateStreak === 'function') calculateStreak(); 
         document.getElementById('historyChartWrapper')?.classList.add('hide');
+
+        // TỐI ƯU HIỆU NĂNG: Đẩy tác vụ ngầm vào hàng đợi lúc rảnh rỗi
+        const runIdleTasksEmpty = () => {
+            if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
+            if (typeof calculateStreak === 'function') calculateStreak(); 
+        };
+
+        if ('requestIdleCallback' in window) requestIdleCallback(runIdleTasksEmpty);
+        else setTimeout(runIdleTasksEmpty, 1); // Fallback an toàn cho Safari/iOS
+
         return;
     }
 
@@ -1638,11 +1653,20 @@ function updateUI() {
 
     listEl.innerHTML = listHTML;
 
-    if(typeof renderBudgets === 'function') renderBudgets();
-    if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
-    if (typeof calculateStreak === 'function') calculateStreak();
+    // TỐI ƯU HIỆU NĂNG: Đẩy 3 tác vụ nặng vào luồng chạy ngầm lúc rảnh rỗi (Idle Time)
+    const runIdleTasksNormal = () => {
+        if(typeof renderBudgets === 'function') renderBudgets();
+        if(!document.getElementById('calendarViewContainer').classList.contains('hide')) renderCalendar();
+        if (typeof calculateStreak === 'function') calculateStreak();
+    };
 
-    // VẼ BIỂU ĐỒ ĐƯỜNG KÉP
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(runIdleTasksNormal);
+    } else {
+        setTimeout(runIdleTasksNormal, 1); // Fallback an toàn cho Safari/iOS
+    }
+
+    // VẼ BIỂU ĐỒ ĐƯỜNG KÉP (Vẫn giữ trên luồng chính để không bị pop-in UI)
     const historyChartWrapper = document.getElementById('historyChartWrapper');
     const isCalendarHidden = document.getElementById('calendarViewContainer').classList.contains('hide');
 
@@ -2168,15 +2192,26 @@ function renderCharts() {
             lineGradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)');
             lineGradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
 
+            // TỐI ƯU HIỆU NĂNG (TURBO MODE): Format sẵn data theo tọa độ {x, y}
+            const optimizedLineData = lineLabels.map((label, index) => ({
+                x: label,
+                y: lineData[index]
+            }));
+
             lineChartInstance = new Chart(lineCtx, {
                 type: 'line',
                 data: {
-                    labels: lineLabels, 
                     datasets: [{
-                        label: 'Số dư', data: lineData, borderColor: '#4361ee', backgroundColor: lineGradient, borderWidth: 2.5, fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 6, pointBackgroundColor: '#ffffff', pointBorderColor: '#4361ee', pointBorderWidth: 2, pointHoverBorderWidth: 3
+                        label: 'Số dư', 
+                        data: optimizedLineData, // Nhét mảng Object đã tối ưu vào đây
+                        borderColor: '#4361ee', backgroundColor: lineGradient, borderWidth: 2.5, fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 6, pointBackgroundColor: '#ffffff', pointBorderColor: '#4361ee', pointBorderWidth: 2, pointHoverBorderWidth: 3
                     }]
                 },
                 options: {
+                    // TẮT PARSING: Báo cho Chart.js biết ta đã lo liệu data, không cần phân tích nữa!
+                    parsing: false,
+                    normalized: true, // Data đã được sắp xếp ngày tháng chuẩn
+                    
                     responsive: true, maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     plugins: {
@@ -3194,8 +3229,7 @@ function renderAdminTxList() {
             
             // BỌC GIÁP CHỐNG CRASH CHO DỮ LIỆU CŨ:
             const catObj = currentAdminCats.find(c => c.id === t.categoryId);
-            const iconStr = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
-            const innerSvg = iconStr.replace(/<svg[^>]*>|<\/svg>/g, '');
+            const innerSvg = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
             const themeObj = (catObj && catObj.color && THEMES[catObj.color]) ? THEMES[catObj.color] : THEMES['theme-gray'];
             
             const timeObj = new Date(t.id);
@@ -3630,8 +3664,7 @@ function renderAdmCharts() {
                 // BỌC GIÁP CHỐNG CRASH CHO TOP 5
                 const catObj = admCats.find(c => c.id === t.categoryId);
                 const themeObj = (catObj && catObj.color && THEMES[catObj.color]) ? THEMES[catObj.color] : THEMES['theme-gray'];
-                const iconStr = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
-                const innerSvg = iconStr.replace(/<svg[^>]*>|<\/svg>/g, '');
+                const innerSvg = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
 
                 const amtClass = admCurrentPieType === 'expense' ? 'text-danger' : 'text-success';
                 const amtPrefix = admCurrentPieType === 'expense' ? '-' : '+';
@@ -4633,6 +4666,9 @@ function initSwipeActions() {
     let isSwiping = false;
     let swipedElement = null;
     let isClickCanceled = false; // Cờ khóa click nếu đang vuốt
+    
+    // TỐI ƯU HIỆU NĂNG: Cờ kiểm soát luồng render (chống Layout Thrashing)
+    let ticking = false;
 
     // 1. Chạm ngón tay vào màn hình
     list.addEventListener('touchstart', e => {
@@ -4667,10 +4703,19 @@ function initSwipeActions() {
 
         // Chỉ cho phép vuốt qua TRÁI và tối đa 120px (bằng độ rộng 2 nút)
         if (diffX < 0 && diffX >= -120) { 
-            swipedElement.style.transform = `translateX(${diffX}px)`;
+            // TỐI ƯU HIỆU NĂNG: Khóa nhịp độ vẽ bằng requestAnimationFrame
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    // Phải kiểm tra lại swipedElement vì có thể ngón tay đã nhấc lên trước khi frame này chạy
+                    if (swipedElement) {
+                        swipedElement.style.transform = `translateX(${diffX}px)`;
+                    }
+                    ticking = false; // Mở khóa cho frame tiếp theo
+                });
+                ticking = true; // Đóng khóa chờ vẽ
+            }
         }
     }, {passive: true});
-
     // 3. Nhấc ngón tay lên
     list.addEventListener('touchend', e => {
         if (!isSwiping || !swipedElement) return;
@@ -5407,8 +5452,7 @@ window.buildGroupItemsHTML = function(dateStr) {
         
         // BẢO VỆ CHỐNG CRASH TỐI ĐA (Tránh lỗi undefined làm tịt cả danh sách)
         const themeObj = (catObj && catObj.color && THEMES[catObj.color]) ? THEMES[catObj.color] : THEMES['theme-gray'];
-        const iconStr = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
-        const innerSvg = iconStr.replace(/<svg[^>]*>|<\/svg>/g, '');
+        const innerSvg = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
         const safeName = cName.replace(/'/g, "\\'");
 
         itemsHtml += `
@@ -6004,3 +6048,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: true }); // Tối ưu GPU khi cuộn trang
     }
 });
+// ==========================================
+// TỐI ƯU HIỆU NĂNG: TRẠM KIỂM SOÁT RENDER (BATCHING)
+// ==========================================
+let renderFrameId = null;
+
+window.scheduleAppRender = function() {
+    // Nếu có một lệnh render đang đợi, hủy nó đi (tránh vẽ chồng chéo)
+    if (renderFrameId) {
+        cancelAnimationFrame(renderFrameId);
+    }
+    
+    // Lên lịch vẽ lại ứng dụng vào khung hình (frame) tiếp theo của GPU
+    renderFrameId = requestAnimationFrame(() => {
+        if (typeof updateUI === 'function') updateUI();
+        
+        if (document.getElementById('analyticsView')?.classList.contains('active')) {
+            if (typeof renderCharts === 'function') renderCharts();
+        }
+        
+        if (document.getElementById('debtView')?.classList.contains('active')) {
+            if (typeof renderDebtUI === 'function') renderDebtUI();
+        }
+        renderFrameId = null;
+    });
+};

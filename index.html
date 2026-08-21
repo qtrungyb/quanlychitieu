@@ -23,7 +23,7 @@
         /* =========================================================
            1. CHUNG, BỐ CỤC & THẺ CARD (FLAT DESIGN)
            ========================================================= */
-        #historyView, #analyticsView { background-color: #f4f7f9 !important; padding: 12px 12px 100px 12px !important; min-height: 100vh; }
+        #historyView, #analyticsView { background-color: #f4f7f9 !important; padding: 12px 12px var(--dynamic-dock-padding, 110px) 12px !important; min-height: 100vh; }
         .modern-card { background: var(--card-bg, #ffffff); border-radius: 20px; padding: 20px 16px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.04); }
         .modern-card.p-0 { padding: 16px 0; } 
         .modern-card.text-center { text-align: center; }
@@ -80,13 +80,36 @@
         .btn-undo-tx:active { background: rgba(243, 156, 18, 0.15); transform: scale(0.9); }
         .btn-undo-tx svg { width: 18px; height: 18px; stroke-width: 2.5; }
 
-        .numpad-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .np-btn { height: 60px; border-radius: 16px; border: none; background: #fff; font-size: 24px; font-weight: 700; color: var(--text-main); box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer; transition: all 0.15s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; align-items: center; justify-content: center; }
-        .np-btn:active { transform: scale(0.92); background: #e2e8f0; }
-        .np-btn.np-op { background: #eef2ff; color: var(--primary); font-size: 22px; }
-        .np-btn.np-back { color: var(--danger); background: #fceceb; }
-        .np-btn.np-done { grid-row: span 2; height: 100%; background: var(--primary); color: #fff; box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3); font-size: 20px; }
-        .np-btn.np-done:active { background: #324cdd; }
+        /* =========================================
+		   BÀN PHÍM MÁY TÍCH HỢP (PARALLAX 3D TOUCH)
+		   ========================================= */
+		.numpad-grid { 
+			display: grid; 
+			grid-template-columns: repeat(4, 1fr); 
+			gap: 10px; 
+			/* BẬT KHÔNG GIAN 3D TẠI ĐÂY ĐỂ CÁC NÚT CÓ THỂ NGHIÊNG */
+			perspective: 800px; 
+		}
+
+		.np-btn { 
+			height: 60px; border-radius: 16px; border: none; background: #fff; font-size: 24px; font-weight: 700; color: var(--text-main); box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer; display: flex; align-items: center; justify-content: center; 
+			
+			/* CẤU TRÚC ANIMATION 3D MỚI (Tách rời các hiệu ứng) */
+			transform-style: preserve-3d;
+			transition: transform 0.1s ease-out, background 0.15s, box-shadow 0.1s ease-out;
+			will-change: transform;
+		}
+
+		.np-btn:active { 
+			/* ĐÃ XÓA transform: scale(0.92); ĐỂ NHƯỜNG QUYỀN ĐIỀU KHIỂN ĐỘ NGHIÊNG CHO JAVASCRIPT */
+			background: #e2e8f0; 
+		}
+
+		/* GIỮ NGUYÊN CÁC NÚT CHỨC NĂNG BÊN DƯỚI */
+		.np-btn.np-op { background: #eef2ff; color: var(--primary); font-size: 22px; }
+		.np-btn.np-back { color: var(--danger); background: #fceceb; }
+		.np-btn.np-done { grid-row: span 2; height: 100%; background: var(--primary); color: #fff; box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3); font-size: 20px; }
+		.np-btn.np-done:active { background: #324cdd; }
 
         /* =========================================================
            3. TAB LỊCH SỬ (TÌM KIẾM, SWIPE, ACCORDION & INLINE SPARKBAR)
@@ -173,7 +196,7 @@
         .btn-load-more { background: transparent !important; border: 2px dashed #cbd5e1 !important; color: var(--text-muted) !important; border-radius: 20px !important; font-weight: 700 !important; transition: all 0.3s ease !important; height: 52px !important; margin-top: 16px !important; position: relative !important; z-index: 999 !important; pointer-events: auto !important; user-select: none; }
         .btn-load-more:hover, .btn-load-more:active { background: #f8f9fa !important; border-color: var(--primary) !important; color: var(--primary) !important; }
         
-        .end-of-list-msg { text-align: center; padding: 30px 20px 100px 20px !important; margin: 0 !important; color: var(--text-muted); font-size: 13px; font-weight: 500; opacity: 0.4; letter-spacing: 0.5px; }
+        .end-of-list-msg { text-align: center; padding: 30px 20px var(--dynamic-dock-padding, 110px) 20px !important; margin: 0 !important; color: var(--text-muted); font-size: 13px; font-weight: 500; opacity: 0.4; letter-spacing: 0.5px; }
 
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .timeline-wrapper-seamless .swipe-container:nth-child(1) { animation-delay: 0.05s; }
@@ -905,13 +928,17 @@
         </button>
         <!-- Nút Chính -->
         <button class="fab-main" id="fabMainBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <!-- Icon Dấu Cộng (Mặc định) -->
+            <svg class="icon-add" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <!-- Icon Mũi Tên Cuộn Lên (Bị ẩn mặc định) -->
+            <svg class="icon-up hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
         </button>
     </div>
 </div>
 
 <!-- BOTTOM NAVIGATION -->
 <div class="bottom-nav">
+    <div class="nav-indicator" id="navIndicator"></div>
     <div class="nav-item active" id="tabHome"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span>Nhập liệu</span></div>
     <div class="nav-item" id="tabHistory"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>Lịch sử</span></div>
     <div class="nav-item" id="tabStats"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg><span>Thống kê</span></div>

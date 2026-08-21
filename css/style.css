@@ -1186,14 +1186,14 @@ body.dark-theme {
     will-change: transform;
 }
 /* =========================================
-   1. THANH ĐIỀU HƯỚNG ĐÁY "VIÊN THUỐC LƠ LỬNG"
+   1. THANH ĐIỀU HƯỚNG ĐÁY "VIÊN THUỐC LƠ LỬNG" (ĐÃ CĂN CHỈNH)
    ========================================= */
 .bottom-nav {
     position: fixed;
-    bottom: 20px !important;
+    bottom: 12px !important; /* Đã hạ thấp viên thuốc xuống sát viền hơn (Cũ là 20px) */
     left: 50% !important;
     
-    /* TỐI ƯU HIỆU NĂNG: Kết hợp căn giữa (translateX) và bật GPU (translateZ) */
+    /* TỐI ƯU HIỆU NĂNG: Căn giữa và bật GPU */
     transform: translateX(-50%) translateZ(0);
     -webkit-transform: translateX(-50%) translateZ(0);
     will-change: transform, backdrop-filter;
@@ -1201,7 +1201,7 @@ body.dark-theme {
     width: calc(100% - 32px) !important;
     max-width: 448px;
     height: 70px !important;
-    border-radius: 35px !important;
+    border-radius: 35px !important; /* Vẫn giữ nguyên dáng viên thuốc bo tròn */
     
     background: var(--sync-glass-bg) !important;
     backdrop-filter: blur(24px) saturate(150%);
@@ -1211,15 +1211,15 @@ body.dark-theme {
     
     display: flex; justify-content: space-around; align-items: center;
     z-index: 900; padding: 0 8px;
-	
 }
+
 body.dark-theme .bottom-nav {
     box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.05) !important;
 }
 
-/* Nâng Nút Thêm Nhanh (FAB) lên để không bị đè vào Viên thuốc */
-.fab-button {
-    bottom: 105px !important; 
+/* Ép Nút Thêm Nhanh (FAB / Dấu cộng) ngoi lên cao, hoàn toàn thoát khỏi viên thuốc */
+.fab-button, .fab-container {
+    bottom: 95px !important; 
 }
 
 

@@ -263,7 +263,29 @@ const adminView = document.getElementById('adminView');
 const settingsView = document.getElementById('settingsView');
 
 let userFullName = ""; 
+// [CẢI TIẾN 1]: Tính toán vị trí và độ rộng của Cục thạch trượt
+function updateNavIndicator() {
+    const indicator = document.getElementById('navIndicator');
+    const activeNavEl = document.querySelector('.bottom-nav .nav-item.active');
+    
+    if (indicator && activeNavEl) {
+        indicator.style.width = `${activeNavEl.offsetWidth}px`;
+        indicator.style.transform = `translateY(-50%) translateX(${activeNavEl.offsetLeft}px)`;
+    }
+}
 
+// BỘ MẮT THẦN (RESIZE OBSERVER): Theo dõi độ giãn nở của từng Tab 60 khung hình/giây
+const dockObserver = new ResizeObserver(() => {
+    requestAnimationFrame(() => updateNavIndicator());
+});
+
+// Chờ DOM load xong rồi gắn mắt thần vào các tab
+window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(el => dockObserver.observe(el));
+});
+
+// Cập nhật lại khi xoay màn hình (Resize)
+window.addEventListener('resize', updateNavIndicator);
 // Khai báo một bộ nhớ siêu nhỏ để App biết bạn đang ở đâu
 let currentActiveTabStr = 'home';
 
@@ -336,7 +358,7 @@ function switchTab(tabName) {
                 if (topNavTitle) topNavTitle.innerText = userFullName ? userFullName.toUpperCase() : 'CÀI ĐẶT';
             }
         }
-        
+        requestAnimationFrame(() => updateNavIndicator());
         // Snap thẳng lên Top để máy ảnh API chụp nét 100%
         window.scrollTo(0, 0); 
     };
@@ -351,15 +373,31 @@ function switchTab(tabName) {
         window.scrollTo({ top: 0, behavior: 'smooth' }); 
     }
 }
-// LOGIC HOẠT ĐỘNG CỦA NÚT THỦY NGÂN (LIQUID FAB)
+// LOGIC HOẠT ĐỘNG CỦA NÚT THỦY NGÂN (CONTEXT-AWARE)
 const fabContainer = document.getElementById('fabContainer');
 const fabMainBtn = document.getElementById('fabMainBtn');
 
 if (fabMainBtn) {
     fabMainBtn.addEventListener('click', () => {
         if (navigator.vibrate) navigator.vibrate(10);
-        fabContainer.classList.toggle('active');
-        fabMainBtn.classList.toggle('active');
+        
+        // NẾU ĐANG Ở TRẠNG THÁI "CUỘN LÊN ĐẦU TRANG"
+        if (fabContainer.classList.contains('mode-scroll-top')) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Kỹ xảo: Phóng nút lên như tên lửa rồi trở lại
+            fabMainBtn.style.transform = 'translateY(-30px) scale(0.7)';
+            fabMainBtn.style.opacity = '0';
+            setTimeout(() => { 
+                fabMainBtn.style.transform = ''; 
+                fabMainBtn.style.opacity = '1';
+            }, 400);
+        } 
+        // NẾU ĐANG LÀ NÚT "THÊM GIAO DỊCH" BÌNH THƯỜNG
+        else {
+            fabContainer.classList.toggle('active');
+            fabMainBtn.classList.toggle('active');
+        }
     });
 }
 
@@ -1479,7 +1517,7 @@ function updateUI() {
     const activeCatPills = Array.from(document.querySelectorAll('#historyCategoryFilter .cat-pill.active'));
     const fCats = activeCatPills.map(p => p.getAttribute('data-filter')).filter(f => f !== '');
     
-    const activeQuickFilter = document.querySelector('.btn-quick-filter.active');
+    const activeQuickFilter = document.querySelector('#quickDateFilters .btn-quick-filter.active');
     const isQuickAll = activeQuickFilter ? activeQuickFilter.getAttribute('data-range') === 'all' : false;
     
     const listEl = document.getElementById('transactionList');
@@ -5163,15 +5201,47 @@ function closeNumpad() {
 }
 npOverlay?.addEventListener('click', closeNumpad);
 
-// 3. Xử lý logic khi bấm nút
+// 3. Xử lý logic khi bấm nút & Bàn phím Parallax 3D
 document.querySelectorAll('#numpadGrid .np-btn').forEach(btn => {
-    // TỐI ƯU UX: Dùng pointerdown để nảy số ngay khi ngón tay vừa chạm mặt kính (0ms delay)
+    
+    // HÀM TÍNH TOÁN ĐỘ NGHIÊNG THEO NGÓN TAY
+    const applyTilt = (e) => {
+        const rect = btn.getBoundingClientRect();
+        // Tính tọa độ ngón tay bên trong nút
+        const x = (e.clientX || e.touches?.[0].clientX) - rect.left;
+        const y = (e.clientY || e.touches?.[0].clientY) - rect.top;
+
+        // Tính % lệch khỏi tâm (-1 đến 1)
+        const xPct = (x / rect.width - 0.5) * 2;
+        const yPct = (y / rect.height - 0.5) * 2;
+
+        // Giới hạn góc nghiêng tối đa (18 độ)
+        const maxTilt = 18;
+        const rotateX = yPct * -maxTilt; // Chạm dưới -> lõm dưới, đỉnh nhô lên
+        const rotateY = xPct * maxTilt;  // Chạm phải -> lõm phải
+
+        // Áp dụng Ma trận 3D (Lún xuống -10px, thu nhỏ 0.94 và nghiêng)
+        btn.style.transform = `translateZ(-10px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(0.94)`;
+        
+        // Hướng bóng đổ chạy ngược lại với hướng nghiêng
+        btn.style.boxShadow = `${-xPct * 5}px ${-yPct * 5}px 10px rgba(0,0,0,0.1)`;
+    };
+
+    const resetTilt = () => {
+        btn.style.transform = '';
+        btn.style.boxShadow = '';
+    };
+
+    // Lắng nghe chạm xuống (Chạm mười ngón cùng lúc vẫn nhận)
     btn.addEventListener('pointerdown', (e) => {
-        e.preventDefault(); // Chặn sự kiện click phát sinh theo sau để không bị nảy số 2 lần
-        Haptic.light();
+        e.preventDefault(); 
+        if (navigator.vibrate) navigator.vibrate(10);
         
+        // Kích hoạt nghiêng 3D
+        applyTilt(e);
+        
+        // --- LOGIC TÍNH TOÁN GỐC CỦA BẠN CHỮA NGUYÊN ---
         const val = btn.getAttribute('data-val');
-        
         if (val === 'C') {
             npExpression = '';
         } else if (val === 'back') {
@@ -5179,17 +5249,17 @@ document.querySelectorAll('#numpadGrid .np-btn').forEach(btn => {
         } else if (btn.id === 'btnNumpadDone') {
             finalizeCalculation();
             closeNumpad();
+            resetTilt();
             return; 
         } else {
-            // Chống bấm 2 phép tính liên tiếp
             const lastChar = npExpression.slice(-1);
             const isOp = ['+', '-', '×', '÷'].includes(val);
             const isLastOp = ['+', '-', '×', '÷'].includes(lastChar);
             
             if (isOp && isLastOp) {
-                npExpression = npExpression.slice(0, -1) + val; // Ghi đè phép tính cuối
+                npExpression = npExpression.slice(0, -1) + val; 
             } else if (val === '.' && lastChar === '.') {
-                return; // Tránh 2 dấu chấm liên tiếp
+                return; 
             } else {
                 let displayVal = val;
                 if (val === '*') displayVal = '×';
@@ -5199,8 +5269,12 @@ document.querySelectorAll('#numpadGrid .np-btn').forEach(btn => {
         }
         updateNpDisplay();
     });
-});
 
+    // Nảy phím lên khi nhấc ngón tay hoặc rê ngón tay ra ngoài
+    btn.addEventListener('pointerup', resetTilt);
+    btn.addEventListener('pointerleave', resetTilt);
+    btn.addEventListener('pointercancel', resetTilt);
+});
 // 4. Render chuỗi phép tính & Tính tổng thời gian thực
 function updateNpDisplay() {
     if (npExprDisplay) npExprDisplay.innerText = npExpression || '0';
@@ -6146,3 +6220,73 @@ const Haptic = {
     success: () => { if (navigator.vibrate) navigator.vibrate([15, 60, 20]); }, // Thành công (Rung 2 nhịp)
     error: () => { if (navigator.vibrate) navigator.vibrate([50, 50, 50]); }    // Thất bại (Rung dài)
 };
+// ==========================================
+// [CẢI TIẾN 2]: TRÍ TUỆ CUỘN TRANG (SMART AUTO-HIDE DOCK & MORPHING FAB)
+// ==========================================
+let lastScrollY = window.scrollY;
+const bottomNavEl = document.querySelector('.bottom-nav');
+const scrollThreshold = 12; // Cần cuộn ít nhất 12px để tránh bị nhạy quá
+
+window.addEventListener('scroll', () => {
+    const currentScrollY = window.scrollY;
+    const fabContainer = document.getElementById('fabContainer');
+
+    // ----------------------------------------------------
+    // 1. LOGIC ẨN/HIỆN THANH DOCK (VIÊN THUỐC)
+    // ----------------------------------------------------
+    // Không ẩn ở trang chủ và trang admin vì ít nội dung
+    if (currentActiveTabStr !== 'home' && currentActiveTabStr !== 'admin') {
+        // Vuốt xuống -> Ẩn Dock
+        if (currentScrollY > lastScrollY + scrollThreshold && currentScrollY > 150) {
+            bottomNavEl?.classList.add('hide-on-scroll');
+        } 
+        // Vuốt lên -> Hiện lại Dock
+        else if (currentScrollY < lastScrollY - scrollThreshold) {
+            bottomNavEl?.classList.remove('hide-on-scroll');
+        }
+    }
+
+    // ----------------------------------------------------
+    // 2. LOGIC NÚT THỦY NGÂN BIẾN HÌNH (SCROLL TO TOP)
+    // ----------------------------------------------------
+    // Nút biến hình chỉ kích hoạt khi KHÔNG ở trang chủ
+    if (currentActiveTabStr !== 'home') {
+        if (currentScrollY > 300) {
+            // Cuộn xuống qua mốc 300px -> Hiện nút và biến thành Mũi tên
+            fabContainer?.classList.remove('hide');
+            fabContainer?.classList.add('mode-scroll-top');
+            fabContainer?.classList.remove('active'); // Ép đóng các giọt con nếu đang mở
+        } else {
+            // Kéo lên gần đỉnh trang -> Giấu nút đi và trả về nguyên trạng Dấu cộng
+            fabContainer?.classList.add('hide');
+            fabContainer?.classList.remove('mode-scroll-top');
+        }
+    }
+
+    // Lưu lại vị trí cuộn hiện tại cho lần tính toán sau
+    lastScrollY = currentScrollY;
+}, { passive: true }); // passive: true giúp cuộn mượt không bị khựng CPU
+// ==========================================
+// THUẬT TOÁN ĐO ĐẠC SAFE-AREA KHÁNG LẸM NỘI DUNG (DYNAMIC DOCK PADDING)
+// ==========================================
+function updateDynamicDockPadding() {
+    const bottomNav = document.querySelector('.bottom-nav');
+    if (bottomNav) {
+        // Lấy chính xác khoảng cách từ mép dưới lên đỉnh thanh Dock + tính cả bóng đổ
+        const computed = window.getComputedStyle(bottomNav);
+        const bottomVal = parseFloat(computed.bottom) || 0;
+        const heightVal = parseFloat(computed.height) || 0;
+        
+        // Cộng thêm 24px để nội dung có khoảng thở (không dính sát mép Dock)
+        const safePadding = bottomVal + heightVal + 24; 
+        
+        // Tiêm biến CSS toàn cục vào thẳng não trình duyệt
+        document.documentElement.style.setProperty('--dynamic-dock-padding', `${safePadding}px`);
+    }
+}
+
+// Lắng nghe sự kiện để đo lại nếu xoay ngang/dọc điện thoại
+window.addEventListener('resize', updateDynamicDockPadding);
+window.addEventListener('DOMContentLoaded', updateDynamicDockPadding);
+// Quét thêm 1 lần sau nửa giây để đảm bảo DOM đã render xong 100%
+setTimeout(updateDynamicDockPadding, 500);

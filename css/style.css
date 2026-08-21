@@ -1251,8 +1251,8 @@ body.dark-theme {
 .bottom-nav {
     position: fixed;
     
-    /* FIX LỖI BAY CAO: Ép sát đáy, chỉ chừa đúng chỗ cho thanh Home Bar của iPhone */
-    bottom: env(safe-area-inset-bottom, 10px) !important; 
+    /* FIX LỖI BAY CAO: Đưa sát hẳn xuống đáy, tích hợp mượt mà với Home Bar của iPhone */
+    bottom: max(8px, env(safe-area-inset-bottom)) !important; 
     margin-bottom: 0 !important; 
     left: 50% !important;
     
@@ -1498,8 +1498,8 @@ body.dark-theme .numpad-grid .np-btn.np-back {
 .fab-container {
     position: fixed;
     
-    /* CHIỀU CAO CHUẨN: Chiều cao Dock (70px) + Hở (12px) = 82px so với mốc đáy */
-    bottom: calc(82px + env(safe-area-inset-bottom, 10px)) !important; 
+    /* CHIỀU CAO MỚI: Hạ nút xuống sát thanh Dock, giúp giải phóng diện tích màn hình */
+    bottom: calc(65px + env(safe-area-inset-bottom, 0px)) !important; 
     margin-bottom: 0 !important; 
     
     right: 0px;              

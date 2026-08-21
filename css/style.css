@@ -1251,19 +1251,16 @@ body.dark-theme {
 .bottom-nav {
     position: fixed;
     
-    /* CHÍNH LÀ 2 DÒNG NÀY: Khóa cứng margin và thiết lập lại bottom */
+    /* FIX LỖI BAY CAO: Ép sát đáy, chỉ chừa đúng chỗ cho thanh Home Bar của iPhone */
+    bottom: env(safe-area-inset-bottom, 10px) !important; 
     margin-bottom: 0 !important; 
-    bottom: calc(12px + env(safe-area-inset-bottom, 12px)) !important; 
-    
     left: 50% !important;
     
-    /* [CẢI TIẾN 4: GPU TUNING] Ép trình duyệt đưa Dock sang 1 Layer phần cứng riêng */
     contain: layout paint;
     transform: translateX(-50%) translate3d(0, 0, 0);
     -webkit-transform: translateX(-50%) translate3d(0, 0, 0);
     will-change: transform, backdrop-filter;
     
-    /* [CẢI TIẾN 2: SMART HIDE] Thêm hiệu ứng trượt xuống khi cuộn */
     transition: transform 0.4s var(--spring-ios), opacity 0.3s ease, background-color 0.35s ease;
 
     width: calc(100% - 32px) !important;
@@ -1500,8 +1497,10 @@ body.dark-theme .numpad-grid .np-btn.np-back {
 /* 1. NỚI RỘNG KHUNG BAO ĐỂ KHÔNG BỊ CẮT XÉN SVG (CLIPPING) */
 .fab-container {
     position: fixed;
-    bottom: calc(95px + env(safe-area-inset-bottom, 12px)) !important; 
-    margin-bottom: 0 !important; /* Xóa margin rác */
+    
+    /* CHIỀU CAO CHUẨN: Chiều cao Dock (70px) + Hở (12px) = 82px so với mốc đáy */
+    bottom: calc(82px + env(safe-area-inset-bottom, 10px)) !important; 
+    margin-bottom: 0 !important; 
     
     right: 0px;              
     width: 100px;            

@@ -218,6 +218,11 @@ function showToast(message, type = 'success') {
     if (!toast) return;
     toast.innerHTML = type === 'success' ? `✓ ${message}` : `⚠ ${message}`;
     toast.className = `toast show ${type}`;
+    
+    // Tự động rung theo ngữ cảnh thông báo
+    if (type === 'success') Haptic.success();
+    else Haptic.error();
+
     clearTimeout(toastTimeout);
     toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
@@ -1663,12 +1668,26 @@ function updateUI() {
     listHTML += `</div>`;
 
     if (sortedDates.length > currentDateLimit) {
-        listHTML += `<button class="btn-load-more" onclick="currentDateLimit += ${DATES_PER_PAGE}; updateUI();">Xem thêm các ngày trước</button>`;
+        // TỐI ƯU UX: Chèn Radar tàng hình thay thế nút bấm
+        listHTML += `<div id="loadMoreSentinel" style="height: 20px; width: 100%;"></div>`;
     } else if (sortedDates.length > 0) {
         listHTML += `<div class="end-of-list-msg">Đã hiển thị toàn bộ giao dịch</div>`;
     }
 
     listEl.innerHTML = listHTML;
+
+    // KÍCH HOẠT RADAR CUỘN VÔ HẠN (INFINITE SCROLL)
+    const sentinel = document.getElementById('loadMoreSentinel');
+    if (sentinel) {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                observer.disconnect(); // Gỡ radar cũ ngay lập tức để tránh gọi lặp
+                currentDateLimit += DATES_PER_PAGE; 
+                scheduleAppRender(); // Gọi trạm kiểm soát để render mượt mà
+            }
+        }, { rootMargin: '150px' }); // Quét trước 150px để load mượt không bị khựng UI
+        observer.observe(sentinel);
+    }
 
     // TỐI ƯU HIỆU NĂNG: Đẩy 3 tác vụ nặng vào luồng chạy ngầm lúc rảnh rỗi (Idle Time)
     const runIdleTasksNormal = () => {
@@ -3077,16 +3096,6 @@ window.closeAdminUserTx = function() {
     document.getElementById('adminUserTxModal')?.classList.remove('show');
 };
 
-window.loadMoreAdminTx = function(btnElement) {
-    if(btnElement) {
-        btnElement.innerText = 'Đang tải...';
-        btnElement.style.opacity = '0.5';
-    }
-    adminTxDateLimit += 3;
-    setTimeout(() => {
-        renderAdminTxList();
-    }, 50);
-};
 
 function renderAdminTxList() {
     const listEl = document.getElementById('adminUserTxList');
@@ -3277,12 +3286,28 @@ function renderAdminTxList() {
     listHTML += `</div>`; 
 
     if (sortedDates.length > adminTxDateLimit) {
-        listHTML += `<div style="padding-bottom: 20px;"><button id="btnLoadMoreAdmin" style="width: 100%; padding: 14px; background: transparent; border: 2px dashed #cbd5e1; color: var(--text-muted); border-radius: 20px; font-weight: 700; cursor: pointer; text-align: center;" onclick="loadMoreAdminTx(this)">Xem thêm các ngày trước</button></div>`;
+        // TỐI ƯU UX: Chèn Radar tàng hình cho Admin
+        listHTML += `<div id="admLoadMoreSentinel" style="height: 20px; width: 100%; margin-bottom: 20px;"></div>`;
     } else if (sortedDates.length > 0) {
         listHTML += `<div class="end-of-list-msg">Đã hiển thị toàn bộ giao dịch</div>`;
     }
     
     listEl.innerHTML = listHTML;
+
+    // KÍCH HOẠT RADAR CUỘN VÔ HẠN CHO ADMIN
+    const admSentinel = document.getElementById('admLoadMoreSentinel');
+    if (admSentinel) {
+        const admObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                admObserver.disconnect();
+                adminTxDateLimit += 3;
+                
+                // Trì hoãn render vào khung hình tiếp theo để tránh khựng màn hình Admin
+                requestAnimationFrame(() => renderAdminTxList());
+            }
+        }, { rootMargin: '150px' });
+        admObserver.observe(admSentinel);
+    }
 
     setTimeout(() => {
         if (sortedDates.length > 0) {
@@ -5143,8 +5168,7 @@ document.querySelectorAll('#numpadGrid .np-btn').forEach(btn => {
     // TỐI ƯU UX: Dùng pointerdown để nảy số ngay khi ngón tay vừa chạm mặt kính (0ms delay)
     btn.addEventListener('pointerdown', (e) => {
         e.preventDefault(); // Chặn sự kiện click phát sinh theo sau để không bị nảy số 2 lần
-        
-        if (navigator.vibrate) navigator.vibrate(15); // Rung phản hồi haptic
+        Haptic.light();
         
         const val = btn.getAttribute('data-val');
         
@@ -6093,4 +6117,32 @@ window.scheduleAppRender = function() {
         }
         renderFrameId = null;
     });
+};
+// ==========================================
+// TỐI ƯU UX: BỘ GIÁM SÁT MODAL TỰ ĐỘNG (PUSH-BACK 3D)
+// ==========================================
+window.addEventListener('DOMContentLoaded', () => {
+    const observer = new MutationObserver(() => {
+        // Kiểm tra xem có bất kỳ lớp phủ nào đang hiển thị (.show) không
+        const hasOpenModal = document.querySelector('.history-overlay.show, .sheet-overlay.show');
+        if (hasOpenModal) {
+            document.body.classList.add('modal-open');
+        } else {
+            document.body.classList.remove('modal-open');
+        }
+    });
+
+    // Cắm mắt theo dõi tất cả các lớp phủ Overlay
+    document.querySelectorAll('.history-overlay, .sheet-overlay').forEach(overlay => {
+        observer.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+    });
+});
+// ==========================================
+// TỐI ƯU UX: ĐỘNG CƠ XÚC GIÁC ĐA ĐIỂM (HAPTIC ENGINE)
+// ==========================================
+const Haptic = {
+    light: () => { if (navigator.vibrate) navigator.vibrate(10); },     // Bấm phím nhẹ
+    medium: () => { if (navigator.vibrate) navigator.vibrate(20); },    // Bật gạt, chuyển tab
+    success: () => { if (navigator.vibrate) navigator.vibrate([15, 60, 20]); }, // Thành công (Rung 2 nhịp)
+    error: () => { if (navigator.vibrate) navigator.vibrate([50, 50, 50]); }    // Thất bại (Rung dài)
 };

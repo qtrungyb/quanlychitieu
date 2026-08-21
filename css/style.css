@@ -36,6 +36,11 @@ input, textarea {
     user-select: auto !important;
 }
 
+/* Phủ màu nền cho toàn bộ khung xương trình duyệt để triệt tiêu vạch đen */
+html {
+    background-color: var(--bg-color);
+}
+
 body { 
     background-color: var(--bg-color); 
     color: var(--text-main); 
@@ -45,7 +50,11 @@ body {
     /* UX NATIVE APP: Khóa chết hiệu ứng nảy cao su (Rubber-banding) ở đầu/cuối trang */
     overscroll-behavior-y: none;
     overscroll-behavior-x: none;
+    
+    /* Đảm bảo App luôn dài chạm đáy */
+    min-height: 100vh;
 }
+
 
 .app-container { 
     width: 100%; max-width: 480px; min-height: 100vh; 

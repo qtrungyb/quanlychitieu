@@ -1250,7 +1250,9 @@ body.dark-theme {
    ========================================= */
 .bottom-nav {
     position: fixed;
-    bottom: calc(12px + env(safe-area-inset-bottom)) !important; 
+    /* Tách rời bottom và safe-area để trình duyệt không tính toán sai */
+    bottom: 16px !important; 
+    margin-bottom: env(safe-area-inset-bottom) !important;
     left: 50% !important;
     
     /* [CẢI TIẾN 4: GPU TUNING] Ép trình duyệt đưa Dock sang 1 Layer phần cứng riêng */
@@ -1496,10 +1498,11 @@ body.dark-theme .numpad-grid .np-btn.np-back {
 /* 1. NỚI RỘNG KHUNG BAO ĐỂ KHÔNG BỊ CẮT XÉN SVG (CLIPPING) */
 .fab-container {
     position: fixed;
-    bottom: 55px !important; /* Hạ thấp khung bao xuống */
-    right: 0px;              /* Kéo sát lề phải */
-    width: 100px;            /* Nới rộng chiều ngang (cũ là 60px) */
-    height: 260px;           /* Nới rộng chiều cao (cũ là 200px) */
+    /* Đẩy toàn bộ khung lên cao cách đáy 90px (chưa tính tai thỏ) để không đè vào Dock */
+    bottom: calc(90px + env(safe-area-inset-bottom)) !important; 
+    right: 0px;              
+    width: 100px;            
+    height: 260px;           
     z-index: 999;
     pointer-events: none; 
     transition: opacity 0.3s, transform 0.3s;

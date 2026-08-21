@@ -1216,8 +1216,9 @@ body.dark-theme {
     -webkit-backdrop-filter: blur(24px) saturate(150%);
     border: 1px solid var(--sync-glass-border) !important;
     
-    /* Thu gọn bóng đổ, không cho hắt xuống đáy (đổi 0 10px thành 0 0, giảm độ đen còn 0.06) */
-    box-shadow: 0 0 20px rgba(0,0,0,0.06), inset 0 1px 1px rgba(255,255,255,0.3) !important;
+        /* Hắt bóng đổ ngược lên trên 10px (số âm -10px), để gầm phía dưới trống trơn */
+    box-shadow: 0 -10px 25px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.3) !important;
+
 
     
     display: flex; justify-content: space-around; align-items: center;
@@ -1225,9 +1226,10 @@ body.dark-theme {
 }
 
 body.dark-theme .bottom-nav {
-    /* Thu gọn bóng đổ cho Dark Mode */
-    box-shadow: 0 0 20px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05) !important;
+    /* Tương tự, hắt bóng đổ ngược lên trên cho nền tối */
+    box-shadow: 0 -10px 25px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05) !important;
 }
+
 
 
 /* Ép Nút Thêm Nhanh (FAB / Dấu cộng) ngoi lên cao, hoàn toàn thoát khỏi viên thuốc */

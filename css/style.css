@@ -57,7 +57,8 @@ body {
 
 .app-container { 
     width: 100%; max-width: 480px; min-height: 100vh; 
-    padding: 20px 16px 100px 16px; 
+    /* Đã thay 100px thành var(--dynamic-dock-padding, 110px) */
+    padding: 20px 16px var(--dynamic-dock-padding, 110px) 16px; 
     display: flex; flex-direction: column; gap: 20px; position: relative;
 }
 
@@ -394,14 +395,63 @@ body.dark-theme .kpi-card { background-color: var(--card-bg) !important; border:
     box-shadow: 0 -4px 20px rgba(0,0,0,0.05); display: flex; justify-content: space-around;
     align-items: center; z-index: 900; padding-bottom: env(safe-area-inset-bottom); border-radius: 24px 24px 0 0;
 }
+/* =========================================
+   UX CẢI TIẾN: ACTIVE TEXT REVEAL (GIÃN NỞ TRỌNG TÂM)
+   ========================================= */
 .nav-item {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: #a0aec0; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; 
-    flex: 1;
+    display: flex; 
+    flex-direction: row; /* Thay đổi từ cột (column) sang hàng ngang (row) */
+    align-items: center; 
+    justify-content: center;
+    color: #a0aec0; 
+    cursor: pointer;
+    flex: 1; /* Tab không chọn sẽ thu nhỏ lại */
+    padding: 8px 0;
+    z-index: 1;
+    transition: all 0.4s var(--spring-ios);
 }
-.nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; stroke: currentColor; fill: none; stroke-width: 2.5; transition: 0.2s;}
-.nav-item.active { color: var(--primary); }
-.nav-item.active svg { transform: translateY(-2px); }
+
+.nav-item.active {
+    flex: 1.6; /* Tab đang chọn sẽ phình to ra đẩy các tab khác sang 2 bên */
+    color: var(--primary);
+}
+
+.nav-item svg {
+    width: 22px; height: 22px; 
+    stroke: currentColor; fill: none; stroke-width: 2.2;
+    transition: all 0.4s var(--spring-ios);
+    flex-shrink: 0; /* Không cho icon bị ép méo */
+}
+
+/* Ẩn chữ đi bằng cách đưa max-width về 0 và scale nhỏ lại */
+.nav-item span {
+    white-space: nowrap !important;
+    font-size: 13px !important;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    max-width: 0; 
+    opacity: 0;
+    margin-left: 0;
+    overflow: hidden;
+    display: inline-block;
+    transform: scale(0.5);
+    transform-origin: left center;
+    transition: all 0.4s var(--spring-ios);
+}
+
+/* Khi tab được Active: Chữ sẽ trượt ngang ra mượt mà */
+.nav-item.active span {
+    max-width: 80px; 
+    opacity: 1;
+    margin-left: 6px; /* Khoảng cách giữa Icon và Chữ */
+    transform: scale(1);
+}
+
+/* Chỉnh lại độ cao Cục thạch trượt cho khớp với dáng dấp mới */
+.nav-indicator {
+    height: 48px !important; 
+    border-radius: 24px !important;
+}
 
 /* =========================================
    10. CÁC POPUP MODALS (MANAGER, ADD CAT)
@@ -1196,47 +1246,73 @@ body.dark-theme {
     will-change: transform;
 }
 /* =========================================
-   1. THANH ĐIỀU HƯỚNG ĐÁY "VIÊN THUỐC LƠ LỬNG" (ĐÃ CĂN CHỈNH)
+   1. THANH ĐIỀU HƯỚNG ĐÁY (GPU TUNED & SMART AUTO-HIDE)
    ========================================= */
 .bottom-nav {
     position: fixed;
-    bottom: 12px !important; /* Đã hạ thấp viên thuốc xuống sát viền hơn (Cũ là 20px) */
+    bottom: calc(12px + env(safe-area-inset-bottom)) !important; 
     left: 50% !important;
     
-    /* TỐI ƯU HIỆU NĂNG: Căn giữa và bật GPU */
-    transform: translateX(-50%) translateZ(0);
-    -webkit-transform: translateX(-50%) translateZ(0);
+    /* [CẢI TIẾN 4: GPU TUNING] Ép trình duyệt đưa Dock sang 1 Layer phần cứng riêng */
+    contain: layout paint;
+    transform: translateX(-50%) translate3d(0, 0, 0);
+    -webkit-transform: translateX(-50%) translate3d(0, 0, 0);
     will-change: transform, backdrop-filter;
+    
+    /* [CẢI TIẾN 2: SMART HIDE] Thêm hiệu ứng trượt xuống khi cuộn */
+    transition: transform 0.4s var(--spring-ios), opacity 0.3s ease, background-color 0.35s ease;
 
     width: calc(100% - 32px) !important;
     max-width: 448px;
     height: 70px !important;
-    border-radius: 35px !important; /* Vẫn giữ nguyên dáng viên thuốc bo tròn */
+    padding: 0 8px !important;
+    border-radius: 35px !important; 
     
     background: var(--sync-glass-bg) !important;
     backdrop-filter: blur(24px) saturate(150%);
     -webkit-backdrop-filter: blur(24px) saturate(150%);
     border: 1px solid var(--sync-glass-border) !important;
-    
-        /* Hắt bóng đổ ngược lên trên 10px (số âm -10px), để gầm phía dưới trống trơn */
-    box-shadow: 0 -10px 25px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.3) !important;
-
-
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08), inset 0 1px 1px rgba(255,255,255,0.3) !important;
     
     display: flex; justify-content: space-around; align-items: center;
-    z-index: 900; padding: 0 8px;
+    z-index: 900; 
+}
+
+/* Lớp ẩn thanh Dock khi cuộn xuống */
+.bottom-nav.hide-on-scroll {
+    transform: translateX(-50%) translateY(120px) translate3d(0,0,0);
+    opacity: 0;
+    pointer-events: none;
 }
 
 body.dark-theme .bottom-nav {
-    /* Tương tự, hắt bóng đổ ngược lên trên cho nền tối */
-    box-shadow: 0 -10px 25px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05) !important;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.05) !important;
 }
 
+/* [CẢI TIẾN 1: GOOEY INDICATOR] Khối nền di chuyển */
+.nav-indicator {
+    position: absolute;
+    top: 50%;
+    left: 0; 
+    height: 54px; /* Cao gần bằng Dock */
+    background: rgba(67, 97, 238, 0.1);
+    border-radius: 27px; /* Nửa hình tròn */
+    
+    /* Dịch chuyển mặc định và hiệu ứng lò xo */
+    transform: translateY(-50%) translateX(8px);
+    transition: transform 0.4s var(--spring-ios), width 0.4s var(--spring-ios);
+    z-index: -1; /* Nằm dưới Icon */
+    pointer-events: none;
+}
 
+body.dark-theme .nav-indicator {
+    background: rgba(130, 159, 255, 0.15);
+}
 
-/* Ép Nút Thêm Nhanh (FAB / Dấu cộng) ngoi lên cao, hoàn toàn thoát khỏi viên thuốc */
-.fab-button, .fab-container {
-    bottom: 95px !important; 
+/* Fix z-index cho nav-item để nó nổi lên trên cục thạch */
+.nav-item {
+    position: relative;
+    z-index: 1;
 }
 
 
@@ -1263,8 +1339,8 @@ body.dark-theme .bottom-nav {
 /* Điều chỉnh lại Khung nền để nội dung trượt qua bên dưới Nav và Dock */
 .app-container {
     padding-top: 80px !important; 
-    padding-bottom: 110px !important;
-    /* Thêm transition để chuẩn bị cho hiệu ứng 3D ở bước sau */
+    /* Bơm đệm từ trường kháng lẹm nội dung */
+    padding-bottom: var(--dynamic-dock-padding, 110px) !important;
     transition: transform 0.4s var(--spring-ios), border-radius 0.4s var(--spring-ios);
     transform-origin: center 10%; 
     background-color: var(--bg-color);
@@ -1417,37 +1493,40 @@ body.dark-theme .numpad-grid .np-btn.np-back {
 /* =========================================
    NÚT NĂNG LƯỢNG THỦY NGÂN (LIQUID MORPHING FAB)
    ========================================= */
+/* 1. NỚI RỘNG KHUNG BAO ĐỂ KHÔNG BỊ CẮT XÉN SVG (CLIPPING) */
 .fab-container {
     position: fixed;
-    bottom: 105px; right: 20px;
-    width: 60px; height: 200px; 
+    bottom: 55px !important; /* Hạ thấp khung bao xuống */
+    right: 0px;              /* Kéo sát lề phải */
+    width: 100px;            /* Nới rộng chiều ngang (cũ là 60px) */
+    height: 260px;           /* Nới rộng chiều cao (cũ là 200px) */
     z-index: 999;
     pointer-events: none; 
     transition: opacity 0.3s, transform 0.3s;
-    
-    /* BẢO VỆ NÚT KHỎI HIỆU ỨNG NHẤP NHÁY KHI ĐỔI TAB */
     view-transition-name: main-fab;
 }
-.fab-container.hide { transform: scale(0) rotate(-90deg); opacity: 0; }
 
 .fab-gooey-wrapper {
     position: absolute; bottom: 0; right: 0;
     width: 100%; height: 100%;
-    filter: url('#gooey'); /* Sử dụng lại bộ lọc thủy tinh lỏng đã có ở thẻ Card */
-    pointer-events: none; /* ĐÃ SỬA: Cho phép bấm xuyên qua vùng trống */
+    filter: url('#gooey'); /* Bộ lọc thủy tinh lỏng */
+    pointer-events: none;
 }
 
+/* 2. BÙ LẠI TỌA ĐỘ ĐỂ NÚT VẪN HIỂN THỊ ĐÚNG VỊ TRÍ GỐC BÊN NGOÀI MÀN HÌNH */
 .fab-main, .fab-child {
-    position: absolute; bottom: 0; right: 0;
+    position: absolute; 
     border: none; border-radius: 50%;
     color: white; display: flex; align-items: center; justify-content: center;
     transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), background 0.3s;
     cursor: pointer;
-	pointer-events: auto;
+    pointer-events: auto;
 }
 
 .fab-main {
     width: 56px; height: 56px;
+    right: 20px;  /* Bù lại khoảng nới rộng lề phải */
+    bottom: 40px; /* Bù lại khoảng nới thấp đáy */
     background: var(--primary);
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     z-index: 3;
@@ -1456,17 +1535,44 @@ body.dark-theme .numpad-grid .np-btn.np-back {
 .fab-main svg { width: 26px; height: 26px; transition: 0.3s; }
 
 .fab-child {
-    width: 48px; height: 48px; right: 4px; bottom: 4px;
-    z-index: 2; opacity: 1; /* Phải để opacity 1 thì mới có hiệu ứng dính */
+    width: 48px; height: 48px; 
+    right: 24px;  /* (20px bù lề + 4px khoảng cách gốc) */
+    bottom: 44px; /* (40px bù lề + 4px khoảng cách gốc) */
+    z-index: 2; opacity: 1; 
 }
+
 .fab-expense { background: var(--danger); }
 .fab-income { background: var(--success); }
 
-/* Khi click, các giọt nước bắn lên trên */
-.fab-container.active .fab-expense { transform: translateY(-70px) scale(1); }
-.fab-container.active .fab-income { transform: translateY(-130px) scale(1); }
+/* 3. TĂNG KHOẢNG CÁCH BAY ĐỂ 2 NÚT "ĐỨT" HOÀN TOÀN KHỎI LỰC HÚT THỦY TINH */
+.fab-container.active .fab-expense { transform: translateY(-85px) scale(1); }
+.fab-container.active .fab-income { transform: translateY(-155px) scale(1); }
+/* 4. TRẠNG THÁI BIẾN HÌNH THÀNH NÚT CUỘN LÊN (SCROLL TO TOP) */
+.fab-container.mode-scroll-top .fab-main {
+    background: var(--text-main); /* Đổi màu xám đen bóng bẩy */
+    transform: scale(0.85) !important; /* Thu nhỏ lại một chút cho tinh tế */
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
 
+/* Hoán đổi Icon bên trong */
+.fab-container.mode-scroll-top .fab-main .icon-add { 
+    display: none; 
+}
+.fab-container.mode-scroll-top .fab-main .icon-up { 
+    display: block !important; 
+    animation: popUpIcon 0.4s var(--spring-ios); 
+}
 
+/* Khóa chặt các giọt nước con (Thu/Chi) không cho bắn ra ngoài khi cuộn */
+.fab-container.mode-scroll-top .fab-child { 
+    display: none !important; 
+}
+
+/* Hiệu ứng Mũi tên nảy lên mượt mà */
+@keyframes popUpIcon {
+    0% { transform: translateY(15px) scale(0.5); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+}
 /* =========================================
    DỊCH CHUYỂN KHÔNG GIAN NGUYÊN KHỐI (VIEW TRANSITIONS API) - FIXED
    ========================================= */
@@ -1637,4 +1743,23 @@ body.theme-default:not(.dark-theme) .transaction-item.swipe-front {
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     background: rgba(0,0,0,0.4) !important;
+}
+/* =========================================
+   SVG MICRO-ANIMATIONS: HIỆU ỨNG TỰ VẼ NÉT (STROKE DRAW)
+   ========================================= */
+.nav-item.active svg path,
+.nav-item.active svg line,
+.nav-item.active svg polyline,
+.nav-item.active svg circle,
+.nav-item.active svg rect {
+    stroke-dasharray: 150;
+    stroke-dashoffset: 150;
+    /* Chạy hiệu ứng vẽ trong 0.55 giây với gia tốc tùy chỉnh */
+    animation: drawStroke 0.55s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes drawStroke {
+    0% { stroke-dashoffset: 150; opacity: 0; }
+    10% { opacity: 1; }
+    100% { stroke-dashoffset: 0; opacity: 1; }
 }

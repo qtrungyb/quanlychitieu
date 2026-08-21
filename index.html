@@ -7,13 +7,16 @@
             window.location.replace('intro.html');
         }
     </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Quản lý chi tiêu</title>
+    <!-- TỐI ƯU KẾT NỐI MẠNG TỪ SỚM -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+
     <!-- FLATPICKR (DATE PICKER) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://npmcdn.com/flatpickr/dist/l10n/vn.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/vn.js" defer></script>
     <!-- LIÊN KẾT FILE CSS CHÍNH -->
     <link rel="stylesheet" href="css/style.css">
     <style>
@@ -302,12 +305,12 @@
     </style>
 
     <!-- SDK FIREBASE -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js" defer></script>
     <!-- THƯ VIỆN BÊN THỨ 3 -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#4361ee">
     <link rel="apple-touch-icon" href="./icon-192.png">
@@ -1268,7 +1271,7 @@
     </div>
 </div>
 <!-- SCRIPTS -->
-<script src="js/config.js"></script>
+<script src="js/config.js" defer></script>
 <!-- PATCH FIX: Mở khóa click cho nút Sửa/Xóa khi vuốt lịch sử -->
     <script>
         const originalAddEventListener = EventTarget.prototype.addEventListener;
@@ -1286,7 +1289,7 @@
             return originalAddEventListener.call(this, type, listener, options);
         };
     </script>
-<script src="js/app.js"></script>
+<script src="js/app.js" defer></script>
 
 <!-- POPUP MỞ KHÓA HUY HIỆU MỚI -->
 <div class="overlay hide" id="badgePopupOverlay" style="z-index: 9999;"></div>
@@ -1337,37 +1340,7 @@
         }
     });
 </script>
-<!-- SCRIPT CHUYÊN SÂU: MỞ KHÓA NÚT TẢI THÊM -->
-<script>
-    // Đăng ký sự kiện click ở mức Document với Capture Phase (true) 
-    // để chộp lấy cú click trước khi nó bị cảm biến vuốt chặn lại
-    document.addEventListener('click', function(e) {
-        const loadMoreBtn = e.target.closest('.btn-load-more');
-        
-        if (loadMoreBtn) {
-            // Dừng sự kiện truyền xuống các lớp dưới
-            e.preventDefault();
-            e.stopPropagation(); 
-            
-            // Xử lý logic tải thêm
-            if (typeof currentDateLimit !== 'undefined' && typeof updateUI === 'function') {
-                const oldLimit = currentDateLimit;
-                currentDateLimit += 3; // Nới rộng thêm 3 ngày
-                
-                // Thay đổi text để tạo phản hồi thị giác
-                loadMoreBtn.innerText = 'Đang tải...';
-                loadMoreBtn.style.opacity = '0.5';
-                
-                // Cập nhật lại UI sau 1 nhịp ngắn
-                setTimeout(() => {
-                    updateUI();
-                    // Cuộn nhẹ xuống để người dùng thấy dữ liệu mới
-                    window.scrollBy({ top: 100, behavior: 'smooth' });
-                }, 100);
-            }
-        }
-    }, true);
-</script>
+
 <!-- SCRIPT TÍNH TOÁN VÀ HIỂN THỊ HẠN MỨC NGÂN SÁCH (BUDGET LIMIT) -->
 <script>
     window.renderBudgets = function() {

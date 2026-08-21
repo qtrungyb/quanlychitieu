@@ -37,23 +37,22 @@ input, textarea {
 }
 
 /* Phủ màu nền cho toàn bộ khung xương trình duyệt để triệt tiêu vạch đen */
-html {
-    background-color: var(--bg-color);
-}
-
-body { 
+html, body { 
     background-color: var(--bg-color); 
     color: var(--text-main); 
+    
+    /* Ép Safari phủ kín không gian tuyệt đối, xóa sổ mọi khe hở */
+    min-height: 100vh;
+    min-height: -webkit-fill-available; 
+}
+
+body {
     display: flex; justify-content: center; 
     overflow-x: hidden;
-    
-    /* UX NATIVE APP: Khóa chết hiệu ứng nảy cao su (Rubber-banding) ở đầu/cuối trang */
     overscroll-behavior-y: none;
     overscroll-behavior-x: none;
-    
-    /* Đảm bảo App luôn dài chạm đáy */
-    min-height: 100vh;
 }
+
 
 
 .app-container { 
@@ -1216,15 +1215,20 @@ body.dark-theme {
     backdrop-filter: blur(24px) saturate(150%);
     -webkit-backdrop-filter: blur(24px) saturate(150%);
     border: 1px solid var(--sync-glass-border) !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.3) !important;
+    
+    /* Thu gọn bóng đổ, không cho hắt xuống đáy (đổi 0 10px thành 0 0, giảm độ đen còn 0.06) */
+    box-shadow: 0 0 20px rgba(0,0,0,0.06), inset 0 1px 1px rgba(255,255,255,0.3) !important;
+
     
     display: flex; justify-content: space-around; align-items: center;
     z-index: 900; padding: 0 8px;
 }
 
 body.dark-theme .bottom-nav {
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.05) !important;
+    /* Thu gọn bóng đổ cho Dark Mode */
+    box-shadow: 0 0 20px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05) !important;
 }
+
 
 /* Ép Nút Thêm Nhanh (FAB / Dấu cộng) ngoi lên cao, hoàn toàn thoát khỏi viên thuốc */
 .fab-button, .fab-container {

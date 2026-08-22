@@ -1343,12 +1343,41 @@ document.getElementById('catBudgetDisplay')?.addEventListener('input', function(
     this.value = formatter.format(parseInt(val));
 });
 document.querySelectorAll('.btn-quick').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
         const addVal = parseInt(btn.getAttribute('data-val'));
         let currentRaw = amountInputRaw?.value ? parseInt(amountInputRaw.value) : 0;
         currentRaw += addVal; 
+        
         if (amountInputRaw) amountInputRaw.value = currentRaw; 
         if (amountInputDisplay) amountInputDisplay.value = formatter.format(currentRaw);
+        
+        // --- 1. GỌI HÀM DỊCH SỐ THÀNH CHỮ ---
+        updateAmountTextVN(currentRaw);
+
+        // --- 2. HIỆU ỨNG BỌT NƯỚC (FLOATING DAMAGE) ---
+        const rect = btn.getBoundingClientRect();
+        const damage = document.createElement('div');
+        damage.className = 'floating-damage';
+        
+        // Viết tắt số (ví dụ: +50K)
+        damage.innerText = '+' + (addVal >= 1000 ? (addVal/1000) + 'K' : addVal);
+        
+        // Đổi màu theo loại giao dịch đang chọn
+        const type = document.getElementById('typeInput')?.value || 'expense';
+        damage.style.color = type === 'income' ? 'var(--success)' : 'var(--danger)';
+
+        // Đặt vị trí xuất phát ngay trên đỉnh của nút được bấm
+        damage.style.left = `${rect.left + rect.width / 2 - 15}px`;
+        damage.style.top = `${rect.top}px`;
+        document.body.appendChild(damage);
+
+        // Rung Haptic mạnh tạo cảm giác "chạm vật lý"
+        if (navigator.vibrate) navigator.vibrate(15);
+
+        // Xóa phần tử khỏi DOM sau khi bay xong (0.8s)
+        setTimeout(() => damage.remove(), 800);
+        // ----------------------------------------------
+
         currentDateLimit = DATES_PER_PAGE;
         updateUI();
     });
@@ -4561,91 +4590,7 @@ document.getElementById('btnSaveAllBudgets')?.addEventListener('click', () => {
         if(btn) { btn.innerText = 'Lưu tất cả hạn mức'; btn.disabled = false; }
     });
 });
-// ==========================================
-// TÍNH NĂNG: CHUỖI NGÀY GHI CHÉP (STREAK & BADGES)
-// ==========================================
-function calculateStreak() {
-    if (!transactions || transactions.length === 0) {
-        updateStreakUI(0);
-        return;
-    }
 
-    // 1. Lọc ra danh sách các ngày có phát sinh thu/chi (Loại bỏ các giao dịch lỗi/trống)
-    const validTxs = transactions.filter(t => t.type === 'income' || t.type === 'expense');
-    const uniqueDates = [...new Set(validTxs.map(t => t.date))].sort().reverse();
-    
-    if (uniqueDates.length === 0) {
-        updateStreakUI(0);
-        return;
-    }
-
-    // 2. Thuật toán ngày tháng
-    const today = new Date();
-    // Hàm định dạng ngày chuẩn yyyy-mm-dd
-    const formatDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    
-    const todayStr = formatDate(today);
-    
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = formatDate(yesterday);
-
-    let streak = 0;
-    let checkDate = new Date(today);
-
-    // LUẬT TÍNH CHUỖI:
-    // Nếu hôm nay chưa ghi, nhưng hôm qua CÓ ghi -> Chuỗi vẫn được bảo lưu (đang chờ ghi hôm nay)
-    if (uniqueDates.includes(todayStr)) {
-        checkDate = new Date(today); // Bắt đầu lùi từ hôm nay
-    } else if (uniqueDates.includes(yesterdayStr)) {
-        checkDate = new Date(yesterday); // Bắt đầu lùi từ hôm qua
-    } else {
-        // Quá 2 ngày không ghi chép -> Gãy chuỗi
-        updateStreakUI(0);
-        return;
-    }
-
-    // Vòng lặp đếm ngược từng ngày về quá khứ
-    while (true) {
-        const checkStr = formatDate(checkDate);
-        if (uniqueDates.includes(checkStr)) {
-            streak++; // Cộng thêm 1 ngày vào chuỗi
-            checkDate.setDate(checkDate.getDate() - 1); // Lùi tiếp 1 ngày về trước
-        } else {
-            break; // Ngày này không có giao dịch -> Kết thúc đếm
-        }
-    }
-
-    updateStreakUI(streak);
-}
-
-// Cập nhật giao diện ngọn lửa
-function updateStreakUI(streak) {
-    const badge = document.getElementById('streakBadge');
-    const countSpan = document.getElementById('streakCount');
-    if (!badge || !countSpan) return;
-
-    if (streak > 0) {
-        countSpan.innerText = streak;
-        badge.style.display = 'flex';
-        badge.title = `Bạn đã ghi chép ${streak} ngày liên tiếp!`;
-        
-        // Hiệu ứng ăn mừng nhẹ nếu đạt mốc đẹp (Tùy chọn)
-        if(streak % 7 === 0) {
-            badge.style.transform = 'scale(1.1)';
-            setTimeout(() => badge.style.transform = 'scale(1)', 400);
-        }
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
-// 3. Móc nối ngầm vào hệ thống tải dữ liệu hiện tại
-const originalUpdateUIForStreak = updateUI;
-updateUI = function() {
-    originalUpdateUIForStreak(); // Chạy bản gốc để vẽ danh sách
-    calculateStreak();           // Chạy thêm thuật toán tính chuỗi ngọn lửa
-};
 // ==========================================
 // TÍNH NĂNG: NÚT THÊM NHANH (FAB - FLOATING ACTION BUTTON)
 // ==========================================
@@ -5289,11 +5234,23 @@ function updateNpDisplay() {
             
             if (mainAmtDisp && !isNaN(tempResult)) mainAmtDisp.value = formatter.format(tempResult);
             if (mainAmtRaw && !isNaN(tempResult)) mainAmtRaw.value = tempResult;
+            
+            // ---> THÊM DÒNG NÀY ĐỂ BÀN PHÍM CŨNG DỊCH CHỮ <---
+            updateAmountTextVN(tempResult);
+
         } else if (!tempExpr) {
             if (mainAmtDisp) mainAmtDisp.value = '';
             if (mainAmtRaw) mainAmtRaw.value = '';
+            updateAmountTextVN(0); // Xóa dòng chữ khi ô nhập liệu trống
         }
     } catch(e) {}
+}
+
+// Bổ sung: Khi Reset form cũng xóa dòng chữ đi
+const originalResetFormState = window.resetFormState;
+window.resetFormState = function() {
+    if (originalResetFormState) originalResetFormState();
+    updateAmountTextVN(0);
 }
 
 function finalizeCalculation() {
@@ -5354,7 +5311,7 @@ function renderRecentTransactions() {
                 <!-- SỬA ĐỔI: Thêm nút Undo bên phải số tiền -->
                 <div style="display: flex; align-items: center;">
                     <div class="mini-tx-amount ${amountClass}" style="font-weight: 800;">${amountPrefix}${formatter.format(t.amount)}đ</div>
-                    <button class="btn-undo-tx" onclick="undoTransaction(${t.id}, '${t.date}')" title="Hoàn tác (Sửa lại)">
+                    <button type="button" class="btn-undo-tx" onclick="undoTransaction(${t.id}, '${t.date}')" title="Hoàn tác (Sửa lại)">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path></svg>
                     </button>
                 </div>
@@ -5689,56 +5646,7 @@ if (typeof updateUI === 'function') {
         setTimeout(renderCardSparkline, 200); // Delay nhẹ 200ms chờ số dư tính xong
     };
 }
-// ==========================================
-// TÍNH NĂNG: VÒNG NĂNG LƯỢNG AVATAR (HEALTH RING)
-// ==========================================
-function updateAvatarHealthRing() {
-    const btnAvatar = document.getElementById('btnAvatar');
-    if (!btnAvatar) return;
 
-    // 1. Tính tổng Thu / Chi của riêng THÁNG HIỆN TẠI
-    const today = new Date();
-    const startOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
-    const endOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-31`;
-
-    let thisMonthIncome = 0;
-    let thisMonthExpense = 0;
-
-    if (typeof transactions !== 'undefined') {
-        transactions.forEach(t => {
-            if (t.date >= startOfMonth && t.date <= endOfMonth) {
-                if (t.type === 'income') thisMonthIncome += t.amount;
-                if (t.type === 'expense') thisMonthExpense += t.amount;
-            }
-        });
-    }
-
-    // 2. Gỡ bỏ trạng thái màu cũ
-    btnAvatar.classList.remove('health-good', 'health-danger');
-
-    // 3. Đánh giá sức khỏe tài chính và kích hoạt màu
-    if (thisMonthExpense > 0 && thisMonthExpense > thisMonthIncome) {
-        // Cảnh báo: Tiêu nhiều hơn kiếm được
-        btnAvatar.classList.add('health-danger'); 
-    } else {
-        // An toàn: Cân bằng hoặc đang dư dả
-        btnAvatar.classList.add('health-good'); 
-    }
-}
-
-// 4. Móc ngầm vào hệ thống tải dữ liệu hiện tại
-if (typeof updateUI === 'function') {
-    const originalUpdateUIForHealthRing = updateUI;
-    updateUI = function() {
-        originalUpdateUIForHealthRing();
-        setTimeout(updateAvatarHealthRing, 250); // Delay nhẹ 250ms chờ số liệu tải xong
-    };
-}
-
-// Kích hoạt ngay lần đầu mở app
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(updateAvatarHealthRing, 1000); 
-});
 // ==========================================
 // TÍNH NĂNG: KỆ THẺ LƯỚT 3D (APPLE WALLET CAROUSEL)
 // ==========================================
@@ -6370,4 +6278,202 @@ const initAuraTracking = () => {
 window.addEventListener('DOMContentLoaded', initAuraTracking);
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
     initAuraTracking();
+}
+// ==========================================
+// THUẬT TOÁN ĐỌC SỐ TIẾNG VIỆT & BỌT NƯỚC (FLOATING DAMAGE)
+// ==========================================
+
+// 1. Hàm dịch số thành chữ chuẩn xác
+function readNumberVN(number) {
+    if (number === 0 || isNaN(number)) return '';
+    const m = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+    const units = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ'];
+    
+    function docSo3ChuSo(baso) {
+        let tram = Math.floor(baso / 100);
+        let chuc = Math.floor((baso % 100) / 10);
+        let donvi = baso % 10;
+        let ketqua = "";
+        
+        if (tram !== 0) ketqua += m[tram] + " trăm ";
+        if (chuc !== 0 && chuc !== 1) {
+            ketqua += m[chuc] + " mươi ";
+            if (chuc === 0 && donvi !== 0) ketqua += "lẻ ";
+        }
+        if (chuc === 1) ketqua += "mười ";
+        switch (donvi) {
+            case 1: if (chuc !== 0 && chuc !== 1) ketqua += "mốt "; else ketqua += m[donvi] + " "; break;
+            case 5: if (chuc === 0) ketqua += m[donvi] + " "; else ketqua += "lăm "; break;
+            default: if (donvi !== 0) ketqua += m[donvi] + " "; break;
+        }
+        return ketqua.trim();
+    }
+
+    let numStr = number.toString();
+    let result = '';
+    let unitIdx = 0;
+
+    while (numStr.length > 0) {
+        let chunk = numStr.length > 3 ? numStr.slice(-3) : numStr;
+        numStr = numStr.slice(0, -chunk.length);
+        
+        let chunkVal = parseInt(chunk, 10);
+        if (chunkVal > 0) {
+            let chunkText = docSo3ChuSo(chunkVal);
+            // Xử lý đọc "không trăm" nếu khối có số lượng chữ số < 3 nhưng nằm ở giữa
+            if (chunk.length === 3 && chunk[0] === '0' && numStr.length > 0) {
+                chunkText = "không trăm " + (chunkVal < 10 ? "lẻ " : "") + chunkText;
+            }
+            result = chunkText + " " + units[unitIdx] + " " + result;
+        }
+        unitIdx++;
+    }
+
+    result = result.trim() + " đồng";
+    return result.charAt(0).toUpperCase() + result.slice(1);
+}
+
+// 2. Hàm in chữ ra giao diện
+window.updateAmountTextVN = function(val) {
+    const textEl = document.getElementById('amountTextVN');
+    if (!textEl) return;
+    if (!val || val === 0) {
+        textEl.classList.add('hide');
+        textEl.innerText = '';
+    } else {
+        textEl.classList.remove('hide');
+        textEl.innerText = readNumberVN(val);
+    }
+}
+// ==========================================
+// THUẬT TOÁN: NÚT XÓA NHANH THÔNG MINH
+// ==========================================
+
+// 1. Hàm điều khiển ẩn/hiện nút Xóa
+window.toggleClearAmountBtn = function(val) {
+    const btn = document.getElementById('btnClearAmount');
+    if (!btn) return;
+    if (val && parseInt(val) > 0) {
+        btn.classList.remove('hide');
+    } else {
+        btn.classList.add('hide');
+    }
+};
+
+// 2. Bắt sự kiện chạm vào nút X
+const btnClearAmount = document.getElementById('btnClearAmount');
+if (btnClearAmount) {
+    // Đổi 'pointerdown' thành 'click' để đồng bộ và chặn chính xác sự kiện 'click' của thẻ cha
+    btnClearAmount.addEventListener('click', (e) => {
+        e.preventDefault();   
+        e.stopPropagation();  // BÂY GIỜ LỆNH NÀY MỚI THỰC SỰ PHÁT HUY TÁC DỤNG CHẶN BÀN PHÍM
+        
+        const mainAmtDisp = document.getElementById('amountInputDisplay');
+        const mainAmtRaw = document.getElementById('amountInputRaw');
+        
+        // Trả mọi thứ về 0
+        if (mainAmtDisp) mainAmtDisp.value = '';
+        if (mainAmtRaw) mainAmtRaw.value = '';
+        
+        // Cắt đứt bộ nhớ của bàn phím Numpad (Chống lỗi lưu số cũ)
+        if (typeof npExpression !== 'undefined') npExpression = '';
+        const npExprDisplay = document.getElementById('numpadExpression');
+        if (npExprDisplay) npExprDisplay.innerText = '0';
+        
+        // Reset chữ tiếng Việt và Ẩn nút X
+        if (typeof updateAmountTextVN === 'function') updateAmountTextVN(0);
+        toggleClearAmountBtn(0);
+        
+        if (navigator.vibrate) navigator.vibrate(10);
+    });
+}
+
+// 3. Nâng cấp hàm Bàn phím để tự động hiện nút Xóa
+updateNpDisplay = function() {
+    const npExprDisplay = document.getElementById('numpadExpression');
+    const mainAmtDisp = document.getElementById('amountInputDisplay');
+    const mainAmtRaw = document.getElementById('amountInputRaw');
+
+    if (npExprDisplay) npExprDisplay.innerText = npExpression || '0';
+    
+    try {
+        let tempExpr = npExpression.replace(/×/g, '*').replace(/÷/g, '/');
+        if (tempExpr && !['+', '-', '*', '/'].includes(tempExpr.slice(-1))) {
+            let tempResult = new Function('return ' + tempExpr)();
+            tempResult = Math.max(0, Math.round(tempResult)); 
+            
+            if (mainAmtDisp && !isNaN(tempResult)) mainAmtDisp.value = formatter.format(tempResult);
+            if (mainAmtRaw && !isNaN(tempResult)) mainAmtRaw.value = tempResult;
+            
+            if (typeof updateAmountTextVN === 'function') updateAmountTextVN(tempResult);
+            toggleClearAmountBtn(tempResult); // Kích hoạt nút Xóa
+
+        } else if (!tempExpr) {
+            if (mainAmtDisp) mainAmtDisp.value = '';
+            if (mainAmtRaw) mainAmtRaw.value = '';
+            
+            if (typeof updateAmountTextVN === 'function') updateAmountTextVN(0);
+            toggleClearAmountBtn(0); // Ẩn nút Xóa
+        }
+    } catch(e) {}
+}
+
+// 4. Gắn Nút Xóa vào sự kiện Nút Cộng Nhanh (+50K)
+document.querySelectorAll('.btn-quick').forEach(btn => {
+    // Vô hiệu hóa event cũ để tránh cộng nhồi đúp
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    
+    newBtn.addEventListener('click', (e) => {
+        const mainAmtDisp = document.getElementById('amountInputDisplay');
+        const mainAmtRaw = document.getElementById('amountInputRaw');
+
+        const addVal = parseInt(newBtn.getAttribute('data-val'));
+        let currentRaw = mainAmtRaw?.value ? parseInt(mainAmtRaw.value) : 0;
+        currentRaw += addVal; 
+        
+        if (mainAmtRaw) mainAmtRaw.value = currentRaw; 
+        if (mainAmtDisp) mainAmtDisp.value = formatter.format(currentRaw);
+        
+        // Đồng bộ ngược lại cho biến Numpad
+        if (typeof npExpression !== 'undefined') npExpression = currentRaw.toString();
+        
+        if (typeof updateAmountTextVN === 'function') updateAmountTextVN(currentRaw);
+        toggleClearAmountBtn(currentRaw); // Kích hoạt nút xóa
+        
+        // Bọt nước
+        const rect = newBtn.getBoundingClientRect();
+        const damage = document.createElement('div');
+        damage.className = 'floating-damage';
+        damage.innerText = '+' + (addVal >= 1000 ? (addVal/1000) + 'K' : addVal);
+        const type = document.getElementById('typeInput')?.value || 'expense';
+        damage.style.color = type === 'income' ? 'var(--success)' : 'var(--danger)';
+        damage.style.left = `${rect.left + rect.width / 2 - 15}px`;
+        damage.style.top = `${rect.top}px`;
+        document.body.appendChild(damage);
+
+        if (navigator.vibrate) navigator.vibrate(15);
+        setTimeout(() => damage.remove(), 800);
+
+        if(typeof DATES_PER_PAGE !== 'undefined') currentDateLimit = DATES_PER_PAGE;
+        if(typeof updateUI === 'function') updateUI();
+    });
+});
+
+// 5. Gắn Nút Xóa vào Hàm Reset Form 
+const originalResetFormState2 = window.resetFormState;
+window.resetFormState = function() {
+    if (originalResetFormState2) originalResetFormState2();
+    if (typeof npExpression !== 'undefined') npExpression = ''; // Reset bàn phím
+    toggleClearAmountBtn(0); // Ẩn nút Xóa
+};
+
+// 6. Gắn Nút Xóa vào lệnh Hoàn tác (Undo)
+const originalUndoTx = window.undoTransaction;
+if (originalUndoTx) {
+    window.undoTransaction = function(id, dateStr) {
+        originalUndoTx(id, dateStr); // Chạy Undo gốc
+        const amtRaw = document.getElementById('amountInputRaw');
+        if (amtRaw && amtRaw.value) toggleClearAmountBtn(amtRaw.value); // Bật X
+    };
 }

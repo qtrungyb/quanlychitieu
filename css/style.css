@@ -606,19 +606,6 @@ body.dark-theme .box-bal .sc-val { color: var(--text-main); }
 body.dark-theme .date-group-header { background: rgba(18, 18, 18, 0.98); border-bottom-color: #2d3748; }
 
 .user-menu { position: relative; }
-.status-indicator {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 12px;
-    height: 12px;
-    background-color: var(--success);
-    border: 2px solid #fff;
-    border-radius: 50%;
-    z-index: 10;
-    transition: 0.3s;
-}
-body.dark-theme .status-indicator { border-color: var(--card-bg); }
 
 #avatarImg { transition: opacity 0.3s ease; background: #f1f3f5; }
 .avatar-edit-wrapper {
@@ -729,66 +716,7 @@ body.dark-theme #formCard.theme-income:focus-within {
     pointer-events: none; /* Khóa click để không chạm nhầm */
     mix-blend-mode: overlay; /* Hòa trộn ánh sáng siêu đẹp với luồng Aura nền */
 }
-/* =========================================
-   VÒNG NĂNG LƯỢNG AVATAR (DYNAMIC HEALTH RING)
-   ========================================= */
-.avatar-btn {
-    position: relative;
-    border-radius: 50%;
-    z-index: 10;
-    overflow: visible !important; /* Mở khóa tràn viền để vòng sáng tỏa ra ngoài */
-}
 
-/* Ép ảnh đại diện luôn tròn và nằm trên vòng sáng */
-.avatar-btn img {
-    position: relative;
-    z-index: 2;
-    border-radius: 50%;
-    background: #fff; 
-    width: 100%; height: 100%; object-fit: cover;
-}
-
-/* Cấu trúc Vòng sáng nằm ngầm bên dưới ảnh */
-.avatar-btn::before {
-    content: '';
-    position: absolute;
-    top: -4px; left: -4px; right: -4px; bottom: -4px; /* Độ dày của vòng sáng: 4px */
-    border-radius: 50%;
-    z-index: 1;
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    pointer-events: none;
-}
-
-/* 1. Trạng thái KHỎE MẠNH (Xanh lá - Xoay êm ái) */
-.avatar-btn.health-good::before {
-    opacity: 1;
-    background: conic-gradient(from 0deg, transparent 0%, rgba(46, 204, 113, 0.1) 40%, rgba(46, 204, 113, 0.8) 80%, rgba(46, 204, 113, 1) 100%);
-    animation: ringSpinSmooth 3s linear infinite;
-    box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
-}
-
-/* 2. Trạng thái BÁO ĐỘNG (Đỏ - Xoay giật cục chập điện) */
-.avatar-btn.health-danger::before {
-    opacity: 1;
-    background: conic-gradient(from 0deg, transparent 0%, rgba(231, 76, 60, 0.2) 30%, rgba(231, 76, 60, 0.9) 70%, rgba(231, 76, 60, 1) 100%);
-    animation: ringSpinGlitch 0.6s steps(3, end) infinite;
-    box-shadow: 0 0 15px rgba(231, 76, 60, 0.5), inset 0 0 5px rgba(231, 76, 60, 0.5);
-}
-
-/* Keyframes cho vòng sáng quay */
-@keyframes ringSpinSmooth {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Keyframes cho hiệu ứng chập điện (Glitch) */
-@keyframes ringSpinGlitch {
-    0% { transform: rotate(0deg) scale(1); }
-    33% { transform: rotate(120deg) scale(1.1); filter: hue-rotate(-15deg); }
-    66% { transform: rotate(240deg) scale(0.9); filter: hue-rotate(15deg); }
-    100% { transform: rotate(360deg) scale(1.05); }
-}
 /* =========================================
    KỆ THẺ LƯỚT 3D (APPLE WALLET CAROUSEL)
    ========================================= */
@@ -1742,4 +1670,85 @@ body.theme-default:not(.dark-theme) .bottom-nav {
 .fab-container {
     bottom: 85px !important;
     margin-bottom: 0 !important;
+}
+/* =========================================
+   CẢI TIẾN: BỌT NƯỚC (FLOATING DAMAGE) & ĐỌC SỐ
+   ========================================= */
+
+/* Hiệu ứng bọt nước nảy lên từ nút cộng nhanh */
+.floating-damage {
+    position: fixed; /* Dùng fixed để bay tự do trên màn hình */
+    font-weight: 800;
+    font-size: 16px;
+    pointer-events: none;
+    z-index: 99999;
+    animation: floatUpFade 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+@keyframes floatUpFade {
+    0% { transform: translateY(0) scale(0.5); opacity: 0; }
+    20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+    100% { transform: translateY(-50px) scale(1); opacity: 0; }
+}
+
+/* Định dạng chữ Đọc số */
+.amount-text-vn {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 6px;
+    margin-bottom: -6px; /* Bù trừ lề để không làm form phình to */
+    font-style: italic;
+    text-align: right;
+    padding-right: 4px;
+    transition: opacity 0.3s ease;
+}
+
+body.dark-theme .amount-text-vn {
+    color: #64748b;
+}
+
+/* =========================================
+   CẢI TIẾN: NÚT XÓA NHANH TRONG Ô NHẬP TIỀN
+   ========================================= */
+.btn-clear-amount {
+    position: absolute;
+    right: 40px; /* Nằm ngay trước chữ 'đ' */
+    width: 24px;
+    height: 24px;
+    background: #f1f5f9;
+    color: #94a3b8;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s var(--spring-ios);
+    z-index: 10;
+}
+.btn-clear-amount:active {
+    background: #e2e8f0;
+    transform: scale(0.85);
+}
+.btn-clear-amount svg {
+    width: 14px;
+    height: 14px;
+}
+/* Trạng thái ẩn: Thu nhỏ và tàng hình */
+.btn-clear-amount.hide {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.5);
+}
+
+/* Chống đè số vào nút X */
+.form-control.input-amount {
+    padding-right: 72px !important;
+}
+
+/* Chế độ tối */
+body.dark-theme .btn-clear-amount {
+    background: #334155;
+    color: #cbd5e1;
 }

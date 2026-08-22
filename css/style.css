@@ -1911,3 +1911,13 @@ body.dark-theme .bottom-nav::before {
 .bottom-nav.is-tracking::before {
     opacity: 1; 
 }
+/* =========================================
+   [FIX LỖI KHỰNG] TỐI ƯU CỤC THẠCH TRƯỢT
+   ========================================= */
+.nav-indicator {
+    /* Tách khỏi hiệu ứng chuyển trang chung để trình duyệt không chụp ảnh lỗi */
+    view-transition-name: jelly-indicator;
+    
+    /* Chốt cứng gia tốc chuẩn của iOS, xóa các lệnh ghi đè lỗi */
+    transition: transform 0.4s var(--spring-ios), width 0.4s var(--spring-ios) !important;
+}

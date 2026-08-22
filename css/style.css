@@ -387,72 +387,6 @@ body.dark-theme .wallet-card::before { opacity: 0.4; }
 body.dark-theme .hero-kpi .kpi-desc { background: var(--card-bg); border-color: #2d3748; }
 body.dark-theme .kpi-card { background-color: var(--card-bg) !important; border: 1px solid #2d3748; }
 
-/* =========================================
-   9. BOTTOM NAVIGATION BAR
-   ========================================= */
-.bottom-nav {
-    position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #fff;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.05); display: flex; justify-content: space-around;
-    align-items: center; z-index: 900; padding-bottom: env(safe-area-inset-bottom); border-radius: 24px 24px 0 0;
-}
-/* =========================================
-   UX CẢI TIẾN: ACTIVE TEXT REVEAL (GIÃN NỞ TRỌNG TÂM)
-   ========================================= */
-.nav-item {
-    display: flex; 
-    flex-direction: row; 
-    align-items: center; 
-    justify-content: center;
-    color: #94a3b8; 
-    cursor: pointer;
-    flex: 1; 
-    padding: 0; /* Xóa padding cũ để căn giữa hoàn toàn theo height 62px */
-    height: 100%;
-    z-index: 1;
-    transition: all 0.4s var(--spring-ios);
-}
-
-.nav-item.active {
-    flex: 1.6; /* Tab đang chọn sẽ phình to ra đẩy các tab khác sang 2 bên */
-    color: var(--primary);
-}
-
-.nav-item svg {
-    width: 20px; height: 20px; /* Thu nhỏ icon 1 chút từ 22px xuống 20px cho tinh tế */
-    stroke: currentColor; fill: none; stroke-width: 2.2;
-    transition: all 0.4s var(--spring-ios);
-    flex-shrink: 0; 
-}
-
-/* Ẩn chữ đi bằng cách đưa max-width về 0 và scale nhỏ lại */
-.nav-item span {
-    white-space: nowrap !important;
-    font-size: 13px !important;
-    font-weight: 700;
-    letter-spacing: -0.2px;
-    max-width: 0; 
-    opacity: 0;
-    margin-left: 0;
-    overflow: hidden;
-    display: inline-block;
-    transform: scale(0.5);
-    transform-origin: left center;
-    transition: all 0.4s var(--spring-ios);
-}
-
-/* Khi tab được Active: Chữ sẽ trượt ngang ra mượt mà */
-.nav-item.active span {
-    max-width: 80px; 
-    opacity: 1;
-    margin-left: 6px; /* Khoảng cách giữa Icon và Chữ */
-    transform: scale(1);
-}
-
-/* Chỉnh lại độ cao Cục thạch trượt cho khớp với dáng dấp mới */
-.nav-indicator {
-    height: 48px !important; 
-    border-radius: 24px !important;
-}
 
 /* =========================================
    10. CÁC POPUP MODALS (MANAGER, ADD CAT)
@@ -1246,63 +1180,6 @@ body.dark-theme {
     transform: translateZ(0);
     will-change: transform;
 }
-/* =========================================
-   1. THANH ĐIỀU HƯỚNG ĐÁY (GPU TUNED & SMART AUTO-HIDE)
-   ========================================= */
-.bottom-nav {
-    position: fixed;
-    
-    /* FIX LỖI BAY CAO: Dùng 12px cố định thay vì env(). 
-       Giúp viên thuốc bám sát đáy hoàn hảo trên cả Safari và PWA */
-    bottom: 12px !important; 
-    margin-bottom: 0 !important; 
-    left: 50% !important;
-    
-    contain: layout paint;
-    transform: translateX(-50%) translate3d(0, 0, 0);
-    -webkit-transform: translateX(-50%) translate3d(0, 0, 0);
-    will-change: transform, backdrop-filter;
-    transition: transform 0.4s var(--spring-ios), opacity 0.3s ease, background-color 0.35s ease;
-
-    /* Giao diện viên thuốc siêu mỏng */
-    width: calc(100% - 24px) !important; 
-    max-width: 448px;
-    height: 62px !important;
-    padding: 0 6px !important;
-    border-radius: 31px !important; 
-    
-    /* Kính mờ trong trẻo, hắt sáng Glow */
-    background: color-mix(in srgb, var(--primary) 3%, rgba(255, 255, 255, 0.7)) !important;
-    backdrop-filter: blur(28px) saturate(180%);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.5) !important;
-    box-shadow: 0 10px 35px rgba(67, 97, 238, 0.08), inset 0 1px 1px rgba(255,255,255,0.6) !important;
-    
-    display: flex; justify-content: space-around; align-items: center;
-    z-index: 900; 
-}
-
-/* Tối ưu Kính mờ cho Chế độ tối */
-body.dark-theme .bottom-nav {
-    background: color-mix(in srgb, var(--primary) 8%, rgba(20, 25, 35, 0.75)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    box-shadow: 0 10px 35px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05) !important;
-}
-/* CẢI TIẾN 2: Cục thạch ôm sát nội dung (Hugging Indicator) */
-.nav-indicator {
-    position: absolute;
-    top: 50%;
-    left: 0; 
-    height: 42px !important; /* Thu nhỏ từ 54px xuống 42px */
-    background: rgba(67, 97, 238, 0.12); /* Đậm màu lên một xíu cho rõ nét */
-    border-radius: 21px !important; 
-    
-    transform: translateY(-50%) translateX(6px);
-    transition: transform 0.4s var(--spring-ios), width 0.4s var(--spring-ios);
-    z-index: -1; 
-    pointer-events: none;
-}
-
 
 /* =========================================
    2. TIÊU ĐỀ LINH ĐỘNG & XÓA NỀN TOP-NAV
@@ -1756,16 +1633,13 @@ body.theme-default:not(.dark-theme) .transaction-item.swipe-front {
     100% { stroke-dashoffset: 0; opacity: 1; }
 }
 /* =========================================
-   [FIX LỖI] GHI ĐÈ TUYỆT ĐỐI: THANH DOCK VIÊN THUỐC SÁT ĐÁY
+   9. BOTTOM NAVIGATION BAR (TỐI GIẢN & TỐI ƯU)
    ========================================= */
 .bottom-nav {
     position: fixed !important;
-    /* Dùng 15px là "khoảng cách vàng" cho iPhone. Không bị dính Home Bar, cũng không bị lơ lửng */
     bottom: 15px !important; 
     margin-bottom: 0 !important; 
     left: 50% !important;
-    
-    /* TUYỆT ĐỐI KHÔNG dùng !important ở transform để hiệu ứng vuốt ẩn dock vẫn hoạt động */
     transform: translateX(-50%) translate3d(0,0,0);
     
     /* Giao diện viên thuốc siêu mỏng */
@@ -1773,10 +1647,7 @@ body.theme-default:not(.dark-theme) .transaction-item.swipe-front {
     max-width: 448px !important;
     height: 60px !important;
     border-radius: 30px !important; 
-    
-    /* XÓA SẠCH mọi tàn dư padding thừa đẩy dock lên cao */
     padding: 0 6px !important;
-    padding-bottom: 0 !important;
     
     /* Kính mờ trong trẻo */
     background: rgba(255, 255, 255, 0.85) !important;
@@ -1785,139 +1656,90 @@ body.theme-default:not(.dark-theme) .transaction-item.swipe-front {
     border: 1px solid rgba(255,255,255,0.6) !important;
     box-shadow: 0 8px 30px rgba(0,0,0,0.08) !important;
     
-	/* Bổ sung hiệu ứng mượt mà khi co rút và giới hạn Hào quang không tràn ra ngoài */
-    overflow: hidden !important; 
-    transition: transform 0.4s var(--spring-ios), opacity 0.3s ease, background-color 0.35s ease, width 0.4s var(--spring-ios), height 0.4s var(--spring-ios), border-radius 0.4s var(--spring-ios) !important;
-	
     display: flex !important; 
     justify-content: space-around !important; 
     align-items: center !important;
     z-index: 9999 !important; 
+    
+    transition: transform 0.4s var(--spring-ios), opacity 0.3s ease, background-color 0.35s ease !important;
 }
 
-/* Fix lại Cục thạch chạy bên trong cho nhỏ lại vừa khít với dock 60px */
-.nav-indicator {
-    height: 44px !important;
-    border-radius: 22px !important;
-    background: rgba(67, 97, 238, 0.12) !important;
-    top: 50% !important;
-    transform: translateY(-50%) translateX(6px);
-}
-
-/* Fix Tab items loại bỏ margin/padding gây lệch */
-.nav-item {
-    height: 100% !important;
-    padding: 0 !important;
-}
-
-/* Điều chỉnh Nút Thủy ngân FAB ăn theo thanh dock mới (15px + 60px + 10px khoảng hở = 85px) */
-.fab-container {
-    bottom: 85px !important;
-    margin-bottom: 0 !important;
-}
-
-/* Tương thích hoàn hảo với Chế độ tối (Dark Mode) */
+/* Đổi màu theo Theme */
 body.dark-theme .bottom-nav {
     background: rgba(30, 41, 59, 0.85) !important;
     border-color: rgba(255,255,255,0.08) !important;
     box-shadow: 0 10px 30px rgba(0,0,0,0.4) !important;
 }
-/* Trả lại màu sứ trắng bệt nếu đang dùng giao diện Cổ điển */
 body.theme-default:not(.dark-theme) .bottom-nav {
     background: #ffffff !important;
 }
-/* =========================================
-   NÂNG CẤP 1: DYNAMIC ISLAND SHRINK (THU NHỎ KHI CUỘN)
-   ========================================= */
-/* Thay vì tàng hình khi cuộn trang, thanh Dock sẽ co rút lại thành hạt đậu */
-.bottom-nav.hide-on-scroll {
-    opacity: 1 !important;
-    pointer-events: auto !important; /* Vẫn cho phép bấm khi bị thu nhỏ */
-    
-    /* Ép nằm im 1 chỗ, không cho rơi tuột xuống đáy màn hình */
-    transform: translateX(-50%) translate3d(0,0,0) !important; 
-    
-    /* Kích thước hạt đậu (Vừa khít 1 icon) */
-    width: 60px !important;
-    height: 60px !important;
-    padding: 0 !important;
-    border-radius: 30px !important;
-    
-    /* Đổi sang màu đen nhám đặc trưng của Dynamic Island */
-    background: var(--text-main) !important;
-    border-color: transparent !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
-}
 
-/* Giấu sạch các tab không được chọn (Ép kích thước về 0) */
-.bottom-nav.hide-on-scroll .nav-item:not(.active) {
-    opacity: 0 !important; 
-    max-width: 0 !important; 
-    margin: 0 !important; 
-    flex: 0 !important; 
-    transform: scale(0) !important;
-}
-
-/* Căn giữa và phóng to Icon của tab ĐANG BẬT */
-.bottom-nav.hide-on-scroll .nav-item.active {
-    color: #fff !important;
-    justify-content: center !important;
-}
-.bottom-nav.hide-on-scroll .nav-item.active svg {
-    width: 24px !important; 
-    height: 24px !important;
-}
-
-/* Ẩn dòng chữ và Cục thạch báo hiệu bên trong hạt đậu */
-.bottom-nav.hide-on-scroll .nav-item.active span,
-.bottom-nav.hide-on-scroll .nav-indicator {
+/* Ẩn hoàn toàn "cục thạch" nền xanh phía sau Tab */
+.nav-indicator {
     display: none !important;
 }
 
-/* Tối ưu hạt đậu đen tuyền cho Chế độ tối (Dark Mode) */
-body.dark-theme .bottom-nav.hide-on-scroll {
-    background: #000000 !important;
-    border: 1px solid rgba(255,255,255,0.15) !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+/* Định dạng các nút Tab */
+.nav-item {
+    display: flex; 
+    flex-direction: row; 
+    align-items: center; 
+    justify-content: center;
+    color: #94a3b8; 
+    cursor: pointer;
+    flex: 1; 
+    height: 100% !important;
+    padding: 0 !important;
+    z-index: 1;
+    transition: all 0.4s var(--spring-ios);
 }
 
+/* Tab đang kích hoạt: Chỉ đổi màu chữ/icon, KHÔNG có nền */
+.nav-item.active {
+    flex: 1.6;
+    color: var(--primary) !important;
+    background: transparent !important;
+}
 
-/* =========================================
-   NÂNG CẤP 2: AURA GLOW TRACKING (ÁNH SÁNG BÁM NGÓN TAY)
-   ========================================= */
-/* Quả cầu ánh sáng tàng hình nằm dưới lớp kính */
-.bottom-nav::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 120px; height: 120px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
-    border-radius: 50%;
-    
-    /* Dịch chuyển quả cầu sáng theo tọa độ X, Y do Javascript cung cấp */
-    transform: translate(calc(var(--mouse-x, 0) * 1px - 60px), calc(var(--mouse-y, 0) * 1px - 60px));
-    pointer-events: none;
+.nav-item svg {
+    width: 20px; height: 20px;
+    stroke: currentColor; fill: none; stroke-width: 2.2;
+    transition: all 0.4s var(--spring-ios);
+    flex-shrink: 0; 
+}
+
+/* Ẩn/Hiện tên Tab bằng cách co giãn bề ngang */
+.nav-item span {
+    white-space: nowrap !important;
+    font-size: 13px !important;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    max-width: 0; 
     opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: -2; /* Đảm bảo nằm dưới các Icon nhưng trên lớp nền kính */
+    margin-left: 0;
+    overflow: hidden;
+    display: inline-block;
+    transform: scale(0.5);
+    transform-origin: left center;
+    transition: all 0.4s var(--spring-ios);
 }
 
-/* Đổi màu ánh sáng sang Xanh quang dải khi ở Chế độ Tối */
-body.dark-theme .bottom-nav::before {
-    background: radial-gradient(circle, rgba(130, 159, 255, 0.35) 0%, transparent 70%);
+.nav-item.active span {
+    max-width: 80px; 
+    opacity: 1;
+    margin-left: 6px;
+    transform: scale(1);
 }
 
-/* Sáng lên khi ngón tay chạm vào thanh Dock */
-.bottom-nav.is-tracking::before {
-    opacity: 1; 
+/* Hiệu ứng trượt xuống đáy màn hình và mờ đi khi cuộn trang */
+.bottom-nav.hide-on-scroll {
+    transform: translateX(-50%) translateY(120px) translate3d(0,0,0) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
-/* =========================================
-   [FIX LỖI KHỰNG] TỐI ƯU CỤC THẠCH TRƯỢT
-   ========================================= */
-.nav-indicator {
-    /* Tách khỏi hiệu ứng chuyển trang chung để trình duyệt không chụp ảnh lỗi */
-    view-transition-name: jelly-indicator;
-    
-    /* Chốt cứng gia tốc chuẩn của iOS, xóa các lệnh ghi đè lỗi */
-    transition: transform 0.4s var(--spring-ios), width 0.4s var(--spring-ios) !important;
+
+/* Căn chỉnh lại Nút Thủy ngân FAB cho khớp với thanh Dock (15px + 60px + 10px = 85px) */
+.fab-container {
+    bottom: 85px !important;
+    margin-bottom: 0 !important;
 }

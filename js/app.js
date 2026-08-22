@@ -6291,45 +6291,42 @@ window.addEventListener('DOMContentLoaded', updateDynamicDockPadding);
 // Quét thêm 1 lần sau nửa giây để đảm bảo DOM đã render xong 100%
 setTimeout(updateDynamicDockPadding, 500);
 // ==========================================
-// Ý TƯỞNG 3: ELASTIC GOOEY (CỤC THẠCH ĐÀN HỒI)
+// [FIX LỖI KHỰNG] BỘ TÍNH TOÁN ĐA MA TRẬN CHO CỤC THẠCH TRƯỢT
 // ==========================================
-let indicatorTimeout;
 window.updateNavIndicator = function() {
     const indicator = document.getElementById('navIndicator');
     const activeNavEl = document.querySelector('.bottom-nav .nav-item.active');
-    
-    if (indicator && activeNavEl) {
-        const targetX = activeNavEl.offsetLeft;
-        const targetWidth = activeNavEl.offsetWidth;
+    const dock = document.querySelector('.bottom-nav');
+
+    if (indicator && activeNavEl && dock) {
+        // Xóa sạch các lệnh delay gây giật lag của code cũ
+        if (window.indicatorTimeout) clearTimeout(window.indicatorTimeout);
+
+        // 1. Lấy dữ liệu không gian thực tế của thanh Dock
+        const tabs = Array.from(dock.querySelectorAll('.nav-item'));
+        const activeIndex = tabs.indexOf(activeNavEl);
         
-        // Đọc tọa độ X hiện tại của cục thạch
-        const currentTransform = indicator.style.transform;
-        const match = currentTransform.match(/translateX\((.*?)px\)/);
-        const currentX = match ? parseFloat(match[1]) : targetX;
+        const dockStyle = window.getComputedStyle(dock);
+        const padLeft = parseFloat(dockStyle.paddingLeft) || 0;
+        const padRight = parseFloat(dockStyle.paddingRight) || 0;
+        const availableWidth = dock.offsetWidth - padLeft - padRight;
+
+        // 2. Giải phương trình Flexbox (Tab đang bật = 1.6, Tab thường = 1.0)
+        const totalFlex = 1.6 + (tabs.length - 1);
+        const baseWidth = availableWidth / totalFlex;
         
-        // Nếu điểm nhảy xa hơn 15px -> Tạo hiệu ứng vươn ra (kéo giãn)
-        if (Math.abs(targetX - currentX) > 15) {
-            // Giãn dài thân thạch ra bằng khoảng cách giữa 2 tab
-            const stretchWidth = Math.abs(targetX - currentX) + targetWidth * 0.5;
-            
-            // Ép mỏ neo luôn xuất phát từ bên trái của đường di chuyển
-            const startX = Math.min(currentX, targetX);
-            
-            indicator.style.width = `${stretchWidth}px`;
-            indicator.style.transform = `translateY(-50%) translateX(${startX}px)`;
-            
-            clearTimeout(indicatorTimeout);
-            
-            // Đợi 150ms (lúc cục thạch bay được nửa đường) -> Cụp nó lại vào đúng đích
-            indicatorTimeout = setTimeout(() => {
-                indicator.style.width = `${targetWidth}px`;
-                indicator.style.transform = `translateY(-50%) translateX(${targetX}px)`;
-            }, 150);
-        } else {
-            // Nếu không di chuyển xa (tải trang hoặc resize), gán thẳng
-            indicator.style.width = `${targetWidth}px`;
-            indicator.style.transform = `translateY(-50%) translateX(${targetX}px)`;
+        const targetWidth = baseWidth * 1.6;
+        let targetX = padLeft;
+        
+        // Cộng dồn chiều rộng của các tab nằm trước tab đang chọn
+        for (let i = 0; i < activeIndex; i++) {
+            targetX += baseWidth;
         }
+
+        // 3. Gán tọa độ ĐÍCH CHÍNH XÁC ngay lập tức (Bỏ qua độ trễ của CSS)
+        // Điều này giúp trình duyệt chụp ảnh chuyển cảnh mượt tuyệt đối
+        indicator.style.width = `${targetWidth}px`;
+        indicator.style.transform = `translateY(-50%) translateX(${targetX}px)`;
     }
 };
 

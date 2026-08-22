@@ -1251,8 +1251,8 @@ body.dark-theme {
 .bottom-nav {
     position: fixed;
     
-    /* FIX LỖI BAY CAO: Đưa sát hẳn xuống đáy, tích hợp mượt mà với Home Bar của iPhone */
-    bottom: max(8px, env(safe-area-inset-bottom)) !important; 
+    /* Tinh chỉnh đáy: Bám sát viền màn hình Android và chỉ chừa đúng 6px phía trên Home Bar của iOS */
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 6px) !important; 
     margin-bottom: 0 !important; 
     left: 50% !important;
     

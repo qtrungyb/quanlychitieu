@@ -6290,3 +6290,87 @@ window.addEventListener('resize', updateDynamicDockPadding);
 window.addEventListener('DOMContentLoaded', updateDynamicDockPadding);
 // Quét thêm 1 lần sau nửa giây để đảm bảo DOM đã render xong 100%
 setTimeout(updateDynamicDockPadding, 500);
+// ==========================================
+// Ý TƯỞNG 3: ELASTIC GOOEY (CỤC THẠCH ĐÀN HỒI)
+// ==========================================
+let indicatorTimeout;
+window.updateNavIndicator = function() {
+    const indicator = document.getElementById('navIndicator');
+    const activeNavEl = document.querySelector('.bottom-nav .nav-item.active');
+    
+    if (indicator && activeNavEl) {
+        const targetX = activeNavEl.offsetLeft;
+        const targetWidth = activeNavEl.offsetWidth;
+        
+        // Đọc tọa độ X hiện tại của cục thạch
+        const currentTransform = indicator.style.transform;
+        const match = currentTransform.match(/translateX\((.*?)px\)/);
+        const currentX = match ? parseFloat(match[1]) : targetX;
+        
+        // Nếu điểm nhảy xa hơn 15px -> Tạo hiệu ứng vươn ra (kéo giãn)
+        if (Math.abs(targetX - currentX) > 15) {
+            // Giãn dài thân thạch ra bằng khoảng cách giữa 2 tab
+            const stretchWidth = Math.abs(targetX - currentX) + targetWidth * 0.5;
+            
+            // Ép mỏ neo luôn xuất phát từ bên trái của đường di chuyển
+            const startX = Math.min(currentX, targetX);
+            
+            indicator.style.width = `${stretchWidth}px`;
+            indicator.style.transform = `translateY(-50%) translateX(${startX}px)`;
+            
+            clearTimeout(indicatorTimeout);
+            
+            // Đợi 150ms (lúc cục thạch bay được nửa đường) -> Cụp nó lại vào đúng đích
+            indicatorTimeout = setTimeout(() => {
+                indicator.style.width = `${targetWidth}px`;
+                indicator.style.transform = `translateY(-50%) translateX(${targetX}px)`;
+            }, 150);
+        } else {
+            // Nếu không di chuyển xa (tải trang hoặc resize), gán thẳng
+            indicator.style.width = `${targetWidth}px`;
+            indicator.style.transform = `translateY(-50%) translateX(${targetX}px)`;
+        }
+    }
+};
+
+// ==========================================
+// Ý TƯỞNG 2: AURA GLOW TRACKING (MẮT THẦN THEO DÕI NGÓN TAY)
+// ==========================================
+const initAuraTracking = () => {
+    const dock = document.querySelector('.bottom-nav');
+    if (!dock) return;
+
+    const handleMove = (e) => {
+        const rect = dock.getBoundingClientRect();
+        // Cướp tọa độ ngón tay (cho màn cảm ứng) hoặc Chuột (PC)
+        const clientX = e.clientX || e.touches?.[0].clientX;
+        const clientY = e.clientY || e.touches?.[0].clientY;
+        
+        if (clientX !== undefined && clientY !== undefined) {
+            // Truyền biến cho CSS vẽ ánh sáng
+            dock.style.setProperty('--mouse-x', clientX - rect.left);
+            dock.style.setProperty('--mouse-y', clientY - rect.top);
+        }
+    };
+
+    // Lắng nghe sự kiện cọ xát
+    dock.addEventListener('mousemove', handleMove);
+    dock.addEventListener('touchmove', handleMove, { passive: true });
+    
+    // Bật đèn khi vừa chạm xuống
+    dock.addEventListener('mouseenter', () => dock.classList.add('is-tracking'));
+    dock.addEventListener('touchstart', (e) => {
+        handleMove(e); // Xác định tọa độ chớp nhoáng
+        dock.classList.add('is-tracking');
+    }, { passive: true });
+    
+    // Tắt đèn khi rút tay
+    dock.addEventListener('mouseleave', () => dock.classList.remove('is-tracking'));
+    dock.addEventListener('touchend', () => setTimeout(() => dock.classList.remove('is-tracking'), 400)); // Delay tắt đèn tạo dư âm
+};
+
+// Cài cảm biến ngay khi DOM hoàn tất
+window.addEventListener('DOMContentLoaded', initAuraTracking);
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    initAuraTracking();
+}

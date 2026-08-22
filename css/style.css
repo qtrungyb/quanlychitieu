@@ -400,13 +400,14 @@ body.dark-theme .kpi-card { background-color: var(--card-bg) !important; border:
    ========================================= */
 .nav-item {
     display: flex; 
-    flex-direction: row; /* Thay đổi từ cột (column) sang hàng ngang (row) */
+    flex-direction: row; 
     align-items: center; 
     justify-content: center;
-    color: #a0aec0; 
+    color: #94a3b8; 
     cursor: pointer;
-    flex: 1; /* Tab không chọn sẽ thu nhỏ lại */
-    padding: 8px 0;
+    flex: 1; 
+    padding: 0; /* Xóa padding cũ để căn giữa hoàn toàn theo height 62px */
+    height: 100%;
     z-index: 1;
     transition: all 0.4s var(--spring-ios);
 }
@@ -417,10 +418,10 @@ body.dark-theme .kpi-card { background-color: var(--card-bg) !important; border:
 }
 
 .nav-item svg {
-    width: 22px; height: 22px; 
+    width: 20px; height: 20px; /* Thu nhỏ icon 1 chút từ 22px xuống 20px cho tinh tế */
     stroke: currentColor; fill: none; stroke-width: 2.2;
     transition: all 0.4s var(--spring-ios);
-    flex-shrink: 0; /* Không cho icon bị ép méo */
+    flex-shrink: 0; 
 }
 
 /* Ẩn chữ đi bằng cách đưa max-width về 0 và scale nhỏ lại */
@@ -1251,7 +1252,7 @@ body.dark-theme {
 .bottom-nav {
     position: fixed;
     
-    /* Tinh chỉnh đáy: Bám sát viền màn hình Android và chỉ chừa đúng 6px phía trên Home Bar của iOS */
+    /* Ép sát mép dưới màn hình (Cách Home Bar iOS đúng 6px) */
     bottom: calc(env(safe-area-inset-bottom, 0px) + 6px) !important; 
     margin-bottom: 0 !important; 
     left: 50% !important;
@@ -1260,60 +1261,46 @@ body.dark-theme {
     transform: translateX(-50%) translate3d(0, 0, 0);
     -webkit-transform: translateX(-50%) translate3d(0, 0, 0);
     will-change: transform, backdrop-filter;
-    
     transition: transform 0.4s var(--spring-ios), opacity 0.3s ease, background-color 0.35s ease;
 
-    width: calc(100% - 32px) !important;
+    /* CẢI TIẾN 1: Tối giản chiều cao từ 70px xuống 62px cho thanh thoát */
+    width: calc(100% - 24px) !important; /* Dài ra một chút để cân đối với độ mỏng */
     max-width: 448px;
-    height: 70px !important;
-    padding: 0 8px !important;
-    border-radius: 35px !important; 
+    height: 62px !important;
+    padding: 0 6px !important;
+    border-radius: 31px !important; /* Bo tròn tuyệt đối = 1/2 height */
     
-    background: var(--sync-glass-bg) !important;
-    backdrop-filter: blur(24px) saturate(150%);
-    -webkit-backdrop-filter: blur(24px) saturate(150%);
-    border: 1px solid var(--sync-glass-border) !important;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.08), inset 0 1px 1px rgba(255,255,255,0.3) !important;
+    /* CẢI TIẾN 3: Kính mờ trong trẻo hơn và bóng đổ dạng Hào quang (Glow) */
+    background: color-mix(in srgb, var(--primary) 3%, rgba(255, 255, 255, 0.7)) !important;
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 10px 35px rgba(67, 97, 238, 0.08), inset 0 1px 1px rgba(255,255,255,0.6) !important;
     
     display: flex; justify-content: space-around; align-items: center;
     z-index: 900; 
 }
 
-/* Lớp ẩn thanh Dock khi cuộn xuống */
-.bottom-nav.hide-on-scroll {
-    transform: translateX(-50%) translateY(120px) translate3d(0,0,0);
-    opacity: 0;
-    pointer-events: none;
-}
-
+/* Kính mờ cho Dark Mode */
 body.dark-theme .bottom-nav {
-    box-shadow: 0 8px 30px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.05) !important;
+    background: color-mix(in srgb, var(--primary) 8%, rgba(20, 25, 35, 0.75)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05) !important;
 }
 
-/* [CẢI TIẾN 1: GOOEY INDICATOR] Khối nền di chuyển */
+/* CẢI TIẾN 2: Cục thạch ôm sát nội dung (Hugging Indicator) */
 .nav-indicator {
     position: absolute;
     top: 50%;
     left: 0; 
-    height: 54px; /* Cao gần bằng Dock */
-    background: rgba(67, 97, 238, 0.1);
-    border-radius: 27px; /* Nửa hình tròn */
+    height: 42px !important; /* Thu nhỏ từ 54px xuống 42px */
+    background: rgba(67, 97, 238, 0.12); /* Đậm màu lên một xíu cho rõ nét */
+    border-radius: 21px !important; 
     
-    /* Dịch chuyển mặc định và hiệu ứng lò xo */
-    transform: translateY(-50%) translateX(8px);
+    transform: translateY(-50%) translateX(6px);
     transition: transform 0.4s var(--spring-ios), width 0.4s var(--spring-ios);
-    z-index: -1; /* Nằm dưới Icon */
+    z-index: -1; 
     pointer-events: none;
-}
-
-body.dark-theme .nav-indicator {
-    background: rgba(130, 159, 255, 0.15);
-}
-
-/* Fix z-index cho nav-item để nó nổi lên trên cục thạch */
-.nav-item {
-    position: relative;
-    z-index: 1;
 }
 
 

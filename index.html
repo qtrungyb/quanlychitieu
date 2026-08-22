@@ -432,13 +432,9 @@
     <!-- HEADER CHUNG -->
     <div class="top-nav">
         <h1>QUẢN LÝ CHI TIÊU</h1>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <div id="streakBadge" style="display: none; align-items: center; gap: 4px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #e84393; padding: 4px 10px; border-radius: 12px; font-weight: 800; font-size: 13px; box-shadow: 0 4px 10px rgba(232, 67, 147, 0.2); cursor: default;">
-                <span id="streakCount">0</span> 🔥
-            </div>
+        <div style="display: flex; align-items: center; gap: 12px;">   
             <div class="user-menu" id="userMenu">
                 <div class="avatar-btn" id="btnAvatar" style="cursor: pointer;"><img src="" alt="Avatar" id="avatarImg"></div>
-                <div class="status-indicator"></div>
                 <div class="dropdown-menu" id="dropdownMenu">
                     <div class="dropdown-header"><span class="dropdown-name" id="dropdownName">XIN CHÀO</span></div>
                     
@@ -555,8 +551,12 @@
                     <div class="amount-wrapper" id="mainAmountWrapper" style="cursor: pointer;">
                         <!-- Ô nhập tiền vô hình chống Autofill -->
                         <input type="text" id="amountInputDisplay" class="form-control input-amount" placeholder="0" readonly autocomplete="off" tabindex="-1" inputmode="none" onfocus="this.blur()" style="pointer-events: none; user-select: none; background: transparent;" required>
-                        <span class="amount-currency">đ</span>
+                        <div id="btnClearAmount" class="btn-clear-amount hide">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+						</div>
+						<span class="amount-currency">đ</span>
                     </div>
+					<div id="amountTextVN" class="amount-text-vn hide">Không đồng</div>
                     <input type="hidden" id="amountInputRaw" required>
                     <div class="quick-amounts">
                         <button type="button" class="btn-quick" data-val="5000">+5K</button>

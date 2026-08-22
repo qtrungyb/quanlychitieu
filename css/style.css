@@ -1785,6 +1785,10 @@ body.theme-default:not(.dark-theme) .transaction-item.swipe-front {
     border: 1px solid rgba(255,255,255,0.6) !important;
     box-shadow: 0 8px 30px rgba(0,0,0,0.08) !important;
     
+	/* Bổ sung hiệu ứng mượt mà khi co rút và giới hạn Hào quang không tràn ra ngoài */
+    overflow: hidden !important; 
+    transition: transform 0.4s var(--spring-ios), opacity 0.3s ease, background-color 0.35s ease, width 0.4s var(--spring-ios), height 0.4s var(--spring-ios), border-radius 0.4s var(--spring-ios) !important;
+	
     display: flex !important; 
     justify-content: space-around !important; 
     align-items: center !important;
@@ -1821,4 +1825,89 @@ body.dark-theme .bottom-nav {
 /* Trả lại màu sứ trắng bệt nếu đang dùng giao diện Cổ điển */
 body.theme-default:not(.dark-theme) .bottom-nav {
     background: #ffffff !important;
+}
+/* =========================================
+   NÂNG CẤP 1: DYNAMIC ISLAND SHRINK (THU NHỎ KHI CUỘN)
+   ========================================= */
+/* Thay vì tàng hình khi cuộn trang, thanh Dock sẽ co rút lại thành hạt đậu */
+.bottom-nav.hide-on-scroll {
+    opacity: 1 !important;
+    pointer-events: auto !important; /* Vẫn cho phép bấm khi bị thu nhỏ */
+    
+    /* Ép nằm im 1 chỗ, không cho rơi tuột xuống đáy màn hình */
+    transform: translateX(-50%) translate3d(0,0,0) !important; 
+    
+    /* Kích thước hạt đậu (Vừa khít 1 icon) */
+    width: 60px !important;
+    height: 60px !important;
+    padding: 0 !important;
+    border-radius: 30px !important;
+    
+    /* Đổi sang màu đen nhám đặc trưng của Dynamic Island */
+    background: var(--text-main) !important;
+    border-color: transparent !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+}
+
+/* Giấu sạch các tab không được chọn (Ép kích thước về 0) */
+.bottom-nav.hide-on-scroll .nav-item:not(.active) {
+    opacity: 0 !important; 
+    max-width: 0 !important; 
+    margin: 0 !important; 
+    flex: 0 !important; 
+    transform: scale(0) !important;
+}
+
+/* Căn giữa và phóng to Icon của tab ĐANG BẬT */
+.bottom-nav.hide-on-scroll .nav-item.active {
+    color: #fff !important;
+    justify-content: center !important;
+}
+.bottom-nav.hide-on-scroll .nav-item.active svg {
+    width: 24px !important; 
+    height: 24px !important;
+}
+
+/* Ẩn dòng chữ và Cục thạch báo hiệu bên trong hạt đậu */
+.bottom-nav.hide-on-scroll .nav-item.active span,
+.bottom-nav.hide-on-scroll .nav-indicator {
+    display: none !important;
+}
+
+/* Tối ưu hạt đậu đen tuyền cho Chế độ tối (Dark Mode) */
+body.dark-theme .bottom-nav.hide-on-scroll {
+    background: #000000 !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+}
+
+
+/* =========================================
+   NÂNG CẤP 2: AURA GLOW TRACKING (ÁNH SÁNG BÁM NGÓN TAY)
+   ========================================= */
+/* Quả cầu ánh sáng tàng hình nằm dưới lớp kính */
+.bottom-nav::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    
+    /* Dịch chuyển quả cầu sáng theo tọa độ X, Y do Javascript cung cấp */
+    transform: translate(calc(var(--mouse-x, 0) * 1px - 60px), calc(var(--mouse-y, 0) * 1px - 60px));
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -2; /* Đảm bảo nằm dưới các Icon nhưng trên lớp nền kính */
+}
+
+/* Đổi màu ánh sáng sang Xanh quang dải khi ở Chế độ Tối */
+body.dark-theme .bottom-nav::before {
+    background: radial-gradient(circle, rgba(130, 159, 255, 0.35) 0%, transparent 70%);
+}
+
+/* Sáng lên khi ngón tay chạm vào thanh Dock */
+.bottom-nav.is-tracking::before {
+    opacity: 1; 
 }

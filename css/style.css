@@ -1755,3 +1755,70 @@ body.theme-default:not(.dark-theme) .transaction-item.swipe-front {
     10% { opacity: 1; }
     100% { stroke-dashoffset: 0; opacity: 1; }
 }
+/* =========================================
+   [FIX LỖI] GHI ĐÈ TUYỆT ĐỐI: THANH DOCK VIÊN THUỐC SÁT ĐÁY
+   ========================================= */
+.bottom-nav {
+    position: fixed !important;
+    /* Dùng 15px là "khoảng cách vàng" cho iPhone. Không bị dính Home Bar, cũng không bị lơ lửng */
+    bottom: 15px !important; 
+    margin-bottom: 0 !important; 
+    left: 50% !important;
+    
+    /* TUYỆT ĐỐI KHÔNG dùng !important ở transform để hiệu ứng vuốt ẩn dock vẫn hoạt động */
+    transform: translateX(-50%) translate3d(0,0,0);
+    
+    /* Giao diện viên thuốc siêu mỏng */
+    width: calc(100% - 32px) !important;
+    max-width: 448px !important;
+    height: 60px !important;
+    border-radius: 30px !important; 
+    
+    /* XÓA SẠCH mọi tàn dư padding thừa đẩy dock lên cao */
+    padding: 0 6px !important;
+    padding-bottom: 0 !important;
+    
+    /* Kính mờ trong trẻo */
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(24px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(150%) !important;
+    border: 1px solid rgba(255,255,255,0.6) !important;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08) !important;
+    
+    display: flex !important; 
+    justify-content: space-around !important; 
+    align-items: center !important;
+    z-index: 9999 !important; 
+}
+
+/* Fix lại Cục thạch chạy bên trong cho nhỏ lại vừa khít với dock 60px */
+.nav-indicator {
+    height: 44px !important;
+    border-radius: 22px !important;
+    background: rgba(67, 97, 238, 0.12) !important;
+    top: 50% !important;
+    transform: translateY(-50%) translateX(6px);
+}
+
+/* Fix Tab items loại bỏ margin/padding gây lệch */
+.nav-item {
+    height: 100% !important;
+    padding: 0 !important;
+}
+
+/* Điều chỉnh Nút Thủy ngân FAB ăn theo thanh dock mới (15px + 60px + 10px khoảng hở = 85px) */
+.fab-container {
+    bottom: 85px !important;
+    margin-bottom: 0 !important;
+}
+
+/* Tương thích hoàn hảo với Chế độ tối (Dark Mode) */
+body.dark-theme .bottom-nav {
+    background: rgba(30, 41, 59, 0.85) !important;
+    border-color: rgba(255,255,255,0.08) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4) !important;
+}
+/* Trả lại màu sứ trắng bệt nếu đang dùng giao diện Cổ điển */
+body.theme-default:not(.dark-theme) .bottom-nav {
+    background: #ffffff !important;
+}

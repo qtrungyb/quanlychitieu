@@ -1252,8 +1252,9 @@ body.dark-theme {
 .bottom-nav {
     position: fixed;
     
-    /* Ép sát mép dưới màn hình (Cách Home Bar iOS đúng 6px) */
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 6px) !important; 
+    /* FIX LỖI BAY CAO: Dùng 12px cố định thay vì env(). 
+       Giúp viên thuốc bám sát đáy hoàn hảo trên cả Safari và PWA */
+    bottom: 12px !important; 
     margin-bottom: 0 !important; 
     left: 50% !important;
     
@@ -1263,14 +1264,14 @@ body.dark-theme {
     will-change: transform, backdrop-filter;
     transition: transform 0.4s var(--spring-ios), opacity 0.3s ease, background-color 0.35s ease;
 
-    /* CẢI TIẾN 1: Tối giản chiều cao từ 70px xuống 62px cho thanh thoát */
-    width: calc(100% - 24px) !important; /* Dài ra một chút để cân đối với độ mỏng */
+    /* Giao diện viên thuốc siêu mỏng */
+    width: calc(100% - 24px) !important; 
     max-width: 448px;
     height: 62px !important;
     padding: 0 6px !important;
-    border-radius: 31px !important; /* Bo tròn tuyệt đối = 1/2 height */
+    border-radius: 31px !important; 
     
-    /* CẢI TIẾN 3: Kính mờ trong trẻo hơn và bóng đổ dạng Hào quang (Glow) */
+    /* Kính mờ trong trẻo, hắt sáng Glow */
     background: color-mix(in srgb, var(--primary) 3%, rgba(255, 255, 255, 0.7)) !important;
     backdrop-filter: blur(28px) saturate(180%);
     -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -1281,13 +1282,12 @@ body.dark-theme {
     z-index: 900; 
 }
 
-/* Kính mờ cho Dark Mode */
+/* Tối ưu Kính mờ cho Chế độ tối */
 body.dark-theme .bottom-nav {
     background: color-mix(in srgb, var(--primary) 8%, rgba(20, 25, 35, 0.75)) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     box-shadow: 0 10px 35px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05) !important;
 }
-
 /* CẢI TIẾN 2: Cục thạch ôm sát nội dung (Hugging Indicator) */
 .nav-indicator {
     position: absolute;
@@ -1481,12 +1481,12 @@ body.dark-theme .numpad-grid .np-btn.np-back {
 /* =========================================
    NÚT NĂNG LƯỢNG THỦY NGÂN (LIQUID MORPHING FAB)
    ========================================= */
-/* 1. NỚI RỘNG KHUNG BAO ĐỂ KHÔNG BỊ CẮT XÉN SVG (CLIPPING) */
+/* NỚI RỘNG KHUNG BAO ĐỂ KHÔNG BỊ CẮT XÉN SVG (CLIPPING) */
 .fab-container {
     position: fixed;
     
-    /* CHIỀU CAO MỚI: Hạ nút xuống sát thanh Dock, giúp giải phóng diện tích màn hình */
-    bottom: calc(65px + env(safe-area-inset-bottom, 0px)) !important; 
+    /* HẠ THẤP NÚT: Đáy màn hình (12px) + Chiều cao Dock (62px) + Khoảng hở (10px) = 84px */
+    bottom: 84px !important; 
     margin-bottom: 0 !important; 
     
     right: 0px;              

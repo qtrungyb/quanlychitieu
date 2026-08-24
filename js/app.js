@@ -1026,6 +1026,21 @@ function renderCategoryUI() {
             const catNameInput = document.getElementById('categoryNameInput');
             if (catIdInput) catIdInput.value = c.id;
             if (catNameInput) catNameInput.value = c.name;
+			// ---> BỔ SUNG: Truyền màu sắc của Danh mục ra ngoài Form để hắt sáng <---
+            const formCard = document.getElementById('formCard');
+            if (formCard) {
+                const hexColor = THEMES[c.color] ? THEMES[c.color].hex : '#4361ee';
+                formCard.style.setProperty('--form-glow-color', hexColor);
+            }
+			// ---> BỔ SUNG MỚI: Bật khay từ khóa tự động <---
+			if (typeof renderSmartNotes === 'function') {
+				const firstCatId = firstVisiblePill.getAttribute('data-id');
+				renderSmartNotes(firstCatId);
+			}
+			// ---> BỔ SUNG MỚI: Bật khay từ khóa dựa trên ID của Danh mục này <---
+            if (typeof renderSmartNotes === 'function') {
+                renderSmartNotes(c.id);
+			}
         };
         scroll.appendChild(div);
     });
@@ -1443,6 +1458,11 @@ function switchType(type) {
         if (catIdIn) catIdIn.value = firstVisiblePill.getAttribute('data-id');
         if (catNameIn) catNameIn.value = firstVisiblePill.getAttribute('data-val');
         if (catScroll) catScroll.scrollLeft = 0;
+		const formCard = document.getElementById('formCard');
+        if (formCard) {
+            const rawBg = firstVisiblePill.style.getPropertyValue('--cat-color');
+            formCard.style.setProperty('--form-glow-color', rawBg.trim() || 'var(--primary)');
+        }
     }
 }
 
@@ -2465,7 +2485,25 @@ document.getElementById('editTxDateInput')?.addEventListener('change', (e) => {
 document.getElementById('btnSaveEditTx')?.addEventListener('click', () => {
     if(!currentUser) return;
     const amtStr = document.getElementById('editTxAmountRaw')?.value;
-    if(!amtStr || parseInt(amtStr) < 1000) { alert('Vui lòng nhập số tiền hợp lệ'); return; }
+    // Kiểm tra nếu quên nhập tiền hoặc nhập chưa đủ 1K
+    if(!amtStr || parseInt(amtStr) < 1000) { 
+        const formCard = document.getElementById('formCard');
+        if (formCard) {
+            // Ép form rung lắc qua lại
+            formCard.classList.remove('shake-error'); // Reset trước
+            void formCard.offsetWidth; // Mẹo ép trình duyệt render lại frame
+            formCard.classList.add('shake-error');
+            
+            // Xóa rung lắc sau nửa giây để có thể rung tiếp lần sau
+            setTimeout(() => formCard.classList.remove('shake-error'), 500);
+        }
+        
+        // Điện thoại rung liên tiếp 3 cái cực mạnh
+        if (navigator.vibrate) navigator.vibrate([50, 50, 50]); 
+        
+        showToast('Bạn quên nhập số tiền kìa!', 'error'); 
+        return; 
+    }
     
     const amt = parseInt(amtStr);
     const catId = document.getElementById('editTxCategoryId')?.value || '';
@@ -3394,49 +3432,66 @@ function renderAdminTxList() {
                     chartExpData.push(d.out);
                 });
 
-                // TỐI ƯU: Chỉ cập nhật data nếu biểu đồ đã tồn tại
+                // FIX LỖI: Phải hủy (destroy) biểu đồ cũ trước khi vẽ lên Canvas mới do innerHTML sinh ra
                 if (window.admHistLineChartInst) {
-                    window.admHistLineChartInst.data.labels = chartLabels;
-                    window.admHistLineChartInst.data.datasets[0].data = chartIncData;
-                    window.admHistLineChartInst.data.datasets[1].data = chartExpData;
-                    
-                    const isDark = document.body.classList.contains('dark-theme');
-                    window.admHistLineChartInst.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
-                    
-                    window.admHistLineChartInst.update();
-                } else {
-                    const ctx = canvas.getContext('2d');
-                    const incGradient = ctx.createLinearGradient(0, 0, 0, 180);
-                    incGradient.addColorStop(0, 'rgba(46, 204, 113, 0.4)');
-                    incGradient.addColorStop(1, 'rgba(46, 204, 113, 0.0)');
-
-                    const expGradient = ctx.createLinearGradient(0, 0, 0, 180);
-                    expGradient.addColorStop(0, 'rgba(231, 76, 60, 0.4)');
-                    expGradient.addColorStop(1, 'rgba(231, 76, 60, 0.0)');
-
-                    window.admHistLineChartInst = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: chartLabels,
-                            datasets: [
-                                { label: 'Tiền Thu', data: chartIncData, borderColor: '#2ecc71', backgroundColor: incGradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, fill: true, tension: 0.4 },
-                                { label: 'Tiền Chi', data: chartExpData, borderColor: '#e74c3c', backgroundColor: expGradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, fill: true, tension: 0.4 }
-                            ]
-                        },
-                        options: {
-                            responsive: true, maintainAspectRatio: false, interaction: { intersect: false, mode: 'index' },
-                            scales: {
-                                y: { beginAtZero: true, ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} }, grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } },
-                                x: { grid: { display: false }, ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' } }
-                            },
-                                                                                    plugins: { legend: { display: false } }
-                        }
-                    });
+                    window.admHistLineChartInst.destroy();
                 }
+                
+                const ctx = canvas.getContext('2d');
+                
+                // Tạo dải màu gradient hắt sáng từ dưới lên
+                const incGradient = ctx.createLinearGradient(0, 0, 0, 180);
+                incGradient.addColorStop(0, 'rgba(46, 204, 113, 0.4)');
+                incGradient.addColorStop(1, 'rgba(46, 204, 113, 0.0)');
+
+                const expGradient = ctx.createLinearGradient(0, 0, 0, 180);
+                expGradient.addColorStop(0, 'rgba(231, 76, 60, 0.4)');
+                expGradient.addColorStop(1, 'rgba(231, 76, 60, 0.0)');
+
+                // Khởi tạo và vẽ mới Biểu đồ
+                window.admHistLineChartInst = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [
+                            { label: 'Tiền Thu', data: chartIncData, borderColor: '#2ecc71', backgroundColor: incGradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, fill: true, tension: 0.4 },
+                            { label: 'Tiền Chi', data: chartExpData, borderColor: '#e74c3c', backgroundColor: expGradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 6, fill: true, tension: 0.4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        interaction: { intersect: false, mode: 'index' },
+                        scales: {
+                            y: { 
+                                beginAtZero: true, 
+                                ticks: { callback: v => (v === 0 ? 0 : v / 1000 + 'K'), font: {size: 10} }, 
+                                grid: { borderDash: [4, 4], color: document.body.classList.contains('dark-theme') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } 
+                            },
+                            x: { 
+                                grid: { display: false }, 
+                                ticks: { maxTicksLimit: 7, font: {size: 10}, color: '#94a3b8' } 
+                            }
+                        },
+                        plugins: { 
+                            legend: { display: false },
+                            // Bổ sung Tooltip kính mờ cực đẹp khi Admin chạm tay vào biểu đồ
+                            tooltip: { 
+                                backgroundColor: document.body.classList.contains('dark-theme') ? '#1e293b' : '#ffffff', 
+                                titleColor: document.body.classList.contains('dark-theme') ? '#94a3b8' : '#64748b', 
+                                bodyColor: document.body.classList.contains('dark-theme') ? '#f1f5f9' : '#0f172a', 
+                                borderColor: document.body.classList.contains('dark-theme') ? '#334155' : '#e2e8f0', 
+                                borderWidth: 1, 
+                                usePointStyle: true, 
+                                callbacks: { label: function(c) { return ' ' + c.dataset.label + ': ' + formatter.format(c.parsed.y) + 'đ'; } } 
+                            } 
+                        }
+                    }
+                });
             }
-        } // Đóng if (sortedDates)
+        } // Đóng if (sortedDates.length > 0)
     }, 100); // Đóng setTimeout
-} // <--- THÊM DẤU NÀY ĐỂ ĐÓNG HÀM renderAdminTxList()
+} // Đóng hàm renderAdminTxList
 
 // ==========================================
 // 13. ADMIN XEM THỐNG KÊ CỦA USER
@@ -6477,3 +6532,71 @@ if (originalUndoTx) {
         if (amtRaw && amtRaw.value) toggleClearAmountBtn(amtRaw.value); // Bật X
     };
 }
+// ==========================================
+// THUẬT TOÁN: GỢI Ý GHI CHÚ THÔNG MINH (SMART NOTE CHIPS)
+// ==========================================
+
+// 1. Kho dữ liệu từ khóa theo từng ID Danh mục (Bạn có thể tự thêm bớt tùy ý)
+const SMART_NOTES = {
+    'exp_food': ['Ăn sáng', 'Ăn trưa', 'Ăn tối', 'Cà phê', 'Trà sữa', 'Ăn vặt', 'Nhậu'],
+    'exp_transport': ['Đổ xăng', 'Gửi xe', 'Taxi/Grab', 'Bảo dưỡng xe', 'Rửa xe'],
+    'exp_shopping': ['Quần áo', 'Siêu thị', 'Shopee/Lazada', 'Mỹ phẩm', 'Đồ gia dụng'],
+    'exp_bill': ['Tiền điện', 'Tiền nước', 'Internet', 'Nạp điện thoại', 'Tiền nhà'],
+    'inc_salary': ['Lương tháng', 'Thưởng', 'Làm thêm', 'Tạm ứng'],
+    'inc_sales': ['Khách chuyển khoản', 'Tiền mặt', 'Đơn Shopee'],
+    'inc_other': ['Được cho', 'Lì xì', 'Hoàn tiền', 'Trúng thưởng', 'Thanh lý đồ'],
+    'exp_other': ['Hiếu hỉ', 'Sinh nhật', 'Đám cưới', 'Thăm ốm', 'Mua thuốc']
+};
+
+// 2. Hàm vẽ khay từ khóa ra màn hình
+window.renderSmartNotes = function(categoryId) {
+    const container = document.getElementById('noteSuggestions');
+    if (!container) return;
+
+    // Tìm xem danh mục này có bộ từ khóa gợi ý nào không
+    const suggestions = SMART_NOTES[categoryId];
+    
+    if (!suggestions || suggestions.length === 0) {
+        container.classList.add('hide');
+        container.innerHTML = '';
+        return;
+    }
+
+    // Nếu có, hiện khay lên và nhét từ khóa vào
+    container.classList.remove('hide');
+    let html = '';
+    suggestions.forEach(note => {
+        // Truyền chữ vào hàm onClick
+        html += `<div class="note-chip" onclick="applySmartNote('${note}')">${note}</div>`;
+    });
+    container.innerHTML = html;
+    
+    // Tự động cuộn khay về vị trí đầu tiên
+    container.scrollLeft = 0;
+};
+
+// 3. Hàm xử lý khi người dùng bấm vào một từ khóa
+window.applySmartNote = function(text) {
+    const noteInput = document.getElementById('noteInput');
+    if (noteInput) {
+        const currentVal = noteInput.value.trim();
+        
+        // Trí thông minh: Nếu ô ghi chú đang trống thì dán vào luôn. 
+        // Nếu đã có chữ thì thêm dấu phẩy (VD: "Ăn trưa, Phở bò")
+        if (currentVal) {
+            // Chống dán trùng lặp từ khóa
+            if (!currentVal.toLowerCase().includes(text.toLowerCase())) {
+                noteInput.value = currentVal + ', ' + text;
+            }
+        } else {
+            noteInput.value = text;
+        }
+        
+        // Rung nhẹ điện thoại phản hồi xúc giác
+        if (navigator.vibrate) navigator.vibrate(15);
+        
+        // Tùy chọn: Nháy nhẹ viền ô Ghi chú để báo hiệu đã dán thành công
+        noteInput.style.borderColor = 'var(--primary)';
+        setTimeout(() => noteInput.style.borderColor = '', 300);
+    }
+};

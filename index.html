@@ -569,7 +569,11 @@
                 </div>
 
                 <div class="form-group"><div class="category-scroll" id="categoryScroll"><div class="loading-text" style="font-size: 13px;">Đang tải danh mục...</div></div><input type="hidden" id="categoryIdInput" required><input type="hidden" id="categoryNameInput" required></div>
-                <div class="form-group" style="margin-bottom: 0;"><input type="text" id="noteInput" class="form-control" placeholder="Ghi chú (Không bắt buộc)"></div>
+                <div class="form-group" style="margin-bottom: 0;">
+					<input type="text" id="noteInput" class="form-control" placeholder="Ghi chú (Không bắt buộc)">
+					<!-- BỔ SUNG: Khay chứa Gợi ý ghi chú thông minh -->
+					<div class="note-suggestions-scroll hide" id="noteSuggestions"></div>
+				</div>
                 <button type="submit" class="btn-submit" id="submitBtn">Thêm giao dịch</button>
                 <button type="button" id="cancelEditBtn" class="btn-clear-filter hide" style="width: 100%; margin-top: 12px; justify-content: center; height: 48px;">Hủy chỉnh sửa</button>
 				<!-- BỔ SUNG: VÙNG HIỂN THỊ MINI-LIST VỪA NHẬP XONG -->

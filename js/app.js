@@ -1032,15 +1032,11 @@ function renderCategoryUI() {
                 const hexColor = THEMES[c.color] ? THEMES[c.color].hex : '#4361ee';
                 formCard.style.setProperty('--form-glow-color', hexColor);
             }
-			// ---> BỔ SUNG MỚI: Bật khay từ khóa tự động <---
-			if (typeof renderSmartNotes === 'function') {
-				const firstCatId = firstVisiblePill.getAttribute('data-id');
-				renderSmartNotes(firstCatId);
-			}
-			// ---> BỔ SUNG MỚI: Bật khay từ khóa dựa trên ID của Danh mục này <---
+            
+            // ---> BỔ SUNG MỚI: Bật khay từ khóa dựa trên ID của Danh mục này <---
             if (typeof renderSmartNotes === 'function') {
                 renderSmartNotes(c.id);
-			}
+            }
         };
         scroll.appendChild(div);
     });
@@ -1462,6 +1458,12 @@ function switchType(type) {
         if (formCard) {
             const rawBg = firstVisiblePill.style.getPropertyValue('--cat-color');
             formCard.style.setProperty('--form-glow-color', rawBg.trim() || 'var(--primary)');
+        }
+        
+        // ---> BỔ SUNG MỚI: Bật khay từ khóa tự động <---
+        if (typeof renderSmartNotes === 'function') {
+            const firstCatId = firstVisiblePill.getAttribute('data-id');
+            renderSmartNotes(firstCatId);
         }
     }
 }
@@ -2547,7 +2549,19 @@ document.getElementById('transactionForm')?.addEventListener('submit', (e) => {
     if(!currentUser) { showToast('Vui lòng đăng nhập!', 'error'); return; }
 
     const amtStr = amountInputRaw?.value;
-    if(!amtStr || parseInt(amtStr) < 1000) { alert('Vui lòng nhập số tiền hợp lệ'); return; }
+    // Kiểm tra nếu quên nhập tiền hoặc nhập chưa đủ 1K
+    if(!amtStr || parseInt(amtStr) < 1000) { 
+        const formCard = document.getElementById('formCard');
+        if (formCard) {
+            formCard.classList.remove('shake-error'); 
+            void formCard.offsetWidth; 
+            formCard.classList.add('shake-error');
+            setTimeout(() => formCard.classList.remove('shake-error'), 500);
+        }
+        if (navigator.vibrate) navigator.vibrate([50, 50, 50]); 
+        showToast('Bạn quên nhập số tiền kìa!', 'error'); 
+        return; 
+    }
     
     const amt = parseInt(amtStr);
     const catId = document.getElementById('categoryIdInput')?.value || '';

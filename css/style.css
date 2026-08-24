@@ -642,27 +642,40 @@ body.dark-theme .date-group-header { background: rgba(18, 18, 18, 0.98); border-
 .avatar-edit-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 body.dark-theme .avatar-edit-btn { border-color: var(--card-bg); }
 /* =========================================
-   HIỆU ỨNG AMBIENT GLOW (ÁNH SÁNG VIỀN)
+   HIỆU ỨNG TẮC KÈ HOA & LẮC ĐẦU BÁO LỖI
    ========================================= */
-/* 1. Thẻ Form Nhập liệu (Glow khi chạm vào) */
-#formCard { transition: box-shadow 0.4s ease, border-color 0.4s ease; }
-
-#formCard.theme-expense:focus-within {
-    border-color: rgba(231, 76, 60, 0.4);
-    box-shadow: 0 10px 30px rgba(231, 76, 60, 0.15), 0 0 0 1px rgba(231, 76, 60, 0.1) inset !important;
+#formCard { 
+    transition: box-shadow 0.4s ease, border-color 0.4s ease, transform 0.2s ease; 
+    --form-glow-color: var(--primary); /* Màu mặc định */
 }
 
-#formCard.theme-income:focus-within {
-    border-color: rgba(46, 204, 113, 0.4);
-    box-shadow: 0 10px 30px rgba(46, 204, 113, 0.15), 0 0 0 1px rgba(46, 204, 113, 0.1) inset !important;
+/* 1. Tắc kè hoa: Ánh sáng hòa trộn tự động theo màu Danh mục (Dùng color-mix) */
+#formCard:focus-within {
+    border-color: color-mix(in srgb, var(--form-glow-color) 40%, transparent) !important;
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--form-glow-color) 15%, transparent), 
+                0 0 0 1px color-mix(in srgb, var(--form-glow-color) 10%, transparent) inset !important;
 }
 
-/* Ánh sáng Form cho Chế độ Tối (Dark Mode) */
-body.dark-theme #formCard.theme-expense:focus-within { 
-    box-shadow: 0 10px 30px rgba(231, 76, 60, 0.25), 0 0 0 1px rgba(231, 76, 60, 0.2) inset !important; 
+body.dark-theme #formCard:focus-within { 
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--form-glow-color) 25%, transparent), 
+                0 0 0 1px color-mix(in srgb, var(--form-glow-color) 20%, transparent) inset !important; 
 }
-body.dark-theme #formCard.theme-income:focus-within { 
-    box-shadow: 0 10px 30px rgba(46, 204, 113, 0.25), 0 0 0 1px rgba(46, 204, 113, 0.2) inset !important; 
+
+/* 2. Hiệu ứng Lắc đầu (Shake-to-warn) khi người dùng quên nhập tiền */
+.shake-error {
+    animation: formShakeError 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    border-color: var(--danger) !important;
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.15) !important;
+}
+body.dark-theme .shake-error {
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.3) !important;
+}
+
+@keyframes formShakeError {
+    10%, 90% { transform: translate3d(-2px, 0, 0); }
+    20%, 80% { transform: translate3d(4px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+    40%, 60% { transform: translate3d(8px, 0, 0); }
 }
 
 /* 2. Thẻ Ngân sách (Glow Cảnh báo nhấp nháy) */
@@ -1751,4 +1764,49 @@ body.dark-theme .amount-text-vn {
 body.dark-theme .btn-clear-amount {
     background: #334155;
     color: #cbd5e1;
+}
+/* =========================================
+   CẢI TIẾN: GỢI Ý GHI CHÚ THÔNG MINH
+   ========================================= */
+.note-suggestions-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 10px 0 4px 0;
+    margin-top: 2px;
+    /* Ẩn thanh cuộn */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.note-suggestions-scroll::-webkit-scrollbar { 
+    display: none; 
+}
+
+.note-chip {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    background: #f1f5f9;
+    color: var(--text-muted);
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s var(--spring-ios);
+    border: 1px solid transparent;
+}
+
+.note-chip:active {
+    transform: scale(0.9);
+    background: #e2e8f0;
+    color: var(--text-main);
+}
+
+/* Chế độ tối */
+body.dark-theme .note-chip {
+    background: #334155;
+    color: #cbd5e1;
+}
+body.dark-theme .note-chip:active {
+    background: #475569;
+    color: #fff;
 }

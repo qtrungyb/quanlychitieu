@@ -672,17 +672,22 @@ auth.onAuthStateChanged(user => {
                 if(transactions.length > 0) { scheduleAppRender(); }
             }
         });
-		// BỔ SUNG: TẢI BỘ TỪ KHÓA THÔNG MINH TỪ FIREBASE
+		// BỔ SUNG: TẢI BỘ TỪ KHÓA THÔNG MINH TỪ FIREBASE REALTIME
         db.ref(`users/${currentUser.uid}/smartNotes`).on('value', (snap) => {
             if(!snap.exists()) {
-                // Nếu User chưa có bộ từ khóa nào, đẩy bộ Mặc định lên cho họ
+                // Nếu User chưa có, đẩy bộ Mặc định lên Cloud
                 db.ref(`users/${currentUser.uid}/smartNotes`).set(DEFAULT_SMART_NOTES);
             } else {
                 userSmartNotes = snap.val();
                 
-                // Nếu đang mở sẵn một danh mục, vẽ lại khay từ khóa lập tức
+                // Đồng bộ ngay ra khay nhập liệu ngoài trang chủ
                 const catIdIn = document.getElementById('categoryIdInput')?.value;
                 if (catIdIn && typeof renderSmartNotes === 'function') renderSmartNotes(catIdIn);
+                
+                // Đồng bộ ngay vào Popup Quản lý nếu đang mở
+                if (document.getElementById('smartNotesManagerModal')?.classList.contains('show')) {
+                    renderSmartNotesManagerList();
+                }
             }
         });
         // TỐI ƯU HIỆU NĂNG: Chỉ tải tối đa 90 ngày (Node) gần nhất tính từ hiện tại
@@ -6596,10 +6601,8 @@ if (originalUndoTx) {
     };
 }
 // ==========================================
-// THUẬT TOÁN: GỢI Ý GHI CHÚ THÔNG MINH (SMART NOTE CHIPS)
+// THUẬT TOÁN: QUẢN LÝ GỢI Ý GHI CHÚ TẬP TRUNG (SETTINGS TAB)
 // ==========================================
-
-// 1. Dữ liệu mồi (Chỉ dùng khi User mới đăng ký chưa có data trên Firebase)
 const DEFAULT_SMART_NOTES = {
     'exp_food': ['Ăn sáng', 'Ăn trưa', 'Ăn tối', 'Cà phê', 'Trà sữa', 'Ăn vặt', 'Nhậu'],
     'exp_transport': ['Đổ xăng', 'Gửi xe', 'Taxi/Grab', 'Bảo dưỡng xe', 'Rửa xe'],
@@ -6610,16 +6613,17 @@ const DEFAULT_SMART_NOTES = {
     'inc_other': ['Được cho', 'Lì xì', 'Hoàn tiền', 'Trúng thưởng', 'Thanh lý đồ'],
     'exp_other': ['Hiếu hỉ', 'Sinh nhật', 'Đám cưới', 'Thăm ốm', 'Mua thuốc']
 };
-let userSmartNotes = {}; // Biến chứa dữ liệu thật từ Firebase
 
-// 2. Hàm vẽ khay từ khóa (Sửa lại để lấy data từ userSmartNotes)
+let userSmartNotes = {};
+
+// 1. Hàm vẽ khay trượt ở Màn hình Nhập liệu (Gọn gàng, chỉ có chữ, không có nút xóa)
 window.renderSmartNotes = function(categoryId) {
     const container = document.getElementById('noteSuggestions');
     if (!container) return;
 
-    const suggestions = userSmartNotes[categoryId]; // <--- SỬA TẠI ĐÂY
+    const suggestions = userSmartNotes[categoryId] || [];
     
-    if (!suggestions || suggestions.length === 0) {
+    if (suggestions.length === 0) {
         container.classList.add('hide');
         container.innerHTML = '';
         return;
@@ -6628,34 +6632,175 @@ window.renderSmartNotes = function(categoryId) {
     container.classList.remove('hide');
     let html = '';
     suggestions.forEach(note => {
-        html += `<div class="note-chip" onclick="applySmartNote('${note}')">${note}</div>`;
+        html += `<div class="note-chip" onclick="applySmartNote('${note.replace(/'/g, "\\'")}')">${note}</div>`;
     });
     container.innerHTML = html;
     container.scrollLeft = 0;
 };
 
-// 3. Hàm xử lý khi người dùng bấm vào một từ khóa
+// 2. Hàm dán chữ vào ô Ghi chú (Kèm hiệu ứng rung & chớp viền)
 window.applySmartNote = function(text) {
     const noteInput = document.getElementById('noteInput');
     if (noteInput) {
         const currentVal = noteInput.value.trim();
-        
-        // Trí thông minh: Nếu ô ghi chú đang trống thì dán vào luôn. 
-        // Nếu đã có chữ thì thêm dấu phẩy (VD: "Ăn trưa, Phở bò")
         if (currentVal) {
-            // Chống dán trùng lặp từ khóa
             if (!currentVal.toLowerCase().includes(text.toLowerCase())) {
                 noteInput.value = currentVal + ', ' + text;
             }
         } else {
             noteInput.value = text;
         }
-        
-        // Rung nhẹ điện thoại phản hồi xúc giác
         if (navigator.vibrate) navigator.vibrate(15);
-        
-        // Tùy chọn: Nháy nhẹ viền ô Ghi chú để báo hiệu đã dán thành công
         noteInput.style.borderColor = 'var(--primary)';
         setTimeout(() => noteInput.style.borderColor = '', 300);
     }
 };
+
+// ----------------------------------------------------
+// CÁC HÀM XỬ LÝ TRONG POPUP QUẢN LÝ TỪ KHÓA (CÀI ĐẶT)
+// ----------------------------------------------------
+window.openSmartNotesManager = function() {
+    document.getElementById('smartNotesManagerOverlay')?.classList.add('show');
+    document.getElementById('smartNotesManagerModal')?.classList.add('show');
+    renderSmartNotesManagerList();
+};
+
+window.closeSmartNotesManager = function() {
+    document.getElementById('smartNotesManagerOverlay')?.classList.remove('show');
+    document.getElementById('smartNotesManagerModal')?.classList.remove('show');
+};
+document.getElementById('btnSettingsSmartNotes')?.addEventListener('click', openSmartNotesManager);
+
+window.renderSmartNotesManagerList = function() {
+    const listEl = document.getElementById('smartNotesManagerList');
+    if (!listEl) return;
+
+    let html = '';
+    categories.forEach(c => {
+        const theme = THEMES[c.color] || THEMES['theme-gray'];
+        const iconSvg = SVG_LIB[c.icon] || SVG_LIB['other'];
+        const innerSvg = iconSvg.replace(/<svg[^>]*>|<\/svg>/g, '');
+
+        const notes = userSmartNotes[c.id] || [];
+        
+        let chipsHtml = '';
+        notes.forEach((note, idx) => {
+            chipsHtml += `
+            <div class="note-chip">
+                <span class="note-chip-text">${note}</span>
+                <div class="note-chip-delete" onclick="removeSmartNote('${c.id}', ${idx})">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </div>
+            </div>`;
+        });
+
+        // Nút thêm mới từ khóa
+        chipsHtml += `<div class="note-chip note-chip-add" onclick="addSmartNoteModal('${c.id}')">+ Thêm</div>`;
+
+        html += `
+        <div class="transaction-item" style="padding: 16px; cursor: default; flex-direction: column; align-items: stretch; gap: 12px; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: ${theme.bg}; color: ${theme.color}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${innerSvg}</svg>
+                </div>
+                <div style="font-weight: 700; font-size: 15px; color: var(--text-main);">${c.name} <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">(${c.type === 'expense' ? 'Chi' : 'Thu'})</span></div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
+                ${chipsHtml}
+            </div>
+        </div>`;
+    });
+    listEl.innerHTML = html;
+};
+
+// Hàm Thêm và Lưu Firebase
+window.addSmartNoteModal = function(categoryId) {
+    if (!currentUser) return;
+    const newNote = prompt('Nhập từ khóa gợi ý mới (VD: Tiền nhà, Bún bò...):');
+    if (!newNote || newNote.trim() === '') return;
+    
+    const noteClean = newNote.trim();
+    let arr = userSmartNotes[categoryId] || [];
+    
+    if (arr.some(item => item.toLowerCase() === noteClean.toLowerCase())) {
+        showToast('Từ khóa này đã có rồi!', 'error');
+        return;
+    }
+
+    arr.push(noteClean); // Đẩy vào mảng
+    db.ref(`users/${currentUser.uid}/smartNotes/${categoryId}`).set(arr).catch(() => showToast('Lỗi khi thêm', 'error'));
+};
+
+// Hàm Xóa và Lưu Firebase
+window.removeSmartNote = function(categoryId, index) {
+    if (!currentUser) return;
+    if (navigator.vibrate) navigator.vibrate(10);
+    
+    if (confirm('Xóa gợi ý này?')) {
+        let arr = userSmartNotes[categoryId] || [];
+        arr.splice(index, 1);
+        db.ref(`users/${currentUser.uid}/smartNotes/${categoryId}`).set(arr).catch(() => showToast('Lỗi khi xóa', 'error'));
+    }
+};
+// ==========================================
+// THUẬT TOÁN: NÚT XÓA NHANH TRONG Ô GHI CHÚ
+// ==========================================
+
+const noteInputEl = document.getElementById('noteInput');
+const btnClearNote = document.getElementById('btnClearNote');
+
+if (noteInputEl && btnClearNote) {
+    // 1. Hàm kiểm tra và ẩn/hiện nút X
+    window.toggleClearNoteBtn = function() {
+        if (noteInputEl.value.trim().length > 0) {
+            btnClearNote.classList.remove('hide');
+        } else {
+            btnClearNote.classList.add('hide');
+        }
+    };
+
+    // 2. Hiện nút X khi người dùng tự gõ phím
+    noteInputEl.addEventListener('input', toggleClearNoteBtn);
+
+    // 3. Xóa trắng ghi chú khi bấm nút X
+    btnClearNote.addEventListener('click', (e) => {
+        e.preventDefault();
+        noteInputEl.value = '';
+        btnClearNote.classList.add('hide');
+        if (navigator.vibrate) navigator.vibrate(10);
+        // Tùy chọn: Nháy đỏ viền để báo hiệu đã xóa
+        noteInputEl.style.borderColor = 'var(--danger)';
+        setTimeout(() => noteInputEl.style.borderColor = '', 300);
+    });
+}
+
+// 4. Kích hoạt nút X khi người dùng Bấm vào Từ khóa Gợi ý
+const originalApplySmartNote = window.applySmartNote;
+if (originalApplySmartNote) {
+    window.applySmartNote = function(text) {
+        originalApplySmartNote(text); // Chạy hàm dán chữ cũ
+        if (typeof toggleClearNoteBtn === 'function') toggleClearNoteBtn(); // Bật nút X lên
+    };
+}
+
+// 5. Giấu nút X đi khi Form bị Reset (Sau khi Lưu hoặc ấn Hoàn tác)
+const originalResetFormState3 = window.resetFormState;
+if (originalResetFormState3) {
+    window.resetFormState = function() {
+        originalResetFormState3(); // Chạy hàm reset cũ
+        const btn = document.getElementById('btnClearNote');
+        if (btn) btn.classList.add('hide'); // Ẩn nút X
+    };
+}
+
+// 6. Hiện lại nút X nếu người dùng ấn Hoàn Tác (Undo) mà giao dịch cũ CÓ ghi chú
+const originalUndoTransaction = window.undoTransaction;
+if (originalUndoTransaction) {
+    window.undoTransaction = function(id, dateStr) {
+        originalUndoTransaction(id, dateStr);
+        // Đợi form điền dữ liệu xong thì check lại ô ghi chú
+        setTimeout(() => {
+            if (typeof toggleClearNoteBtn === 'function') toggleClearNoteBtn();
+        }, 100);
+    };
+}

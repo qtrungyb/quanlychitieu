@@ -1821,3 +1821,35 @@ body.dark-theme .note-chip:active {
     background: #475569;
     color: #fff;
 }
+/* =========================================
+   FIX LỖI LAYOUT BÀN PHÍM MÁY TÍNH
+   ========================================= */
+#numpadExpression {
+    max-width: 75%;
+    white-space: nowrap; /* Cấm xuống dòng */
+    overflow: hidden; /* Cắt bớt phần thừa */
+    text-overflow: ellipsis; /* Biến phần bị cắt thành dấu "..." */
+    text-align: right;
+}
+/* =========================================
+   FIX LỖI LAYOUT BÀN PHÍM VÀ KHÓA CUỘN NỀN
+   ========================================= */
+/* 1. Ép chữ số không bao giờ được rớt xuống dòng */
+#numpadExpression {
+    max-width: 75%;
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    text-align: right;
+}
+
+/* 2. Class dùng để khóa chết màn hình nền khi mở Bàn phím */
+body.no-scroll {
+    overflow: hidden !important;
+    touch-action: none !important; /* Chặn hoàn toàn hành vi vuốt của trình duyệt */
+}
+
+/* 3. Fix lỗi iOS không nhận diện click trên nền mờ */
+.sheet-overlay {
+    cursor: pointer;
+}

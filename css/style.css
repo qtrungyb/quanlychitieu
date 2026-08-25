@@ -649,16 +649,27 @@ body.dark-theme .avatar-edit-btn { border-color: var(--card-bg); }
     --form-glow-color: var(--primary); /* Màu mặc định */
 }
 
-/* 1. Tắc kè hoa: Ánh sáng hòa trộn tự động theo màu Danh mục (Dùng color-mix) */
-#formCard:focus-within {
-    border-color: color-mix(in srgb, var(--form-glow-color) 40%, transparent) !important;
-    box-shadow: 0 10px 30px color-mix(in srgb, var(--form-glow-color) 15%, transparent), 
-                0 0 0 1px color-mix(in srgb, var(--form-glow-color) 10%, transparent) inset !important;
+/* 1. Tắc kè hoa: Ánh sáng hòa trộn tự động theo màu Danh mục */
+/* Dùng class .numpad-open thay vì :focus-within do ô input đã bị chặn focus */
+#formCard.numpad-open {
+    border-color: color-mix(in srgb, var(--form-glow-color) 60%, transparent) !important;
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--form-glow-color) 25%, transparent), 
+                0 0 0 1px color-mix(in srgb, var(--form-glow-color) 20%, transparent) inset !important;
 }
 
-body.dark-theme #formCard:focus-within { 
-    box-shadow: 0 10px 30px color-mix(in srgb, var(--form-glow-color) 25%, transparent), 
-                0 0 0 1px color-mix(in srgb, var(--form-glow-color) 20%, transparent) inset !important; 
+body.dark-theme #formCard.numpad-open { 
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--form-glow-color) 35%, transparent), 
+                0 0 0 1px color-mix(in srgb, var(--form-glow-color) 30%, transparent) inset !important; 
+}
+
+/* ĐỒNG BỘ: Ép màu chữ số tiền đổi theo đúng màu danh mục (Hồng, Tím, Cam...) */
+#formCard .input-amount {
+    color: var(--form-glow-color) !important;
+    transition: color 0.3s ease;
+}
+#formCard .amount-currency {
+    color: color-mix(in srgb, var(--form-glow-color) 70%, transparent) !important;
+    transition: color 0.3s ease;
 }
 
 /* 2. Hiệu ứng Lắc đầu (Shake-to-warn) khi người dùng quên nhập tiền */

@@ -5228,16 +5228,29 @@ mainAmtWrapper?.addEventListener('click', () => {
     npSheet?.classList.add('show');
     npExpression = mainAmtRaw?.value || '';
     updateNpDisplay();
-    // BỔ SUNG: Kích hoạt hắt sáng Form
     document.getElementById('formCard')?.classList.add('numpad-open');
+    
+    // FIX: Khóa cuộn nền đằng sau để chống giật cục khi vuốt
+    document.body.classList.add('no-scroll');
 });
 
 // 2. Đóng Numpad
 function closeNumpad() {
     npOverlay?.classList.remove('show');
     npSheet?.classList.remove('show');
-    // BỔ SUNG: Tắt hắt sáng Form khi đóng bàn phím
     document.getElementById('formCard')?.classList.remove('numpad-open');
+    
+    // FIX: Mở khóa cuộn nền khi đóng bàn phím
+    document.body.classList.remove('no-scroll');
+}
+
+// BỔ SUNG: Bắt sự kiện chạm nhạy bén trên Mobile để đóng bàn phím
+if (npOverlay) {
+    npOverlay.addEventListener('click', closeNumpad);
+    npOverlay.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Tránh bị click xuyên thấu
+        closeNumpad();
+    }, {passive: false});
 }
 
 // 3. Xử lý logic khi bấm nút & Bàn phím Parallax 3D
@@ -5291,6 +5304,11 @@ document.querySelectorAll('#numpadGrid .np-btn').forEach(btn => {
             resetTilt();
             return; 
         } else {
+			// FIX: Khóa chặn không cho nhập quá 16 ký tự để tránh lỗi tràn số và vỡ layout
+            if (npExpression.length >= 16) {
+                if (navigator.vibrate) navigator.vibrate(50); // Rung cảnh báo
+                return; // Dừng lại, không cho nhập thêm
+            }
             const lastChar = npExpression.slice(-1);
             const isOp = ['+', '-', '×', '÷'].includes(val);
             const isLastOp = ['+', '-', '×', '÷'].includes(lastChar);

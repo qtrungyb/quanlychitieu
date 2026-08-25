@@ -672,7 +672,19 @@ auth.onAuthStateChanged(user => {
                 if(transactions.length > 0) { scheduleAppRender(); }
             }
         });
-
+		// BỔ SUNG: TẢI BỘ TỪ KHÓA THÔNG MINH TỪ FIREBASE
+        db.ref(`users/${currentUser.uid}/smartNotes`).on('value', (snap) => {
+            if(!snap.exists()) {
+                // Nếu User chưa có bộ từ khóa nào, đẩy bộ Mặc định lên cho họ
+                db.ref(`users/${currentUser.uid}/smartNotes`).set(DEFAULT_SMART_NOTES);
+            } else {
+                userSmartNotes = snap.val();
+                
+                // Nếu đang mở sẵn một danh mục, vẽ lại khay từ khóa lập tức
+                const catIdIn = document.getElementById('categoryIdInput')?.value;
+                if (catIdIn && typeof renderSmartNotes === 'function') renderSmartNotes(catIdIn);
+            }
+        });
         // TỐI ƯU HIỆU NĂNG: Chỉ tải tối đa 90 ngày (Node) gần nhất tính từ hiện tại
         // Tiết kiệm 80% RAM và Băng thông mạng cho người dùng lâu năm
         txRef = db.ref(`users/${currentUser.uid}/transactions`).orderByKey().limitToLast(90);
@@ -1241,7 +1253,7 @@ function openCatForm(id = null, defaultType = 'expense') {
     // MỚI THÊM: Lấy element ngân sách
     const cBudgetRaw = document.getElementById('catBudgetRaw');
     const cBudgetDisplay = document.getElementById('catBudgetDisplay');
-
+	const cNotesInput = document.getElementById('catSmartNotesInput');
     if (id) {
         const c = categories.find(x => x.id === id);
         if (!c) return;
@@ -1250,13 +1262,14 @@ function openCatForm(id = null, defaultType = 'expense') {
         setCatFormType(c.type);
         if (cIconInput) cIconInput.value = c.icon;
         if (cColorInput) cColorInput.value = c.color;
-        
+        if (cNotesInput) cNotesInput.value = userSmartNotes[id] ? userSmartNotes[id].join(', ') : '';
         // MỚI THÊM: Đổ dữ liệu ngân sách cũ vào Form
         if (c.budgetLimit && cBudgetRaw && cBudgetDisplay) {
             cBudgetRaw.value = c.budgetLimit;
             cBudgetDisplay.value = formatter.format(c.budgetLimit);
         } else {
             if (cBudgetRaw) cBudgetRaw.value = '';
+			if (cNotesInput) cNotesInput.value = '';
             if (cBudgetDisplay) cBudgetDisplay.value = '';
         }
         
@@ -1300,18 +1313,23 @@ document.getElementById('btnSaveCat')?.addEventListener('click', () => {
     // MỚI THÊM: Lấy giá trị ngân sách
     const budgetStr = document.getElementById('catBudgetRaw')?.value;
     const budgetLimit = budgetStr ? parseInt(budgetStr) : null;
-
+	const notesStr = document.getElementById('catSmartNotesInput')?.value || '';
+    const notesArr = notesStr.split(',').map(n => n.trim()).filter(n => n !== '');
+	
     if(!name) { showToast('Vui lòng nhập tên danh mục!', 'error'); return; }
     if(!icon) { showToast('Vui lòng chọn 1 biểu tượng!', 'error'); return; }
     if(!color) { showToast('Vui lòng chọn 1 màu sắc!', 'error'); return; }
 
     if(editingCatId) {
         db.ref(`users/${currentUser.uid}/categories/${editingCatId}`).update({ name, type, icon, color, budgetLimit: budgetLimit })
+          .then(() => db.ref(`users/${currentUser.uid}/smartNotes/${editingCatId}`).set(notesArr))
           .then(() => { showToast('Đã cập nhật danh mục'); closeCatForm(); });
     } else {
         const newId = 'cat_' + Date.now();
         const newOrder = categories.filter(c => c.type === type).length;
+        // SỬA LẠI THÀNH SET CHUỖI LIÊN HOÀN
         db.ref(`users/${currentUser.uid}/categories/${newId}`).set({ name, type, icon, color, order: newOrder, budgetLimit: budgetLimit })
+          .then(() => db.ref(`users/${currentUser.uid}/smartNotes/${newId}`).set(notesArr))
           .then(() => { showToast('Đã thêm danh mục mới'); closeCatForm(); });
     }
 });
@@ -1319,6 +1337,7 @@ document.getElementById('btnSaveCat')?.addEventListener('click', () => {
 function deleteCat(id) {
     if(confirm('Bạn có chắc muốn xóa danh mục này?')) {
         db.ref(`users/${currentUser.uid}/categories/${id}`).remove()
+          .then(() => db.ref(`users/${currentUser.uid}/smartNotes/${id}`).remove()) // Xóa luôn từ khóa đi kèm
           .then(() => showToast('Đã xóa danh mục'));
     }
 }
@@ -6550,8 +6569,8 @@ if (originalUndoTx) {
 // THUẬT TOÁN: GỢI Ý GHI CHÚ THÔNG MINH (SMART NOTE CHIPS)
 // ==========================================
 
-// 1. Kho dữ liệu từ khóa theo từng ID Danh mục (Bạn có thể tự thêm bớt tùy ý)
-const SMART_NOTES = {
+// 1. Dữ liệu mồi (Chỉ dùng khi User mới đăng ký chưa có data trên Firebase)
+const DEFAULT_SMART_NOTES = {
     'exp_food': ['Ăn sáng', 'Ăn trưa', 'Ăn tối', 'Cà phê', 'Trà sữa', 'Ăn vặt', 'Nhậu'],
     'exp_transport': ['Đổ xăng', 'Gửi xe', 'Taxi/Grab', 'Bảo dưỡng xe', 'Rửa xe'],
     'exp_shopping': ['Quần áo', 'Siêu thị', 'Shopee/Lazada', 'Mỹ phẩm', 'Đồ gia dụng'],
@@ -6561,14 +6580,14 @@ const SMART_NOTES = {
     'inc_other': ['Được cho', 'Lì xì', 'Hoàn tiền', 'Trúng thưởng', 'Thanh lý đồ'],
     'exp_other': ['Hiếu hỉ', 'Sinh nhật', 'Đám cưới', 'Thăm ốm', 'Mua thuốc']
 };
+let userSmartNotes = {}; // Biến chứa dữ liệu thật từ Firebase
 
-// 2. Hàm vẽ khay từ khóa ra màn hình
+// 2. Hàm vẽ khay từ khóa (Sửa lại để lấy data từ userSmartNotes)
 window.renderSmartNotes = function(categoryId) {
     const container = document.getElementById('noteSuggestions');
     if (!container) return;
 
-    // Tìm xem danh mục này có bộ từ khóa gợi ý nào không
-    const suggestions = SMART_NOTES[categoryId];
+    const suggestions = userSmartNotes[categoryId]; // <--- SỬA TẠI ĐÂY
     
     if (!suggestions || suggestions.length === 0) {
         container.classList.add('hide');
@@ -6576,16 +6595,12 @@ window.renderSmartNotes = function(categoryId) {
         return;
     }
 
-    // Nếu có, hiện khay lên và nhét từ khóa vào
     container.classList.remove('hide');
     let html = '';
     suggestions.forEach(note => {
-        // Truyền chữ vào hàm onClick
         html += `<div class="note-chip" onclick="applySmartNote('${note}')">${note}</div>`;
     });
     container.innerHTML = html;
-    
-    // Tự động cuộn khay về vị trí đầu tiên
     container.scrollLeft = 0;
 };
 

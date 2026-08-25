@@ -1777,50 +1777,48 @@ body.dark-theme .btn-clear-amount {
     color: #cbd5e1;
 }
 /* =========================================
-   CẢI TIẾN: GỢI Ý GHI CHÚ THÔNG MINH
+   CẢI TIẾN: GỢI Ý GHI CHÚ THÔNG MINH (CÓ NÚT XÓA/THÊM)
    ========================================= */
 .note-suggestions-scroll {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding: 10px 0 4px 0;
-    margin-top: 2px;
-    /* Ẩn thanh cuộn */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    display: flex; gap: 8px; overflow-x: auto; padding: 10px 0 4px 0; margin-top: 2px;
+    scrollbar-width: none; -ms-overflow-style: none;
 }
-.note-suggestions-scroll::-webkit-scrollbar { 
-    display: none; 
-}
+.note-suggestions-scroll::-webkit-scrollbar { display: none; }
 
+/* Chip bọc ngoài */
 .note-chip {
-    flex-shrink: 0;
-    padding: 6px 14px;
-    background: #f1f5f9;
-    color: var(--text-muted);
-    border-radius: 16px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s var(--spring-ios);
-    border: 1px solid transparent;
+    flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+    padding: 6px 10px 6px 14px; background: #f1f5f9; color: var(--text-muted);
+    border-radius: 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s var(--spring-ios); border: 1px solid transparent;
 }
+.note-chip:active { transform: scale(0.95); background: #e2e8f0; color: var(--text-main); }
 
-.note-chip:active {
-    transform: scale(0.9);
-    background: #e2e8f0;
-    color: var(--text-main);
+/* Chữ gợi ý */
+.note-chip-text { pointer-events: none; } /* Ép click xuyên qua chữ để ăn vào thẻ cha */
+
+/* Nút Xóa (x) nằm gọn trong Chip */
+.note-chip-delete {
+    display: flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: rgba(0,0,0,0.06); color: var(--text-muted);
+    transition: 0.2s;
 }
+.note-chip-delete:active { background: var(--danger); color: #fff; transform: scale(1.1); }
+.note-chip-delete svg { width: 12px; height: 12px; stroke-width: 3; }
+
+/* Nút [+ Thêm] đặc biệt */
+.note-chip-add {
+    background: transparent; border: 1px dashed var(--primary); color: var(--primary);
+    padding: 6px 14px;
+}
+.note-chip-add:active { background: rgba(67, 97, 238, 0.1); color: var(--primary); }
 
 /* Chế độ tối */
-body.dark-theme .note-chip {
-    background: #334155;
-    color: #cbd5e1;
-}
-body.dark-theme .note-chip:active {
-    background: #475569;
-    color: #fff;
-}
+body.dark-theme .note-chip { background: #334155; color: #cbd5e1; }
+body.dark-theme .note-chip:active { background: #475569; color: #fff; }
+body.dark-theme .note-chip-delete { background: rgba(255,255,255,0.1); color: #cbd5e1; }
+body.dark-theme .note-chip-add { border-color: #829fff; color: #829fff; }
 /* =========================================
    FIX LỖI LAYOUT BÀN PHÍM MÁY TÍNH
    ========================================= */

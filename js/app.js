@@ -1041,9 +1041,12 @@ function renderCategoryUI() {
 			// ---> BỔ SUNG: Truyền màu sắc của Danh mục ra ngoài Form để hắt sáng <---
             const formCard = document.getElementById('formCard');
             if (formCard) {
-                const hexColor = THEMES[c.color] ? THEMES[c.color].hex : '#4361ee';
-                formCard.style.setProperty('--form-glow-color', hexColor);
-            }
+            // FIX: Lấy mã Hex chuẩn từ danh mục đầu tiên để màu sắc hắt ra mượt mà nhất
+				const firstCatId = firstVisiblePill.getAttribute('data-id');
+				const cObj = categories.find(c => c.id === firstCatId);
+				const hexColor = (cObj && THEMES[cObj.color]) ? THEMES[cObj.color].hex : '#4361ee';
+				formCard.style.setProperty('--form-glow-color', hexColor);
+			}
             
             // ---> BỔ SUNG MỚI: Bật khay từ khóa dựa trên ID của Danh mục này <---
             if (typeof renderSmartNotes === 'function') {
@@ -5225,14 +5228,17 @@ mainAmtWrapper?.addEventListener('click', () => {
     npSheet?.classList.add('show');
     npExpression = mainAmtRaw?.value || '';
     updateNpDisplay();
+    // BỔ SUNG: Kích hoạt hắt sáng Form
+    document.getElementById('formCard')?.classList.add('numpad-open');
 });
 
 // 2. Đóng Numpad
 function closeNumpad() {
     npOverlay?.classList.remove('show');
     npSheet?.classList.remove('show');
+    // BỔ SUNG: Tắt hắt sáng Form khi đóng bàn phím
+    document.getElementById('formCard')?.classList.remove('numpad-open');
 }
-npOverlay?.addEventListener('click', closeNumpad);
 
 // 3. Xử lý logic khi bấm nút & Bàn phím Parallax 3D
 document.querySelectorAll('#numpadGrid .np-btn').forEach(btn => {
@@ -6545,6 +6551,12 @@ document.querySelectorAll('.btn-quick').forEach(btn => {
 
         if(typeof DATES_PER_PAGE !== 'undefined') currentDateLimit = DATES_PER_PAGE;
         if(typeof updateUI === 'function') updateUI();
+		const formCard = document.getElementById('formCard');
+        if (formCard) {
+            formCard.classList.add('numpad-open');
+            clearTimeout(formCard.glowTimeout);
+            formCard.glowTimeout = setTimeout(() => formCard.classList.remove('numpad-open'), 400); // Tự tắt sau 0.4s
+        }
     });
 });
 

@@ -4581,9 +4581,10 @@ function openBudgetManager() {
                     <div style="font-weight: 700; font-size: 14px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.name}</div>
                 </div>
                 
-                <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0; width: 170px;">
+                <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0; width: 190px;">
                     <div class="amount-wrapper" style="height: 36px; flex: 1; background: #f8f9fa; border: 1px solid transparent; transition: 0.3s; border-radius: 8px; margin-bottom: 0;">
-                        <input type="text" class="form-control input-amount budget-input-display" data-id="${c.id}" placeholder="Vô hạn" value="${budgetVal}" style="font-size: 14px; background: transparent; border: none; text-align: right; font-weight: 700; width: 100%; height: 100%; padding: 0 24px 0 8px;">
+                        <input type="text" class="form-control input-amount budget-input-display" data-id="${c.id}" placeholder="Vô hạn" value="${budgetVal}" style="font-size: 14px; background: transparent; border: none; text-align: right; font-weight: 700; width: 100%; height: 100%; padding: 0 24px 0 8px !important;">
+
                         <span class="amount-currency" style="right: 8px; top: 9px; font-size: 12px;">đ</span>
                         <input type="hidden" class="budget-input-raw" id="raw_budget_${c.id}" value="${rawVal}">
                     </div>

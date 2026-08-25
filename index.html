@@ -973,6 +973,11 @@
             <div class="amount-wrapper" style="height: 48px;"><input type="text" id="catBudgetDisplay" class="form-control input-amount" placeholder="Không giới hạn" inputmode="numeric" style="font-size: 16px;"><span class="amount-currency">đ</span></div>
             <input type="hidden" id="catBudgetRaw">
         </div>
+		<!-- BỔ SUNG MỚI: Ô NHẬP TỪ KHÓA GỢI Ý ĐỘNG -->
+        <div class="form-group" style="margin-top: 16px;">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Gợi ý Ghi chú (Mỗi từ cách nhau bằng dấu phẩy)</label>
+            <input type="text" id="catSmartNotesInput" class="form-control" placeholder="VD: Ăn sáng, Phở bò, Cà phê...">
+        </div>
         <div class="type-toggle" style="margin-bottom: 24px;">
             <button type="button" class="btn-toggle active income" id="btnCatTypeInc" onclick="setCatFormType('income')">Tiền Thu</button>
             <button type="button" class="btn-toggle expense" id="btnCatTypeExp" onclick="setCatFormType('expense')">Tiền Chi</button>

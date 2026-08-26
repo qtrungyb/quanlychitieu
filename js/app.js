@@ -443,7 +443,8 @@ document.getElementById('btnSettingsCatManager')?.addEventListener('click', open
 document.getElementById('btnSettingsWalletTheme')?.addEventListener('click', openWalletThemeModal);
 document.getElementById('btnSettingsAppTheme')?.addEventListener('click', openAppThemeModal);
 document.getElementById('btnSettingsChangePwd')?.addEventListener('click', () => { 
-    document.getElementById('changePwdOverlay')?.classList.remove('hide'); 
+    document.getElementById('changePwdOverlay')?.classList.add('show'); 
+    document.getElementById('changePwdModal')?.classList.add('show'); 
 });
 document.getElementById('btnSettingsLogout')?.addEventListener('click', () => {
     if(confirm('Bạn muốn đăng xuất?')) {
@@ -610,10 +611,14 @@ auth.onAuthStateChanged(user => {
     if (user) {
         currentUser = user;
 		// Bơm mã số UID lên mặt sau của thẻ
-        const uidEl = document.getElementById('cardBackUid');
-        if (uidEl) uidEl.innerText = 'UID: ' + user.uid.substring(0, 8).toUpperCase();
-        document.getElementById('authOverlay')?.classList.add('hide');
-		document.getElementById('registerOverlay')?.classList.add('hide');
+         const uidEl = document.getElementById('cardBackUid');
+         if (uidEl) uidEl.innerText = 'UID: ' + user.uid.substring(0, 8).toUpperCase();
+            
+         // FIX LỖI NHẢY MÀN HÌNH: Nếu đang ở luồng Đăng ký thì KHÔNG ẨN màn hình Auth
+         if (!window.isRegisteringUser) {
+             document.getElementById('authOverlay')?.classList.add('hide');
+             document.getElementById('registerOverlay')?.classList.add('hide');
+         }
         
         const username = user.email.split('@')[0];
         const avatarImg = document.getElementById('avatarImg');
@@ -800,10 +805,14 @@ auth.onAuthStateChanged(user => {
             }
         });
     } else {
-        currentUser = null;
-        document.getElementById('authOverlay')?.classList.remove('hide'); 
-		document.getElementById('registerOverlay')?.classList.add('hide');
-        transactions = []; categories = []; updateUI();
+         currentUser = null;
+            
+         // FIX LỖI NHẢY MÀN HÌNH: Đợi Đăng ký xong mới hiện lại màn hình
+         if (!window.isRegisteringUser) {
+             document.getElementById('authOverlay')?.classList.remove('hide'); 
+             document.getElementById('registerOverlay')?.classList.add('hide');
+         }
+         transactions = []; categories = []; updateUI();
         
         if(pieChartInstance) pieChartInstance.destroy();
         if(barChartInstance) barChartInstance.destroy();
@@ -838,6 +847,22 @@ document.getElementById('btnLogin')?.addEventListener('click', () => {
         .catch(err => showToast(getAuthErrorVN(err.code), 'error'));
 });
 // ==========================================
+// THUẬT TOÁN BỔ SUNG CHO MÀN HÌNH ĐĂNG NHẬP
+// ==========================================
+
+// 1. Mắt thần bật/tắt mật khẩu Đăng nhập
+document.getElementById('btnToggleLoginPwd')?.addEventListener('click', function() {
+    const pwdInput = document.getElementById('passwordInput');
+    const svg = this.querySelector('svg');
+    if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        svg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+    } else {
+        pwdInput.type = 'password';
+        svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+    }
+});
+// ==========================================
 // TÍNH NĂNG ĐĂNG KÝ TÀI KHOẢN DÀNH CHO NGƯỜI MỚI (PUBLIC)
 // ==========================================
 // 1. Chuyển đổi qua lại giữa Form Đăng nhập và Đăng ký
@@ -853,62 +878,204 @@ document.getElementById('btnShowLogin')?.addEventListener('click', (e) => {
     document.getElementById('authOverlay')?.classList.remove('hide');
 });
 
-// 2. Logic xử lý Đăng ký
+// 2.1. Tự động xóa khoảng trắng và dấu Tiếng Việt lúc gõ Username
+document.getElementById('regUsernameInput')?.addEventListener('input', function(e) {
+    let val = e.target.value;
+    // Chuẩn hóa: Gỡ dấu Unicode, xóa khoảng trắng/ký tự đặc biệt, ép viết thường
+    val = val.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+             .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+             .replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    e.target.value = val;
+});
+
+// 2.2. Mắt thần bật/tắt hiển thị mật khẩu
+document.getElementById('btnToggleRegPwd')?.addEventListener('click', function() {
+    const pwdInput = document.getElementById('regPasswordInput');
+    const svg = this.querySelector('svg');
+    if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        svg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+    } else {
+        pwdInput.type = 'password';
+        svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+    }
+});
+
+// 2.3. Thanh đo sức mạnh mật khẩu thời gian thực
+document.getElementById('regPasswordInput')?.addEventListener('input', function(e) {
+    const val = e.target.value;
+    const wrapper = document.getElementById('pwdStrengthWrapper');
+    const bar1 = document.getElementById('pwdBar1');
+    const bar2 = document.getElementById('pwdBar2');
+    const bar3 = document.getElementById('pwdBar3');
+    const text = document.getElementById('pwdStrengthText');
+
+    if (val.length === 0) {
+        wrapper.style.display = 'none';
+        return;
+    }
+    
+    wrapper.style.display = 'block';
+    let strength = 0;
+    
+    // Thuật toán tính điểm (Max 3 điểm)
+    if (val.length >= 6) strength += 1; // Độ dài tối thiểu
+    if (val.match(/[A-Z]/) || val.match(/[0-9]/)) strength += 1; // Có hoa hoặc số
+    if (val.match(/[^a-zA-Z0-9]/) && val.length >= 8) strength += 1; // Có ký tự đặc biệt + dài trên 8
+
+    bar1.style.background = strength >= 1 ? 'var(--danger)' : 'transparent';
+    bar2.style.background = strength >= 2 ? 'var(--warning)' : 'transparent';
+    bar3.style.background = strength >= 3 ? 'var(--success)' : 'transparent';
+
+    if (strength === 1) { text.innerText = 'Bảo mật Yếu'; text.style.color = 'var(--danger)'; }
+    else if (strength === 2) { text.innerText = 'Trung bình'; text.style.color = 'var(--warning)'; }
+    else if (strength === 3) { text.innerText = 'Rất Mạnh'; text.style.color = 'var(--success)'; }
+});
+
+// 2.4. Logic xử lý Đăng ký lên Firebase
 document.getElementById('btnSubmitRegister')?.addEventListener('click', () => {
     const name = document.getElementById('regNameInput')?.value.trim();
     let username = document.getElementById('regUsernameInput')?.value.trim();
     const pwd = document.getElementById('regPasswordInput')?.value;
+    const confirmPwd = document.getElementById('regConfirmPasswordInput')?.value; // Bổ sung
 
-    if(!name || !username || !pwd) { showToast('Vui lòng nhập đủ thông tin', 'error'); return; }
-    if(pwd.length < 6) { showToast('Mật khẩu phải từ 6 ký tự!', 'error'); return; }
+    // Rung lắc cảnh báo nếu form có vấn đề
+    const triggerErrorShake = (msg) => {
+        const authCard = document.querySelector('#registerOverlay .auth-card');
+        if (authCard) {
+            authCard.classList.remove('shake-error');
+            void authCard.offsetWidth; // Mẹo render lại frame của trình duyệt
+            authCard.classList.add('shake-error');
+            setTimeout(() => authCard.classList.remove('shake-error'), 500);
+        }
+        if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+        showToast(msg, 'error');
+    };
 
-    // Tự động ghim đuôi email
+    // Kiểm tra thiếu thông tin
+    if(!name || !username || !pwd || !confirmPwd) { 
+        triggerErrorShake('Vui lòng nhập đủ thông tin!'); 
+        return; 
+    }
+    
+    // Kiểm tra độ dài mật khẩu
+    if (pwd.length < 6) {
+        triggerErrorShake('Mật khẩu phải từ 6 ký tự!'); 
+        return;
+    }
+
+    // Kiểm tra xem hai mật khẩu có giống nhau không
+    if (pwd !== confirmPwd) {
+        triggerErrorShake('Mật khẩu nhập lại không khớp!'); 
+        return;
+    }
+
+    // Nối đuôi ảo nếu người dùng chỉ nhập username
     let email = username.includes('@') ? username : `${username}@chitieu.com`;
 
     const btn = document.getElementById('btnSubmitRegister');
-    if(btn) { btn.innerText = 'Đang xử lý...'; btn.disabled = true; }
+    if(btn) btn.classList.add('is-loading'); // Xoay vòng
 
-    // Sử dụng app chính của Firebase vì người dùng đăng ký xong sẽ được đăng nhập tự động luôn
+    // BẬT KHIÊN: Khóa màn hình để Firebase không tự động chuyển cảnh
+    window.isRegisteringUser = true;
+
     auth.createUserWithEmailAndPassword(email, pwd)
         .then((userCredential) => {
             const newUid = userCredential.user.uid;
-            
-            // Khởi tạo Role "user" mặc định và cấu hình
             const userData = { email: email, role: 'user', createdAt: new Date().toISOString() };
-            
             return db.ref(`users/${newUid}`).set(userData).then(() => {
                 return db.ref(`users/${newUid}/profile`).set({ name: name });
             });
         })
         .then(() => {
-            showToast('Đăng ký thành công!');
-            document.getElementById('registerOverlay')?.classList.add('hide');
-            // Ghi chú: Firebase sẽ tự động trigger hàm onAuthStateChanged và đăng nhập, tải dữ liệu luôn.
+            // FIX LỖI NHẢY MÀN HÌNH: Đăng xuất ngay lập tức để ngắt Auto-Login của Firebase
+            auth.signOut(); 
+
+            if(btn) {
+                btn.classList.remove('is-loading');
+                btn.classList.add('is-success'); // Biến thành Dấu tick xanh
+            }
+            if (navigator.vibrate) navigator.vibrate([15, 40, 15]);
+            
+            setTimeout(() => {
+                if (btn) btn.classList.remove('is-success');
+
+                // 1. Bơm dữ liệu vừa gõ vào Popup Thành công TRƯỚC
+                const rsName = document.getElementById('rsName');
+                const rsUsername = document.getElementById('rsUsername');
+                const rsPassword = document.getElementById('rsPassword');
+                
+                if (rsName) rsName.innerText = name;
+                if (rsUsername) rsUsername.innerText = username;
+                if (rsPassword) rsPassword.innerText = pwd;
+
+                // 2. Hiện Popup Thành công lên
+                document.getElementById('regSuccessOverlay')?.classList.add('show');
+                document.getElementById('regSuccessModal')?.classList.add('show');
+
+                // 3. Tự động điền Username vào form Đăng nhập phía sau sẵn luôn
+                const loginUserInp = document.getElementById('usernameInput');
+                if (loginUserInp) loginUserInp.value = username;
+
+                // 4. FIX LỖI BÓNG MA APP: Tráo đổi Form Đăng ký thành Form Đăng nhập ở lớp nền phía sau
+                document.getElementById('registerOverlay')?.classList.add('hide');
+                document.getElementById('authOverlay')?.classList.remove('hide');
+
+                // 5. Xóa trắng form đăng ký cho lần sau
+                const nameInp = document.getElementById('regNameInput');
+                const userInp = document.getElementById('regUsernameInput');
+                const pwdInp = document.getElementById('regPasswordInput');
+                const confirmInp = document.getElementById('regConfirmPasswordInput');
+                const pwdWrapper = document.getElementById('pwdStrengthWrapper');
+
+                if (nameInp) nameInp.value = '';
+                if (userInp) userInp.value = '';
+                if (pwdInp) pwdInp.value = '';
+                if (confirmInp) confirmInp.value = '';
+                if (pwdWrapper) pwdWrapper.style.display = 'none';
+                
+            }, 800); // Trì hoãn 0.8s để người dùng nhìn thấy dấu tick xanh trên nút
         })
         .catch((error) => {
+            if (btn) btn.classList.remove('is-loading');
             let errorMsg = getAuthErrorVN(error.code);
             if(error.code === 'auth/email-already-in-use') { errorMsg = 'Tên tài khoản này đã được sử dụng!'; }
             showToast(errorMsg || 'Lỗi khi đăng ký', 'error');
-        })
-        .finally(() => {
-            if(btn) { 
-                btn.innerHTML = 'Đăng ký <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>'; 
-                btn.disabled = false; 
-            }
         });
 });
-const changePwdOverlay = document.getElementById('changePwdOverlay');
 
-document.getElementById('btnCancelChangePwd')?.addEventListener('click', () => { 
-    changePwdOverlay?.classList.add('hide'); 
+// =========================================================
+// HÀM ĐÓNG POPUP THÀNH CÔNG VÀ CHUYỂN SANG ĐĂNG NHẬP (FIXED)
+// =========================================================
+window.closeRegSuccessModal = function() {
+    // TẮT KHIÊN: Trả lại quyền điều khiển giao diện cho Firebase
+    window.isRegisteringUser = false;
+    
+    // 1. Đóng popup thành công (Lúc này Form đăng nhập đã nằm chờ sẵn ở dưới)
+    document.getElementById('regSuccessOverlay')?.classList.remove('show');
+    document.getElementById('regSuccessModal')?.classList.remove('show');
+    
+    // 2. UX Đỉnh cao: Đợi lớp sương mù mờ đi, tự động nhảy con trỏ chuột vào ô Mật khẩu
+    setTimeout(() => {
+        document.getElementById('passwordInput')?.focus();
+    }, 100);
+
+    // Rung nhẹ
+    if (navigator.vibrate) navigator.vibrate(10);
+};
+// HÀM ĐÓNG VÀ XÓA TRẮNG POPUP ĐỔI MẬT KHẨU
+window.closeChangePwdModal = function() {
+    document.getElementById('changePwdOverlay')?.classList.remove('show');
+    document.getElementById('changePwdModal')?.classList.remove('show');
     const oPwd = document.getElementById('oldPasswordInput');
     const nPwd = document.getElementById('newPasswordInput');
     const cPwd = document.getElementById('confirmNewPasswordInput');
     if (oPwd) oPwd.value = ''; 
     if (nPwd) nPwd.value = ''; 
     if (cPwd) cPwd.value = '';
-});
+};
 
+// XỬ LÝ ĐỔI MẬT KHẨU
 document.getElementById('btnSubmitChangePwd')?.addEventListener('click', () => {
     const oldPwd = document.getElementById('oldPasswordInput')?.value;
     const newPwd = document.getElementById('newPasswordInput')?.value;
@@ -926,13 +1093,7 @@ document.getElementById('btnSubmitChangePwd')?.addEventListener('click', () => {
     currentUser.reauthenticateWithCredential(credential).then(() => {
         currentUser.updatePassword(newPwd).then(() => {
             showToast('Đổi mật khẩu thành công!');
-            changePwdOverlay?.classList.add('hide');
-            const oPwd = document.getElementById('oldPasswordInput');
-            const nPwd = document.getElementById('newPasswordInput');
-            const cPwd = document.getElementById('confirmNewPasswordInput');
-            if (oPwd) oPwd.value = ''; 
-            if (nPwd) nPwd.value = '';
-            if (cPwd) cPwd.value = '';
+            closeChangePwdModal();
             if(localStorage.getItem('savedUsername')) localStorage.setItem('savedPassword', newPwd);
         }).catch((error) => { showToast(getAuthErrorVN(error.code), 'error'); });
     }).catch((error) => {
@@ -4581,7 +4742,7 @@ function openBudgetManager() {
                     <div style="font-weight: 700; font-size: 14px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.name}</div>
                 </div>
                 
-                <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0; width: 145px;">
+                <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0; width: 180px;">
                     <div class="amount-wrapper" style="height: 36px; flex: 1; background: #f8f9fa; border: 1px solid transparent; transition: 0.3s; border-radius: 8px; margin-bottom: 0;">
                         <input type="text" class="form-control budget-input-display" data-id="${c.id}" placeholder="Vô hạn" value="${budgetVal}" style="font-size: 14px; background: transparent; border: none; text-align: right; font-weight: 700; width: 100%; height: 100%; padding: 0 24px 0 8px;">
 

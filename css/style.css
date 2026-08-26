@@ -1852,3 +1852,49 @@ body.no-scroll {
 .sheet-overlay {
     cursor: pointer;
 }
+/* =========================================
+   CẢI TIẾN: NÚT ĐĂNG KÝ VÀ FORM AUTH
+   ========================================= */
+.btn-auth { position: relative; overflow: hidden; }
+.btn-auth.is-loading { color: transparent !important; pointer-events: none; }
+.btn-auth.is-loading::after {
+    content: ''; position: absolute; width: 22px; height: 22px;
+    top: 50%; left: 50%; margin-top: -11px; margin-left: -11px;
+    border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff;
+    border-radius: 50%; animation: btnSpin 0.6s linear infinite;
+}
+.btn-auth.is-success { background: var(--success) !important; color: transparent !important; pointer-events: none; }
+.btn-auth.is-success::after {
+    content: ''; position: absolute; width: 10px; height: 20px;
+    top: 50%; left: 50%; margin-top: -14px; margin-left: -5px;
+    border: solid white; border-width: 0 3px 3px 0;
+    transform: rotate(45deg) scale(0); animation: checkmarkPop 0.4s var(--spring-ios) forwards;
+}
+
+/* Đồng bộ rung lắc cho Card Đăng ký/Đăng nhập */
+.auth-card.shake-error {
+    animation: formShakeError 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    border: 1px solid var(--danger);
+    box-shadow: 0 10px 40px rgba(231, 76, 60, 0.15);
+}
+
+body.dark-theme .auth-card.shake-error {
+    border-color: rgba(231, 76, 60, 0.5);
+    box-shadow: 0 10px 40px rgba(231, 76, 60, 0.25);
+}
+/* Bảng thông tin đăng ký thành công */
+.reg-info-box {
+    background: #f8f9fa; 
+    border: 1px dashed #cbd5e1; 
+    border-radius: 16px; 
+    padding: 16px; 
+    text-align: left; 
+    margin-bottom: 24px;
+}
+body.dark-theme .reg-info-box {
+    background: rgba(0,0,0,0.2);
+    border-color: #4a5568;
+}
+body.dark-theme #regSuccessModal .history-modal-body {
+    background: var(--card-bg) !important;
+}

@@ -455,6 +455,7 @@ document.getElementById('btnSettingsLogout')?.addEventListener('click', () => {
             applyAppTheme('bg-default', false);
             localStorage.removeItem('walletTheme');
             localStorage.removeItem('appTheme');
+			localStorage.removeItem('cache_profile');
             showToast('Đã đăng xuất'); 
             switchTab('home');
         });
@@ -745,22 +746,24 @@ auth.onAuthStateChanged(user => {
             renderBalances();
             if(document.getElementById('debtView')?.classList.contains('active')) renderDebtUI();
         });
-        const settingsRef = db.ref(`users/${currentUser.uid}/settings`);
-        settingsRef.on('value', (snap) => {
-            if (snap.exists()) {
-                const settings = snap.val();
-                if (settings.walletTheme) applyWalletTheme(settings.walletTheme, false);
-                if (settings.appTheme) applyAppTheme(settings.appTheme, false);
-            } else {
-                applyWalletTheme('wt-blue', false);
-                applyAppTheme('bg-default', false);
-            }
-            
-            if (isFirstLoad) {
-                document.getElementById('splashScreen')?.classList.add('hide');
-                isFirstLoad = false;
-            }
-        });
+			const settingsRef = db.ref(`users/${currentUser.uid}/settings`);
+			settingsRef.on('value', (snap) => {
+				if (snap.exists()) {
+					const settings = snap.val();
+					if (settings.walletTheme) applyWalletTheme(settings.walletTheme, false);
+					if (settings.appTheme) applyAppTheme(settings.appTheme, false);
+				} else {
+					applyWalletTheme('wt-blue', false);
+					applyAppTheme('bg-default', false);
+				}
+			});
+
+			// ĐẨY LỆNH NÀY RA NGOÀI ĐỂ TẮT MÀN HÌNH CHỜ NGAY LẬP TỨC KHI XÁC THỰC XONG
+			if (isFirstLoad) {
+				document.getElementById('splashScreen')?.classList.add('hide');
+				isFirstLoad = false;
+			}
+
 
         db.ref(`users/${currentUser.uid}/profile`).on('value', (snap) => {
             if (snap.exists()) {
@@ -791,6 +794,12 @@ auth.onAuthStateChanged(user => {
                     if (pDob) pDob.value = p.dob;
                     if (pDobDisp) pDobDisp.innerText = formatNiceDate(p.dob).replace('Hôm nay, ', '');
                 }
+				// ---> BỔ SUNG DÒNG NÀY VÀO ĐÂY: Lưu lại profile vào Cache <---
+                localStorage.setItem('cache_profile', JSON.stringify({
+                    name: userFullName,
+                    avatarData: p.avatarData || null
+                }));
+
             } else {
                 userFullName = "";
                 const dropdownName = document.getElementById('dropdownName');
@@ -807,17 +816,31 @@ auth.onAuthStateChanged(user => {
     } else {
          currentUser = null;
             
-         // FIX LỖI NHẢY MÀN HÌNH: Đợi Đăng ký xong mới hiện lại màn hình
+         // FIX LỖI NHẢY MÀN HÌNH: Xử lý hiển thị Form Đăng Nhập
          if (!window.isRegisteringUser) {
-             document.getElementById('authOverlay')?.classList.remove('hide'); 
-             document.getElementById('registerOverlay')?.classList.add('hide');
+             const authOverlay = document.getElementById('authOverlay');
+             const regOverlay = document.getElementById('registerOverlay');
+
+             if (authOverlay) {
+                 // MA THUẬT: Ép hiện Form Đăng nhập NGAY LẬP TỨC (Bỏ qua CSS Transition 0.3s)
+                 // Bức tường thép này sẽ che kín Main App trước khi Màn hình chờ (Splash) tan biến
+                 authOverlay.style.transition = 'none'; 
+                 authOverlay.classList.remove('hide'); 
+                 
+                 void authOverlay.offsetWidth; // Cú lừa ép trình duyệt render tức thời
+                 
+                 authOverlay.style.transition = ''; // Trả lại hiệu ứng mờ cho các lần bấm sau
+             }
+             if (regOverlay) regOverlay.classList.add('hide');
          }
+
          transactions = []; categories = []; updateUI();
         
         if(pieChartInstance) pieChartInstance.destroy();
         if(barChartInstance) barChartInstance.destroy();
         
         if (isFirstLoad) {
+            // Khi form Đăng nhập đã dựng xong tức thời, ta có thể rút Màn hình chờ đi một cách mượt mà
             document.getElementById('splashScreen')?.classList.add('hide');
             isFirstLoad = false;
         }
@@ -1000,7 +1023,7 @@ document.getElementById('btnSubmitRegister')?.addEventListener('click', () => {
             setTimeout(() => {
                 if (btn) btn.classList.remove('is-success');
 
-                // 1. Bơm dữ liệu vừa gõ vào Popup Thành công TRƯỚC
+                // 1. Bơm dữ liệu vừa gõ vào Popup Thành công
                 const rsName = document.getElementById('rsName');
                 const rsUsername = document.getElementById('rsUsername');
                 const rsPassword = document.getElementById('rsPassword');
@@ -1009,19 +1032,15 @@ document.getElementById('btnSubmitRegister')?.addEventListener('click', () => {
                 if (rsUsername) rsUsername.innerText = username;
                 if (rsPassword) rsPassword.innerText = pwd;
 
-                // 2. Hiện Popup Thành công lên
-                document.getElementById('regSuccessOverlay')?.classList.add('show');
-                document.getElementById('regSuccessModal')?.classList.add('show');
-
-                // 3. Tự động điền Username vào form Đăng nhập phía sau sẵn luôn
-                const loginUserInp = document.getElementById('usernameInput');
-                if (loginUserInp) loginUserInp.value = username;
-
-                // 4. FIX LỖI BÓNG MA APP: Tráo đổi Form Đăng ký thành Form Đăng nhập ở lớp nền phía sau
+                // 2. CHỐT CHẶN BÓNG MA: Tắt form Đăng ký và bật sẵn form Đăng nhập đè lên để che kín Main App
                 document.getElementById('registerOverlay')?.classList.add('hide');
                 document.getElementById('authOverlay')?.classList.remove('hide');
 
-                // 5. Xóa trắng form đăng ký cho lần sau
+                // 3. Hiện Popup Thành công nổi lên trên cùng
+                document.getElementById('regSuccessOverlay')?.classList.add('show');
+                document.getElementById('regSuccessModal')?.classList.add('show');
+
+                // 4. Xóa trắng form đăng ký cho lần sau
                 const nameInp = document.getElementById('regNameInput');
                 const userInp = document.getElementById('regUsernameInput');
                 const pwdInp = document.getElementById('regPasswordInput');
@@ -1055,10 +1074,15 @@ window.closeRegSuccessModal = function() {
     document.getElementById('regSuccessOverlay')?.classList.remove('show');
     document.getElementById('regSuccessModal')?.classList.remove('show');
     
-    // 2. UX Đỉnh cao: Đợi lớp sương mù mờ đi, tự động nhảy con trỏ chuột vào ô Mật khẩu
+    // 2. Tự động điền Username vào form Đăng nhập
+    const savedUser = document.getElementById('rsUsername')?.innerText;
+    const loginUserInp = document.getElementById('usernameInput');
+    if (loginUserInp && savedUser) loginUserInp.value = savedUser;
+
+    // 3. Chờ 0.3s cho sương mù tan bớt rồi tự động nhảy con trỏ chuột vào ô Mật khẩu
     setTimeout(() => {
         document.getElementById('passwordInput')?.focus();
-    }, 100);
+    }, 300);
 
     // Rung nhẹ
     if (navigator.vibrate) navigator.vibrate(10);
@@ -2821,7 +2845,38 @@ applyDarkMode(savedDarkMode);
 // THÊM: Đọc và áp dụng ngay màu nền gốc để tắt Kính mờ trước khi web tải xong
 const savedAppTheme = localStorage.getItem('appTheme') || 'bg-default';
 applyAppTheme(savedAppTheme, false);
-
+// BỔ SUNG: Đọc và áp dụng ngay màu Thẻ Card trước khi Firebase tải xong
+const savedWalletTheme = localStorage.getItem('walletTheme') || 'wt-blue';
+applyWalletTheme(savedWalletTheme, false);
+// BỔ SUNG: Lấy Avatar và Tên từ bộ nhớ đệm (Cache) đắp lên giao diện ngay lập tức
+const cachedProfileStr = localStorage.getItem('cache_profile');
+if (cachedProfileStr) {
+    try {
+        const cachedProfile = JSON.parse(cachedProfileStr);
+        const avatarImg = document.getElementById('avatarImg');
+        const dropdownName = document.getElementById('dropdownName');
+        const topTitle = document.querySelector('.top-nav h1');
+        
+        // Render Avatar
+        if (avatarImg) {
+            if (cachedProfile.avatarData) {
+                avatarImg.src = cachedProfile.avatarData;
+            } else if (cachedProfile.name) {
+                avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(cachedProfile.name)}&background=4361ee&color=fff&bold=true`;
+            }
+        }
+        
+        // Render Tên user
+        if (cachedProfile.name) {
+            userFullName = cachedProfile.name; // Cập nhật biến toàn cục
+            if (dropdownName) dropdownName.innerText = `XIN CHÀO, ${userFullName.toUpperCase()}`;
+            // Nếu đang mở tab cài đặt, đổi tên Header luôn
+            if (document.getElementById('settingsView')?.classList.contains('active') && topTitle) {
+                topTitle.innerText = userFullName.toUpperCase();
+            }
+        }
+    } catch(e) { console.log('Lỗi đọc cache profile'); }
+}
 function initWalletThemes() {
     const grid = document.getElementById('walletThemeGrid');
     if(!grid) return;
@@ -2895,6 +2950,7 @@ if (btnLogoutAvatar) {
                 applyAppTheme('bg-default', false);
                 localStorage.removeItem('walletTheme');
                 localStorage.removeItem('appTheme');
+				localStorage.removeItem('cache_profile');
                 showToast('Đã đăng xuất'); 
                 switchTab('home');
             });

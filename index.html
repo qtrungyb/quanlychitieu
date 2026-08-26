@@ -364,34 +364,38 @@
     <symbol id="icon-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></symbol>
     <symbol id="icon-other" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></symbol>
 </svg>
-<!-- MÀN HÌNH SPLASH -->
-<div id="splashScreen" class="splash-screen">
-    <div class="auth-logo"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg></div>
-    <h2 class="auth-title">QUẢN LÝ CHI TIÊU</h2>
-</div>
-
 <!-- MÀN HÌNH ĐĂNG NHẬP -->
 <div id="authOverlay" class="auth-overlay hide">
     <div class="auth-card">
         <div class="auth-logo"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg></div>
+        
+        <!-- TRẢ LẠI TIÊU ĐỀ GỐC -->
         <h2 class="auth-title">QUẢN LÝ CHI TIÊU</h2>
+        
         <form id="authForm">
             <div class="auth-input-group">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                <input type="text" id="usernameInput" class="auth-form-control" placeholder="Tài khoản" required>
+                <input type="text" id="usernameInput" class="auth-form-control" placeholder="Tên tài khoản hoặc Email" required>
             </div>
+            
             <div class="auth-input-group">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <input type="password" id="passwordInput" class="auth-form-control" placeholder="Mật khẩu" required minlength="6">
+                <input type="password" id="passwordInput" class="auth-form-control" placeholder="Mật khẩu" style="padding-right: 40px;" required minlength="6">
+                <!-- Nút Mắt thần -->
+                <button type="button" id="btnToggleLoginPwd" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: static; transform: none;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
             </div>
-            <div class="auth-options">
-                <label class="checkbox-group"><input type="checkbox" id="rememberMe"><span>Ghi nhớ tài khoản</span></label>
+
+            <!-- Tính năng Ghi nhớ đăng nhập -->
+            <div class="auth-options" style="display: flex; align-items: center; margin-bottom: 24px;">
+                <label class="checkbox-group" style="margin: 0;"><input type="checkbox" id="rememberMe"><span style="font-size: 13px;">Ghi nhớ tôi</span></label>
             </div>
-            <button type="button" id="btnLogin" class="btn-auth btn-login">Đăng nhập</button>
-            <div style="text-align: center; margin-top: 20px;">
-                <span style="font-size: 13px; color: var(--text-muted);">Chưa có tài khoản? </span>
-                <a href="#" id="btnShowRegister" style="font-size: 13px; font-weight: 700; color: var(--primary); text-decoration: none;">Đăng ký ngay</a>
-            </div>
+            
+            <button type="button" id="btnLogin" class="btn-auth btn-login" style="margin-bottom: 12px;">Đăng nhập</button>
+            
+            <!-- Nút Đăng ký (Secondary Button) -->
+            <button type="button" id="btnShowRegister" class="btn-auth btn-cancel">Tạo tài khoản mới</button>
         </form>
     </div>
 </div>
@@ -406,16 +410,39 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 <input type="text" id="regNameInput" class="auth-form-control" placeholder="Họ và tên" required>
             </div>
-            <div class="auth-input-group" style="position: relative;">
+            
+            <!-- Đã gỡ bỏ thẻ span chứa @chitieu.com và xóa padding-right thừa -->
+            <div class="auth-input-group">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                <input type="text" id="regUsernameInput" class="auth-form-control" placeholder="Tên đăng nhập" style="padding-right: 105px;" required>
-                <span style="position: absolute; right: 16px; top: 12px; font-size: 15px; font-weight: 600; color: #cbd5e1; pointer-events: none;">@chitieu.com</span>
+                <input type="text" id="regUsernameInput" class="auth-form-control" placeholder="Tên đăng nhập" required>
             </div>
+            
             <div class="auth-input-group">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <input type="password" id="regPasswordInput" class="auth-form-control" placeholder="Mật khẩu (từ 6 ký tự)" required minlength="6">
+                <input type="password" id="regPasswordInput" class="auth-form-control" placeholder="Mật khẩu (từ 6 ký tự)" style="padding-right: 40px;" required minlength="6">
+                <!-- Nút bật tắt mắt thần -->
+                <button type="button" id="btnToggleRegPwd" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: static; transform: none;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
             </div>
-            <button type="button" id="btnSubmitRegister" class="btn-auth btn-login" style="margin-top: 16px; background: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">Đăng ký</button>
+
+            <!-- THANH ĐO SỨC MẠNH MẬT KHẨU -->
+            <div id="pwdStrengthWrapper" style="display: none; margin-top: -8px; margin-bottom: 16px; text-align: left; padding: 0 4px;">
+                <div style="display: flex; gap: 4px; height: 4px; border-radius: 2px; overflow: hidden; margin-bottom: 6px; background: rgba(0,0,0,0.05);">
+                    <div id="pwdBar1" style="flex: 1; transition: 0.3s; border-radius: 2px;"></div>
+                    <div id="pwdBar2" style="flex: 1; transition: 0.3s; border-radius: 2px;"></div>
+                    <div id="pwdBar3" style="flex: 1; transition: 0.3s; border-radius: 2px;"></div>
+                </div>
+                <span id="pwdStrengthText" style="font-size: 11px; font-weight: 700; color: var(--text-muted);">Độ mạnh mật khẩu</span>
+            </div>
+
+            <!-- BỔ SUNG: Ô XÁC NHẬN MẬT KHẨU -->
+            <div class="auth-input-group">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                <input type="password" id="regConfirmPasswordInput" class="auth-form-control" placeholder="Nhập lại mật khẩu" required minlength="6">
+            </div>
+
+            <button type="button" id="btnSubmitRegister" class="btn-auth btn-login" style="margin-top: 4px; background: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">Đăng ký</button>
             <div style="text-align: center; margin-top: 20px;">
                 <span style="font-size: 13px; color: var(--text-muted);">Đã có tài khoản? </span>
                 <a href="#" id="btnShowLogin" style="font-size: 13px; font-weight: 700; color: var(--success); text-decoration: none;">Đăng nhập</a>
@@ -1083,7 +1110,54 @@
     <button class="sheet-btn btn-sheet-delete" onclick="setDefaultAvatar()" style="margin-top: 12px;">Xóa ảnh (Mặc định)</button>
     <button class="sheet-btn btn-sheet-cancel" onclick="closeAvatarActionSheet()">Đóng</button>
 </div>
+<!-- POPUP ĐĂNG KÝ THÀNH CÔNG -->
+<div class="history-overlay" id="regSuccessOverlay" style="z-index: 10050;"></div>
+<div class="history-modal" id="regSuccessModal" style="z-index: 10051; height: auto; max-height: 80vh; text-align: center;">
+    <div class="history-modal-body" style="background: #fff; padding: 32px 20px; border-radius: 24px;">
+        <div style="width: 64px; height: 64px; background: var(--success-light); color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h3 style="font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Đăng ký thành công!</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Vui lòng chụp màn hình hoặc lưu lại thông tin tài khoản của bạn.</p>
 
+        <div class="reg-info-box">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Họ và tên:</span>
+                <span id="rsName" style="font-size: 14px; font-weight: 800; color: var(--text-main);"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Tài khoản:</span>
+                <span id="rsUsername" style="font-size: 14px; font-weight: 800; color: var(--primary);"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Mật khẩu:</span>
+                <span id="rsPassword" style="font-size: 14px; font-weight: 800; color: var(--danger);"></span>
+            </div>
+        </div>
+
+        <button type="button" class="btn-submit" onclick="closeRegSuccessModal()" style="margin-top: 0; background: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">Tiến hành Đăng nhập</button>
+    </div>
+</div>
+<!-- POPUP ĐỔI MẬT KHẨU -->
+<div class="history-overlay" id="changePwdOverlay" style="z-index: 10030;" onclick="closeChangePwdModal()"></div>
+<div class="history-modal" id="changePwdModal" style="z-index: 10031; height: auto; max-height: 80vh;">
+    <div class="history-modal-header"><h3>Đổi mật khẩu</h3><button class="btn-close-modal" onclick="closeChangePwdModal()">&times;</button></div>
+    <div class="history-modal-body" style="background: #fff; padding-top: 20px;">
+        <div class="form-group">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Mật khẩu hiện tại</label>
+            <input type="password" id="oldPasswordInput" class="form-control" placeholder="Nhập mật khẩu hiện tại" required>
+        </div>
+        <div class="form-group">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Mật khẩu mới</label>
+            <input type="password" id="newPasswordInput" class="form-control" placeholder="Từ 6 ký tự trở lên" required minlength="6">
+        </div>
+        <div class="form-group">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">Xác nhận mật khẩu mới</label>
+            <input type="password" id="confirmNewPasswordInput" class="form-control" placeholder="Nhập lại mật khẩu mới" required minlength="6">
+        </div>
+        <button type="button" class="btn-submit" id="btnSubmitChangePwd" style="margin-top: 24px;">Xác nhận đổi</button>
+    </div>
+</div>
 <!-- POPUP THANH TOÁN MỘT PHẦN -->
 <div class="history-overlay" id="partialPayOverlay" style="z-index: 10040;" onclick="closePartialPay()"></div>
 <div class="history-modal" id="partialPayModal" style="z-index: 10041; height: auto; max-height: 80vh;">

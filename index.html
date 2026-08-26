@@ -325,6 +325,36 @@
         
         /* Dark Mode: Dải lụa tỷ trọng */
         body.dark-theme .daily-sparkbar { background: rgba(255,255,255,0.05); }
+		/* =========================================================
+           6. MÀN HÌNH CHỜ (SPLASH SCREEN) - CHỐNG NHẢY TRANG
+           ========================================================= */
+        .splash-screen {
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: var(--bg-color); 
+            z-index: 999999; /* Nằm trên cùng, che mọi thứ */
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        .splash-screen.hide {
+            opacity: 0; 
+            visibility: hidden; 
+            pointer-events: none;
+        }
+        .splash-spinner {
+            width: 44px; height: 44px;
+            border: 4px solid rgba(67, 97, 238, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: splashSpin 1s cubic-bezier(0.5, 0.1, 0.15, 1) infinite;
+        }
+        @keyframes splashSpin { 
+            100% { transform: rotate(360deg); } 
+        }
     </style>
 
     <!-- SDK FIREBASE -->
@@ -339,6 +369,10 @@
     <link rel="apple-touch-icon" href="./icon-192.png">
 </head>
 <body>
+<!-- MÀN HÌNH CHỜ (Bức tường thép che ứng dụng cho đến khi Firebase xác thực xong) -->
+<div id="splashScreen" class="splash-screen">
+    <div class="splash-spinner"></div>
+</div>
 <!-- ==========================================
      TỐI ƯU HIỆU NĂNG: KHUÔN ĐÚC SVG (SPRITES)
 =========================================== -->
@@ -389,7 +423,7 @@
 
             <!-- Tính năng Ghi nhớ đăng nhập -->
             <div class="auth-options" style="display: flex; align-items: center; margin-bottom: 24px;">
-                <label class="checkbox-group" style="margin: 0;"><input type="checkbox" id="rememberMe"><span style="font-size: 13px;">Ghi nhớ tôi</span></label>
+                <label class="checkbox-group" style="margin: 0;"><input type="checkbox" id="rememberMe"><span style="font-size: 13px;">Lưu tài khoản</span></label>
             </div>
             
             <button type="button" id="btnLogin" class="btn-auth btn-login" style="margin-bottom: 12px;">Đăng nhập</button>

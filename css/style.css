@@ -1766,8 +1766,9 @@ body.dark-theme .amount-text-vn {
     transform: scale(0.5);
 }
 
-/* Chống đè số vào nút X */
-.form-control.input-amount {
+
+/* Chống đè số vào nút X (Chỉ áp dụng cho ô nhập liệu chính ngoài trang chủ) */
+#mainAmountWrapper .input-amount {
     padding-right: 72px !important;
 }
 

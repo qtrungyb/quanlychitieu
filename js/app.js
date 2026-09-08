@@ -1945,11 +1945,13 @@ function updateUI() {
             <div class="date-group-header" onclick="document.getElementById('date_group_${rawDate}').classList.toggle('collapsed')" style="flex-direction: column; align-items: stretch; justify-content: center !important; gap: 8px; padding-bottom: 10px !important;">
                 
                 <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; gap: 8px;">
-                    <div class="date-title" style="font-size: 14px; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0;">
-                        ${displayDateText}
-                        <svg class="header-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    <!-- FIX: Cho phép Ngày tháng thu hẹp lại (có dấu ...) nếu màn hình quá nhỏ -->
+                    <div class="date-title" style="font-size: 13.5px; display: flex; align-items: center; flex: 1; min-width: 0;">
+                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${displayDateText}</span>
+                        <svg class="header-chevron" style="flex-shrink: 0;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </div>
-                    <div class="date-summary" style="display: flex; justify-content: flex-end; white-space: nowrap; flex: 1;">
+                    <!-- FIX: Bảo vệ tuyệt đối Số tiền, KHÔNG cho phép co hẹp (flex-shrink: 0) -->
+                    <div class="date-summary" style="display: flex; justify-content: flex-end; white-space: nowrap; flex-shrink: 0;">
                         <span class="ds-in text-success" style="width: auto !important; text-align: right;">+${formatter.format(data.in)}</span>
                         <span class="ds-sep" style="margin: 0 4px;">|</span> 
                         <span class="ds-out text-danger" style="width: auto !important; text-align: left;">-${formatter.format(data.out)}</span>
@@ -3597,11 +3599,11 @@ function renderAdminTxList() {
         <div class="date-group collapsed" id="adm_date_group_${rawDate}">
             <div class="date-group-header" onclick="document.getElementById('adm_date_group_${rawDate}').classList.toggle('collapsed')" style="flex-direction: column; align-items: stretch; justify-content: center !important; gap: 8px; padding-bottom: 10px !important; cursor: pointer;">
                 <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; gap: 8px;">
-                        <div class="date-title" style="font-size: 14px; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0;">
-                            ${friendlyDate}
-                            <svg class="header-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        <div class="date-title" style="font-size: 13.5px; display: flex; align-items: center; flex: 1; min-width: 0;">
+                            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${friendlyDate}</span>
+                            <svg class="header-chevron" style="flex-shrink: 0;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
-                        <div class="date-summary" style="display: flex; justify-content: flex-end; white-space: nowrap; flex: 1;">
+                        <div class="date-summary" style="display: flex; justify-content: flex-end; white-space: nowrap; flex-shrink: 0;">
                             <span class="ds-in text-success" style="width: auto !important; text-align: right;">+${formatter.format(data.in)}</span>
                             <span class="ds-sep" style="margin: 0 4px;">|</span> 
                             <span class="ds-out text-danger" style="width: auto !important; text-align: left;">-${formatter.format(data.out)}</span>

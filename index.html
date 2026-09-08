@@ -695,12 +695,11 @@
                         
                         <!-- 1. Lọc Thời gian (Ưu tiên đưa lên trên) -->
                         <div class="quick-filters-scroll" id="quickDateFilters" style="display: flex; gap: 8px; overflow-x: auto;">
-                            <button class="btn-quick-filter active" data-range="this_month">Tháng này</button>
-                            <button class="btn-quick-filter" data-range="last_month">Tháng trước</button>
-                            <button class="btn-quick-filter" data-range="this_week">Tuần này</button>
-                            <button class="btn-quick-filter" data-range="all">Tất cả</button>
-                            <button class="btn-quick-filter" data-range="custom">Tùy chỉnh...</button>
-                        </div>
+							<button class="btn-quick-filter active" data-range="this_month">Tháng này</button>
+							<button class="btn-quick-filter" data-range="last_month">Tháng trước</button>
+							<button class="btn-quick-filter" data-range="this_week">Tuần này</button>
+							<button class="btn-quick-filter" data-range="custom">Tùy chỉnh</button>
+						</div>
                         
                         <!-- 2. Form chọn Ngày Tùy chỉnh (Sẽ tự động chèn vào giữa khi được gọi) -->
                         <div class="filter-row hide" id="customDateContainer">
@@ -1263,8 +1262,8 @@
             <div class="search-box"><input type="text" id="admTxSearchInput" placeholder="Tìm kiếm..."></div>
             <div class="category-scroll" id="admTxCategoryFilter" style="margin-top: 12px; padding-bottom: 0;"></div>
             <div class="quick-filters-scroll" id="admTxQuickDateFilters" style="margin-top: 12px; display: flex; gap: 8px; overflow-x: auto;">
-                <button class="btn-quick-filter active" data-range="this_month">Tháng này</button><button class="btn-quick-filter" data-range="last_month">Tháng trước</button><button class="btn-quick-filter" data-range="this_week">Tuần này</button><button class="btn-quick-filter" data-range="all">Tất cả</button><button class="btn-quick-filter" data-range="custom">Tùy chỉnh</button>
-            </div>
+				<button class="btn-quick-filter active" data-range="this_month">Tháng này</button><button class="btn-quick-filter" data-range="last_month">Tháng trước</button><button class="btn-quick-filter" data-range="this_week">Tuần này</button><button class="btn-quick-filter" data-range="custom">Tùy chỉnh</button>
+			</div>
             <div class="filter-row hide" id="admTxCustomDateContainer" style="margin-top: 12px; display: flex; gap: 8px;">
                 <div class="filter-date-wrapper active"><span class="date-text" id="admTxStartDateDisplay">Từ ngày</span><input type="date" id="admTxStartDate"></div>
                 <div class="filter-date-wrapper active"><span class="date-text" id="admTxEndDateDisplay">Đến ngày</span><input type="date" id="admTxEndDate"></div>

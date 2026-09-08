@@ -1949,7 +1949,7 @@ function updateUI() {
                         ${displayDateText}
                         <svg class="header-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </div>
-                    <div class="date-summary" style="display: flex; justify-content: flex-end; white-space: nowrap; overflow: hidden; flex: 1;">
+                    <div class="date-summary" style="display: flex; justify-content: flex-end; white-space: nowrap; flex: 1;">
                         <span class="ds-in text-success" style="width: auto !important; text-align: right;">+${formatter.format(data.in)}</span>
                         <span class="ds-sep" style="margin: 0 4px;">|</span> 
                         <span class="ds-out text-danger" style="width: auto !important; text-align: left;">-${formatter.format(data.out)}</span>
@@ -3601,7 +3601,7 @@ function renderAdminTxList() {
                             ${friendlyDate}
                             <svg class="header-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
-                        <div class="date-summary" style="display: flex; justify-content: flex-end; white-space: nowrap; overflow: hidden; flex: 1;">
+                        <div class="date-summary" style="display: flex; justify-content: flex-end; white-space: nowrap; flex: 1;">
                             <span class="ds-in text-success" style="width: auto !important; text-align: right;">+${formatter.format(data.in)}</span>
                             <span class="ds-sep" style="margin: 0 4px;">|</span> 
                             <span class="ds-out text-danger" style="width: auto !important; text-align: left;">-${formatter.format(data.out)}</span>

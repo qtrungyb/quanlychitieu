@@ -511,7 +511,7 @@ if (transactions.length > 0 || categories.length > 0) {
 let selectedSheetId = null;
 let editingCatId = null; 
 
-const DATES_PER_PAGE = 3; 
+const DATES_PER_PAGE = 30; 
 let currentDateLimit = DATES_PER_PAGE;
 let isBalanceHidden = true; 
 let currentBalances = { total: 0, income: 0, expense: 0 };
@@ -1813,8 +1813,9 @@ function updateUI() {
             else if (fStartDate) matchDate = t.date >= fStartDate;
             else if (fEndDate) matchDate = t.date <= fEndDate;
             
+            // FIX LỖI SẬP MÀN HÌNH: Trả lại biến fCats (có chữ 's') dành riêng cho mảng đa danh mục
             const matchCat = fCats.length > 0 ? (fCats.includes(t.categoryName) || fCats.includes(t.category)) : true;
-            const amtString = t.amount.toString();
+            const amtString = (t.amount || 0).toString();
             const matchSearch = sText ? (
                 t.categoryName?.toLowerCase().includes(sText) || 
                 t.category?.toLowerCase().includes(sText) || 
@@ -1969,8 +1970,11 @@ function updateUI() {
     listHTML += `</div>`;
 
     if (sortedDates.length > currentDateLimit) {
-        // TỐI ƯU UX: Chèn Radar tàng hình thay thế nút bấm
-        listHTML += `<div id="loadMoreSentinel" style="height: 20px; width: 100%;"></div>`;
+        // FIX LỖI: Chèn Radar tàng hình kết hợp nút bấm dự phòng tránh kẹt scroll
+        listHTML += `
+            <div id="loadMoreSentinel" style="height: 20px; width: 100%;"></div>
+            <button class="btn-load-more" onclick="currentDateLimit += DATES_PER_PAGE; scheduleAppRender();">Tải thêm giao dịch</button>
+        `;
     } else if (sortedDates.length > 0) {
         listHTML += `<div class="end-of-list-msg">Đã hiển thị toàn bộ giao dịch</div>`;
     }
@@ -3332,11 +3336,11 @@ function renderAdminUserList(users) {
 // ==========================================
 let currentAdminTxs = [];
 let currentAdminCats = [];
-let adminTxDateLimit = 3; 
+let adminTxDateLimit = 30;
 
 window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('admTxSearchInput')?.addEventListener('input', debounce(() => {
-        adminTxDateLimit = 3; renderAdminTxList();
+        adminTxDateLimit = 30; renderAdminTxList();
     }, 300));
 
     document.querySelectorAll('#admTxQuickDateFilters .btn-quick-filter').forEach(btn => {
@@ -3381,7 +3385,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if(aEnd) aEnd.value = endVal;
             if(aSearch) aSearch.value = ''; 
             
-            adminTxDateLimit = 3;
+            adminTxDateLimit = 30;
             renderAdminTxList();
         });
     });
@@ -3392,7 +3396,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const [y, m, d] = val.split('-');
             displayEl.innerText = `${d}/${m}/${y}`;
         }
-        adminTxDateLimit = 3;
+        adminTxDateLimit = 30;
         renderAdminTxList();
     };
     
@@ -3433,7 +3437,7 @@ window.viewUserTransactions = function(uid, userName) {
                 pill.addEventListener('click', () => {
                     histCatScroll.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
                     pill.classList.add('active');
-                    adminTxDateLimit = 3; renderAdminTxList();
+                    adminTxDateLimit = 30; renderAdminTxList();
                 });
             });
         }
@@ -3448,7 +3452,7 @@ window.viewUserTransactions = function(uid, userName) {
                     }
                 }
             }
-            adminTxDateLimit = 3;
+            adminTxDateLimit = 30;
             document.querySelector('#admTxQuickDateFilters .btn-quick-filter[data-range="this_month"]')?.click();
         });
     });
@@ -3649,8 +3653,10 @@ function renderAdminTxList() {
     listHTML += `</div>`; 
 
     if (sortedDates.length > adminTxDateLimit) {
-        // TỐI ƯU UX: Chèn Radar tàng hình cho Admin
-        listHTML += `<div id="admLoadMoreSentinel" style="height: 20px; width: 100%; margin-bottom: 20px;"></div>`;
+        listHTML += `
+            <div id="admLoadMoreSentinel" style="height: 20px; width: 100%; margin-bottom: 20px;"></div>
+            <button class="btn-load-more" onclick="adminTxDateLimit += 30; renderAdminTxList();">Tải thêm giao dịch</button>
+        `;
     } else if (sortedDates.length > 0) {
         listHTML += `<div class="end-of-list-msg">Đã hiển thị toàn bộ giao dịch</div>`;
     }
@@ -3663,7 +3669,7 @@ function renderAdminTxList() {
         const admObserver = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting) {
                 admObserver.disconnect();
-                adminTxDateLimit += 3;
+                adminTxDateLimit += 30;
                 
                 // Trì hoãn render vào khung hình tiếp theo để tránh khựng màn hình Admin
                 requestAnimationFrame(() => renderAdminTxList());
@@ -5857,14 +5863,15 @@ window.buildGroupItemsHTML = function(dateStr) {
 
     let itemsHtml = '';
     data.items.forEach(t => {
-        const isInc = t.type === 'income';
-        const cName = t.categoryName || t.category;
-        const catObj = categories.find(c => c.id === t.categoryId);
-        
-        // BẢO VỆ CHỐNG CRASH TỐI ĐA (Tránh lỗi undefined làm tịt cả danh sách)
-        const themeObj = (catObj && catObj.color && THEMES[catObj.color]) ? THEMES[catObj.color] : THEMES['theme-gray'];
-        const innerSvg = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
-        const safeName = cName.replace(/'/g, "\\'");
+            const isInc = t.type === 'income';
+            // FIX: Chống lỗi undefined khi dữ liệu cũ bị mất tên danh mục
+            const cName = t.categoryName || t.category || 'Chưa phân loại'; 
+            const catObj = categories.find(c => c.id === t.categoryId);
+            
+            // BẢO VỆ CHỐNG CRASH TỐI ĐA (Tránh lỗi undefined làm tịt cả danh sách)
+            const themeObj = (catObj && catObj.color && THEMES[catObj.color]) ? THEMES[catObj.color] : THEMES['theme-gray'];
+            const innerSvg = (catObj && catObj.icon && SVG_LIB[catObj.icon]) ? SVG_LIB[catObj.icon] : SVG_LIB['other'];
+            const safeName = cName.replace(/'/g, "\\'"); // Đảm bảo cName luôn là chuỗi
 
         itemsHtml += `
             <div class="swipe-container">

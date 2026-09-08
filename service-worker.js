@@ -1,4 +1,4 @@
-const CACHE_NAME = 'thuchi-v9.5'; 
+const CACHE_NAME = 'thuchi-v9.6'; 
 
 const ASSETS_TO_CACHE = [
     './',
